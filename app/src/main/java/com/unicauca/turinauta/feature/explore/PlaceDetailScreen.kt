@@ -195,10 +195,11 @@ fun PlaceDetailRoute(
             onPhotoSelected = visitViewModel::onPhotoSelected,
             onPhotoError = visitViewModel::onPhotoError,
             onLocationLoading = visitViewModel::onLocationLoading,
-            onLocationResolved = { lat, lon ->
+            onLocationResolved = { lat, lon, accuracy ->
                 visitViewModel.onLocationResolved(
                     userLat = lat,
                     userLon = lon,
+                    accuracyMeters = accuracy,
                     placeLat = currentPlace.latitude,
                     placeLon = currentPlace.longitude,
                 )

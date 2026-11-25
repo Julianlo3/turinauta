@@ -102,7 +102,7 @@ fun ConfirmVisitSheet(
     onPhotoSelected: (previewUri: String, bytes: ByteArray, extension: String) -> Unit,
     onPhotoError: (String) -> Unit,
     onLocationLoading: () -> Unit,
-    onLocationResolved: (Double, Double) -> Unit,
+    onLocationResolved: (Double, Double, Float) -> Unit,
     onLocationError: (String) -> Unit,
     onConfirmClick: () -> Unit,
     onDismiss: () -> Unit,
@@ -143,9 +143,9 @@ fun ConfirmVisitSheet(
         scope.launch {
             val location = getDeviceLocation(context, LocationPurpose.VISIT)
             if (location != null) {
-                onLocationResolved(location.latitude, location.longitude)
+                onLocationResolved(location.latitude, location.longitude, location.accuracy)
             } else {
-                onLocationError("No obtuvimos una ubicación reciente y precisa. Activa la ubicación precisa y vuelve a intentar.")
+                onLocationError("No obtuvimos una ubicación reciente. Activa la ubicación y vuelve a intentar.")
             }
         }
     }
@@ -421,9 +421,9 @@ fun ConfirmVisitSheetContent(
                                 )
                                 Text(
                                     text = if (withinRange) {
-                                        "Ubicación verificada: a ${uiState.distanceMeters} m del lugar."
+                                        "Distancia estimada: ${uiState.distanceMeters} m del lugar (precisión aproximada: ${uiState.locationAccuracyMeters} m). El servidor confirmará el límite de ${VisitRecord.MAX_VISIT_DISTANCE_METERS} m."
                                     } else {
-                                        "Estás a ${uiState.distanceMeters} m del lugar. El servidor exige estar a máximo ${VisitRecord.MAX_VISIT_DISTANCE_METERS} m."
+                                        "Distancia estimada: ${uiState.distanceMeters} m del lugar (precisión aproximada: ${uiState.locationAccuracyMeters} m). El servidor exige estar a máximo ${VisitRecord.MAX_VISIT_DISTANCE_METERS} m."
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (withinRange) OnSoftTealContainer else OnSoftOchreContainer,

@@ -17,7 +17,7 @@ import kotlin.coroutines.resume
 
 enum class LocationPurpose(val maxAgeMillis: Long, val maxAccuracyMeters: Float) {
     MAP(90_000, 200f),
-    VISIT(30_000, 50f),
+    VISIT(90_000, 150f),
 }
 
 internal fun isUsableLocation(ageMillis: Long, accuracyMeters: Float?, purpose: LocationPurpose): Boolean =

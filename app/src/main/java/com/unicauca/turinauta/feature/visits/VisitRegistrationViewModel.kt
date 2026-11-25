@@ -24,6 +24,7 @@ data class VisitRegistrationUiState(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val distanceMeters: Int? = null,
+    val locationAccuracyMeters: Int? = null,
     val isFetchingLocation: Boolean = false,
     val locationError: String? = null,
     val isSubmitting: Boolean = false,
@@ -52,6 +53,7 @@ data class VisitRegistrationUiState(
             latitude == other.latitude &&
             longitude == other.longitude &&
             distanceMeters == other.distanceMeters &&
+            locationAccuracyMeters == other.locationAccuracyMeters &&
             isFetchingLocation == other.isFetchingLocation &&
             locationError == other.locationError &&
             isSubmitting == other.isSubmitting &&
@@ -67,6 +69,7 @@ data class VisitRegistrationUiState(
         result = 31 * result + (latitude?.hashCode() ?: 0)
         result = 31 * result + (longitude?.hashCode() ?: 0)
         result = 31 * result + (distanceMeters ?: 0)
+        result = 31 * result + (locationAccuracyMeters ?: 0)
         result = 31 * result + isFetchingLocation.hashCode()
         result = 31 * result + (locationError?.hashCode() ?: 0)
         result = 31 * result + isSubmitting.hashCode()
@@ -132,6 +135,7 @@ class VisitRegistrationViewModel(
                 latitude = null,
                 longitude = null,
                 distanceMeters = null,
+                locationAccuracyMeters = null,
                 locationError = null,
             )
         }
@@ -140,6 +144,7 @@ class VisitRegistrationViewModel(
     fun onLocationResolved(
         userLat: Double,
         userLon: Double,
+        accuracyMeters: Float,
         placeLat: Double,
         placeLon: Double,
     ) {
@@ -149,6 +154,7 @@ class VisitRegistrationViewModel(
                 latitude = userLat,
                 longitude = userLon,
                 distanceMeters = distance,
+                locationAccuracyMeters = accuracyMeters.roundToInt(),
                 isFetchingLocation = false,
                 locationError = null,
             )
@@ -162,6 +168,7 @@ class VisitRegistrationViewModel(
                 latitude = null,
                 longitude = null,
                 distanceMeters = null,
+                locationAccuracyMeters = null,
                 locationError = message,
             )
         }

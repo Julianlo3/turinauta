@@ -137,7 +137,7 @@ class Phase4ViewModelsTest {
 
         // Foto válida + ubicación dentro de 200 m
         vm.onPhotoSelected("content://ok", ByteArray(2048) { 1 }, "jpg")
-        vm.onLocationResolved(2.4419, -76.6063, 2.4420, -76.6063)
+        vm.onLocationResolved(2.4419, -76.6063, 100f, 2.4420, -76.6063)
         assertTrue(vm.uiState.value.canSubmit)
         assertTrue(vm.uiState.value.isWithinRange)
 
@@ -146,7 +146,7 @@ class Phase4ViewModelsTest {
         assertFalse(vm.uiState.value.hasLocation)
         vm.onLocationError("Sin señal")
         assertFalse(vm.uiState.value.canSubmit)
-        vm.onLocationResolved(2.4419, -76.6063, 2.4420, -76.6063)
+        vm.onLocationResolved(2.4419, -76.6063, 100f, 2.4420, -76.6063)
 
         // Primer intento falla con error de red (HU-18)
         vm.submitVisit("p1")

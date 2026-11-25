@@ -12,8 +12,9 @@ class DeviceLocationPolicyTest {
 
     @Test fun visitRequiresFreshAccuratePosition() {
         assertTrue(isUsableLocation(10_000, 30f, LocationPurpose.VISIT))
-        assertFalse(isUsableLocation(10_000, 120f, LocationPurpose.VISIT))
-        assertFalse(isUsableLocation(40_000, 10f, LocationPurpose.VISIT))
+        assertTrue(isUsableLocation(40_000, 100f, LocationPurpose.VISIT))
+        assertFalse(isUsableLocation(10_000, 200f, LocationPurpose.VISIT))
+        assertFalse(isUsableLocation(120_000, 10f, LocationPurpose.VISIT))
         assertFalse(isUsableLocation(10_000, null, LocationPurpose.VISIT))
     }
 }
