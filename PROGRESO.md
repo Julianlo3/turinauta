@@ -82,14 +82,20 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 **Verificado:** lectura de columnas reales de todas las tablas públicas; la app muestra en el emulador los 8 lugares, las categorías y las 2 rutas desde Supabase; «Continuar con Google» abre el navegador y Supabase redirige a Google.
 
+**Inicio de sesión con Google (diagnóstico 25/11/2026):**
+- La app abre Google en una pestaña integrada (Custom Tab) con flujo PKCE y `redirect_to=com.unicauca.turinauta://login-callback`, como pide el contrato.
+- Al terminar en Google, Supabase devuelve a `http://localhost:3000` (su *Site URL*) en lugar de a la app: **la dirección de retorno no está permitida en el proyecto**.
+- Comprobado que la app sí recibe y procesa `com.unicauca.turinauta://login-callback`.
+- Se agregó `com.unicauca.turinauta://login-callback` en *Authentication → URL Configuration → Redirect URLs* de Supabase (el «retorno a Android» del contrato).
+- **Verificado en el emulador:** el inicio con Google vuelve a la app con la sesión; el Perfil muestra el nombre de `profiles` y el correo de Auth; `my_visit_history` responde sin error (0 visitas) y la Colección muestra «Sabores de la ciudad» (0 de 3) y «Hecho en Popayán» (0 de 5).
+
 **Sin verificar (requiere una cuenta Google real en el dispositivo):**
-- Que `com.unicauca.turinauta://login-callback` esté en *Authentication → URL Configuration → Redirect URLs* de Supabase.
 - Columnas exactas de `my_visit_history` (sin sesión responde «permission denied»); se leen de forma tolerante (`place_id`, `place_name`, `place_available`, `stamp_title`, `photo_path`, `visited_at`).
 - Subida de foto + `record_visit` (exige estar a ≤ 200 m del lugar con GPS real).
 
 ## Pendiente
 
-- Probar el inicio con Google y el registro de una visita en un teléfono real en Popayán.
+- Probar el registro de una visita en un teléfono real en Popayán (y con ella confirmar las columnas de `my_visit_history` con datos).
 - Inyectar MapLibre en `PlaceLocationMap`.
 - Mostrar las imágenes de `image_path` cuando existan.
 
@@ -104,3 +110,5 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 | 24/11/2026 | `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` leídas de `local.properties` hacia `BuildConfig` y `SupabaseConfig`. |
 | 24/11/2026 | AGP bajado de 9.5.1 a 9.2.1 y Gradle de 9.6.0 a 9.4.1 (máximo soportado por Android Studio 2026.1); se activa `android.r8.gradual.support` para conservar `optimization { enable = true }` en release. |
 | 25/11/2026 | Datos simulados reemplazados por Supabase (catálogo, rutas, colecciones, Google, visitas, reportes); verificado el catálogo real en el emulador. |
+| 25/11/2026 | Inicio con Google en Custom Tab + PKCE; diagnóstico: Supabase redirige a localhost:3000 porque falta la Redirect URL de la app. |
+| 25/11/2026 | Redirect URL agregada en Supabase; inicio con Google verificado en el emulador (perfil, historial vacío y colecciones reales). |

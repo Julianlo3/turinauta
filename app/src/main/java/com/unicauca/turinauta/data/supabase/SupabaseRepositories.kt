@@ -20,6 +20,7 @@ import com.unicauca.turinauta.core.model.VisitCondition
 import com.unicauca.turinauta.core.model.VisitPhoto
 import com.unicauca.turinauta.core.model.VisitRecord
 import com.unicauca.turinauta.core.model.VisitResult
+import com.unicauca.turinauta.core.network.AUTH_REDIRECT_URL
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
@@ -203,7 +204,7 @@ class SupabaseAuthRepository(
 
     override suspend fun signInWithGoogle(): AuthResult = try {
         // Abre el navegador; Supabase devuelve la sesión por el deep link login-callback.
-        client.auth.signInWith(Google)
+        client.auth.signInWith(Google, redirectUrl = AUTH_REDIRECT_URL)
         AuthResult.Started
     } catch (e: Exception) {
         AuthResult.Error(e.friendlyMessage())
