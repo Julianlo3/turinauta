@@ -2,6 +2,7 @@ package com.unicauca.turinauta.feature.collection
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -62,12 +65,14 @@ import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.MutedOchre
 import com.unicauca.turinauta.core.designsystem.OnDeepTeal
+import com.unicauca.turinauta.core.designsystem.OnSoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.PlaceIllustration
 import com.unicauca.turinauta.core.designsystem.PureWhite
 import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
 import com.unicauca.turinauta.core.designsystem.SoftTealContainer
+import com.unicauca.turinauta.core.designsystem.SoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
@@ -326,73 +331,115 @@ private fun CollectionProgressCard(
     onStampClick: (String) -> Unit,
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
+    val completed = collection.isCompleted
     Surface(
-        color = PureWhite,
+        color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
         shape = shape,
         modifier = Modifier
             .fillMaxWidth()
-            .border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape),
+            .border(
+                TurinautaDimens.CardBorderWidth,
+                if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
+                shape,
+            ),
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = collection.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SlateDark,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(
-                        text = "${collection.earnedStamps}/${collection.totalStamps}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = DeepTeal,
-                    )
+        Box {
+            if (completed) CompletedCollectionRibbon(
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp),
+            )
+            Column(
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = if (completed) 54.dp else 16.dp,
+                    bottom = 16.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = collection.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = SlateDark,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            text = "${collection.earnedStamps}/${collection.totalStamps}",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = DeepTeal,
+                        )
+                    }
+                    if (collection.description.isNotBlank()) {
+                        Text(
+                            text = collection.description,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SlateMedium,
+                        )
+                    }
                 }
-                if (collection.description.isNotBlank()) {
+
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    LinearProgressIndicator(
+                        progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
+                        color = if (completed) MutedOchre else DeepTeal,
+                        trackColor = if (completed) PureWhite else SurfaceLowSand,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(7.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                    )
                     Text(
-                        text = collection.description,
+                        text = if (completed) {
+                            "Colección completada (${collection.progressPercent}%)"
+                        } else {
+                            "${collection.progressPercent}% completado"
+                        },
                         style = MaterialTheme.typography.bodySmall,
                         color = SlateMedium,
                     )
                 }
-            }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                LinearProgressIndicator(
-                    progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
-                    color = DeepTeal,
-                    trackColor = SurfaceLowSand,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(7.dp)
-                        .clip(RoundedCornerShape(4.dp)),
-                )
-                Text(
-                    text = if (collection.isCompleted) {
-                        "Colección completada (${collection.progressPercent}%)"
-                    } else {
-                        "${collection.progressPercent}% completado"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SlateMedium,
-                )
-            }
-
-            if (collection.stamps.isNotEmpty()) {
-                HorizontalDivider(color = SubtleOutline)
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    collection.stamps.forEach { badge ->
-                        RewardBadgeRow(badge = badge, onStampClick = onStampClick)
+                if (collection.stamps.isNotEmpty()) {
+                    HorizontalDivider(color = if (completed) MutedOchre.copy(alpha = 0.3f) else SubtleOutline)
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        collection.stamps.forEach { badge ->
+                            RewardBadgeRow(badge = badge, onStampClick = onStampClick)
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CompletedCollectionRibbon(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.width(130.dp).height(32.dp), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val notch = size.height * 0.28f
+            val ribbon = Path().apply {
+                moveTo(notch, 0f)
+                lineTo(size.width, 0f)
+                lineTo(size.width, size.height)
+                lineTo(notch, size.height)
+                lineTo(0f, size.height / 2f)
+                close()
+            }
+            drawPath(ribbon, MutedOchre)
+        }
+        Row(
+            modifier = Modifier.padding(start = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Icon(Icons.Rounded.WorkspacePremium, contentDescription = null,
+                tint = OnSoftOchreContainer, modifier = Modifier.size(17.dp))
+            Text("COMPLETA", style = MaterialTheme.typography.labelSmall, color = OnSoftOchreContainer)
         }
     }
 }
@@ -601,5 +648,30 @@ private fun CollectionScreenPreview() {
             onRetryClick = {},
             onStampClick = {},
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun CompletedCollectionCardPreview() {
+    TurinautaTheme {
+        Box(modifier = Modifier.background(WarmIvory).padding(16.dp)) {
+            CollectionProgressCard(
+                collection = CollectionProgress(
+                    id = "col-complete",
+                    name = "Sabores de la Ciudad",
+                    slug = "sabores-de-la-ciudad",
+                    description = "Descubre los sabores locales.",
+                    totalStamps = 3,
+                    earnedStamps = 3,
+                    stamps = listOf(
+                        RewardBadge("s1", "Sello del Café del Patio Blanco", "", isEarned = true),
+                        RewardBadge("s2", "Sello de la Esquina del Maíz", "", isEarned = true),
+                        RewardBadge("s3", "Sello de Cocina Local", "", isEarned = true),
+                    ),
+                ),
+                onStampClick = {},
+            )
+        }
     }
 }
