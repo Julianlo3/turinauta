@@ -440,27 +440,14 @@ private fun RewardBadgeRow(
             isEarned = badge.isEarned,
         )
 
-        Column(
+        Text(
+            text = badge.title,
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = badge.title,
-                style = MaterialTheme.typography.titleSmall,
-                color = if (badge.isEarned) SlateDark else SlateMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (badge.description.isNotBlank()) {
-                Text(
-                    text = badge.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SlateMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
+            style = MaterialTheme.typography.titleSmall,
+            color = if (badge.isEarned) SlateDark else SlateMedium,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
 
         // Insignia de estado con icono + texto explícito (nunca solo color)
         Surface(
