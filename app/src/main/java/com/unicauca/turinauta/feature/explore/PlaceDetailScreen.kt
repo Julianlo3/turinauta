@@ -96,6 +96,7 @@ fun PlaceDetailRoute(
     reportRepository: ReportRepository,
     onBackClick: () -> Unit,
     onRequireAuth: () -> Unit,
+    onOpenCollection: () -> Unit,
     onNavigateToCollection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -125,6 +126,8 @@ fun PlaceDetailRoute(
     var showReportSheet by remember { mutableStateOf(false) }
     var showVisitSheet by remember { mutableStateOf(false) }
 
+    LaunchedEffect(visitUiState.result) {
+        when (visitUiState.result) {
     LaunchedEffect(visitUiState.visitResult) {
         when (visitUiState.visitResult) {
             is VisitResult.VisitCreated,
@@ -180,6 +183,10 @@ fun PlaceDetailRoute(
             onLocationLoading = visitViewModel::onLocationLoading,
             onLocationResolved = { lat, lon ->
                 visitViewModel.onLocationResolved(
+                    latitude = lat,
+                    longitude = lon,
+                    placeLatitude = currentPlace.latitude,
+                    placeLongitude = currentPlace.longitude,
                     userLat = lat,
                     userLon = lon,
                     placeLat = currentPlace.latitude,
@@ -195,6 +202,7 @@ fun PlaceDetailRoute(
         )
     }
 
+    val visitResult = visitUiState.result
     val visitResult = visitUiState.visitResult
     if (visitResult != null && currentPlace != null) {
         VisitResultDialog(
@@ -210,11 +218,14 @@ fun PlaceDetailRoute(
                 visitViewModel.dismissResult()
                 visitViewModel.submitVisit(currentPlace.id)
             },
+            onOpenCollection = {
             onViewCollection = {
                 visitViewModel.reset()
                 showVisitSheet = false
+                onOpenCollection()
                 onNavigateToCollection()
             },
+            onRequireAuth = {
             onGoToAuth = {
                 visitViewModel.reset()
                 showVisitSheet = false
