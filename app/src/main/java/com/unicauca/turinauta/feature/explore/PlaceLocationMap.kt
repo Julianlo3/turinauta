@@ -8,6 +8,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.GradientDrawable
+import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -71,7 +72,7 @@ import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
-import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import kotlin.math.atan2
 import com.unicauca.turinauta.data.repository.MapPoint
 import com.unicauca.turinauta.data.repository.WalkingRoute
 import androidx.compose.ui.graphics.toArgb
@@ -265,7 +266,23 @@ private fun OpenStreetMapView(
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(interactive)
             if (interactive) {
-                overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                val rotationGesture = MapRotationGesture()
+                setOnTouchListener { _, event ->
+                    when (event.actionMasked) {
+                        MotionEvent.ACTION_POINTER_DOWN -> {
+                            if (event.pointerCount == 2) {
+                                rotationGesture.begin(event.touchAngle(), mapOrientation)
+                            } else rotationGesture.end()
+                        }
+                        MotionEvent.ACTION_MOVE -> {
+                            if (event.pointerCount == 2) {
+                                rotationGesture.move(event.touchAngle())?.let(::setMapOrientation)
+                            } else rotationGesture.end()
+                        }
+                        MotionEvent.ACTION_POINTER_UP, MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> rotationGesture.end()
+                    }
+                    false // Let osmdroid handle zooming and panning normally.
+                }
             }
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             controller.setZoom(if (interactive) 17.0 else 16.0)
@@ -357,6 +374,10 @@ private fun OpenStreetMapView(
 
     AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
 }
+
+private fun MotionEvent.touchAngle(): Float = Math.toDegrees(
+    atan2((getY(0) - getY(1)).toDouble(), (getX(0) - getX(1)).toDouble()),
+).toFloat()
 
 private fun formatDistance(meters: Double): String =
     if (meters < 1000) "${meters.toInt()} m" else String.format(java.util.Locale.forLanguageTag("es-CO"), "%.1f km", meters / 1000)
