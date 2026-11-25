@@ -39,6 +39,18 @@ import com.unicauca.turinauta.core.designsystem.OverlineStyle
 import com.unicauca.turinauta.core.designsystem.PillShape
 import com.unicauca.turinauta.core.designsystem.PrimaryWideButton
 import com.unicauca.turinauta.core.designsystem.StampArt
+import com.unicauca.turinauta.core.designsystem.StampStyle
+import com.unicauca.turinauta.core.designsystem.stampStyleFor
+import com.unicauca.turinauta.core.model.Illustration
+import android.provider.Settings
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.unicauca.turinauta.core.designsystem.formatShortDate
 import com.unicauca.turinauta.core.model.VisitResult
 
@@ -71,7 +83,7 @@ fun VisitResultDialog(
                         }
                     }
                     Spacer(Modifier.height(24.dp))
-                    StampArt(result.badge.stamp.illustration, obtained = true, size = 160.dp)
+                    StampReveal(result.badge.stamp.illustration, stampStyleFor(result.progress?.collection?.styleIndex ?: 0))
                     Spacer(Modifier.height(20.dp))
                     Text("SELLO OBTENIDO", style = OverlineStyle, color = MaterialTheme.colorScheme.primary)
                     Text(
@@ -125,3 +137,34 @@ fun VisitResultDialog(
     }
 }
 
+/**
+ * Animación de «estampado»: el sello entra grande y girado y se asienta con un rebote corto,
+ * seguido de una vibración leve. Si el teléfono tiene las animaciones desactivadas, aparece quieto.
+ */
+@Composable
+private fun StampReveal(illustration: Illustration, style: StampStyle) {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val reduceMotion = remember {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
+    val progress = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    LaunchedEffect(Unit) {
+        if (!reduceMotion) progress.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = 260f))
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+    }
+    StampArt(
+        illustration = illustration,
+        obtained = true,
+        size = 170.dp,
+        style = style,
+        modifier = Modifier.graphicsLayer {
+            val p = progress.value
+            val scale = 1.35f - 0.35f * p
+            scaleX = scale
+            scaleY = scale
+            rotationZ = -14f * (1f - p)
+            alpha = p.coerceIn(0f, 1f)
+        },
+    )
+}

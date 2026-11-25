@@ -75,7 +75,7 @@ fun RouteBannerArt(illustration: Illustration, modifier: Modifier = Modifier) {
     }
 }
 
-private fun DrawScope.drawIllustrationIn(illustration: Illustration, area: Size) {
+internal fun DrawScope.drawIllustrationIn(illustration: Illustration, area: Size) {
     when (illustration) {
         Illustration.BOWL -> drawBowl(area)
         Illustration.WEAVE -> drawWeave(columns = 2, area = area)
@@ -184,27 +184,5 @@ fun TurinautaLogo(modifier: Modifier = Modifier, size: Dp = 32.dp) {
         }
         drawPath(p, Color.White, style = Stroke(this.size.width * 0.07f, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 5f))))
         drawCircle(Ochre, radius = this.size.width * 0.1f, center = Offset(this.size.width * 0.68f, this.size.height * 0.30f))
-    }
-}
-
-/** Sello coleccionable: relleno si se obtuvo; borde punteado si está pendiente. */
-@Composable
-fun StampArt(illustration: Illustration, obtained: Boolean, modifier: Modifier = Modifier, size: Dp = 72.dp) {
-    Box(modifier.size(size).clip(CircleShape)) {
-        Canvas(Modifier.size(size)) {
-            if (obtained) {
-                drawCircle(SandHigh)
-                drawCircle(Ochre, style = Stroke(this.size.width * 0.05f))
-                drawCircle(Ochre, radius = this.size.width * 0.40f, style = Stroke(this.size.width * 0.015f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))))
-            } else {
-                drawCircle(SandLow)
-                drawCircle(OutlineWarm, style = Stroke(this.size.width * 0.03f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))))
-            }
-            val inner = this.size.width * 0.56f
-            translate(left = (this.size.width - inner) / 2, top = (this.size.height - inner) / 2) {
-                if (obtained) drawIllustrationIn(illustration, Size(inner, inner))
-                else drawCircle(OutlineWarm.copy(alpha = 0.5f), radius = inner * 0.28f, center = Offset(inner / 2, inner / 2))
-            }
-        }
     }
 }

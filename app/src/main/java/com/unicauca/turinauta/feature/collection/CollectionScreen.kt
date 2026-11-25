@@ -47,6 +47,8 @@ import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.LoadingState
 import com.unicauca.turinauta.core.designsystem.PillShape
 import com.unicauca.turinauta.core.designsystem.StampArt
+import com.unicauca.turinauta.core.designsystem.StampStyle
+import com.unicauca.turinauta.core.designsystem.stampStyleFor
 import com.unicauca.turinauta.core.model.CollectionProgress
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.navigation.TurinautaViewModelFactory
@@ -126,7 +128,12 @@ private fun CollectionCard(progress: CollectionProgress, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            StampArt(progress.collection.illustration, obtained = progress.earnedStamps > 0, size = 56.dp)
+            StampArt(
+                progress.collection.illustration,
+                obtained = progress.earnedStamps > 0,
+                size = 60.dp,
+                style = stampStyleFor(progress.collection.styleIndex),
+            )
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(progress.collection.name, style = MaterialTheme.typography.titleSmall)
@@ -190,7 +197,7 @@ fun CollectionDetailScreen(
                         Text("Toca un sello para abrir la ficha del lugar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
-                items(progress.badges, key = { it.stamp.id }) { badge -> BadgeTile(badge) { onOpenPlace(badge.stamp.placeId) } }
+                items(progress.badges, key = { it.stamp.id }) { badge -> BadgeTile(badge, stampStyleFor(progress.collection.styleIndex)) { onOpenPlace(badge.stamp.placeId) } }
             }
         }
     }
@@ -198,7 +205,7 @@ fun CollectionDetailScreen(
 
 /** Obtenido/Pendiente se comunica con texto + icono, nunca solo con color. */
 @Composable
-private fun BadgeTile(badge: RewardBadge, onClick: () -> Unit) {
+private fun BadgeTile(badge: RewardBadge, style: StampStyle, onClick: () -> Unit) {
     val status = if (badge.earned) "Obtenido" else "Pendiente"
     Surface(
         onClick = onClick,
@@ -210,7 +217,7 @@ private fun BadgeTile(badge: RewardBadge, onClick: () -> Unit) {
         },
     ) {
         Column(Modifier.padding(14.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            StampArt(badge.stamp.illustration, obtained = badge.earned, size = 76.dp)
+            StampArt(badge.stamp.illustration, obtained = badge.earned, size = 84.dp, style = style)
             Spacer(Modifier.height(10.dp))
             Text(badge.placeName, style = MaterialTheme.typography.titleSmall, textAlign = TextAlign.Center)
             Text(badge.stamp.title, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)

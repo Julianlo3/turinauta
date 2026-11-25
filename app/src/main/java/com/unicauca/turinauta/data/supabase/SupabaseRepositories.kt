@@ -365,12 +365,12 @@ class SupabaseCollectionRepository(
                 .select { order("sort_order", Order.ASCENDING) }.decodeList<CollectionDto>()
             val links = client.from("collection_stamps").select().decodeList<CollectionStampDto>()
             val stamps = client.from("stamps").select().decodeList<StampDto>().associateBy { it.id }
-            return collections.map { c ->
+            return collections.mapIndexed { index, c ->
                 val stampList = links.filter { it.collectionId == c.id }.sortedBy { it.sortOrder }
                     .mapNotNull { stamps[it.stampId] }
                     .map { Stamp(it.id, it.placeId, it.title, it.description, Illustration.CLAY, SupabaseConfig.catalogImageUrl(it.imagePath)) }
                 LoadedCollection(
-                    ThematicCollection(c.id, c.slug, c.name, c.description, Illustration.BOWL, stampList.map { it.id }, c.sortOrder),
+                    ThematicCollection(c.id, c.slug, c.name, c.description, Illustration.BOWL, stampList.map { it.id }, c.sortOrder, styleIndex = index),
                     stampList,
                 )
             }

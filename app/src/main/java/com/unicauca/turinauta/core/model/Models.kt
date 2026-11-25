@@ -130,6 +130,8 @@ data class ThematicCollection(
     val illustration: Illustration,
     val stampIds: List<String>,
     val sortOrder: Int,
+    /** Posición de la colección (0, 1, 2…): define la forma del borde de sus sellos. */
+    val styleIndex: Int = 0,
 )
 
 /** `my_collection_progress` + sus sellos. */

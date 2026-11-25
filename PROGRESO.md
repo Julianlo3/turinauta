@@ -100,6 +100,14 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 - Mientras carga, si falla la red o si no hay imagen, se ve la ilustración de la categoría. La etiqueta «Imagen ilustrativa» solo aparece cuando no hay foto.
 - Coil reduce cada foto al tamaño de la vista y la guarda en caché de disco.
 
+## Sellos con borde ✅
+
+- `core/designsystem/Stamp.kt`: `StampShape` y `StampArt` con seis bordes (flor, estrella, onda, estrella fina, festón, onda fina), a partir de la propuesta visual.
+- Un borde por colección según su orden: 1.ª flor de 10 lóbulos, 2.ª estrella de 14 puntas, 3.ª onda…
+- Obtenido: papel claro, borde ocre, perforación punteada e ilustración a color. Pendiente: borde punteado gris, ilustración apagada y candado (además del texto «Pendiente»).
+- Pantalla «Sello obtenido»: animación de estampado (escala + giro con rebote) y vibración leve; sin animación si el teléfono las tiene desactivadas.
+- **Verificado en el emulador:** portadas de colección y sellos pendientes con flor y estrella; aspecto del sello obtenido con una compilación temporal. La animación queda por ver con una visita real.
+
 ## Pendiente
 
 - Probar el registro de una visita en un teléfono real en Popayán (y con ella confirmar las columnas de `my_visit_history` con datos).
@@ -120,3 +128,4 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 | 25/11/2026 | Inicio con Google en Custom Tab + PKCE; diagnóstico: Supabase redirige a localhost:3000 porque falta la Redirect URL de la app. |
 | 25/11/2026 | Redirect URL agregada en Supabase; inicio con Google verificado en el emulador (perfil, historial vacío y colecciones reales). |
 | 25/11/2026 | Fotos reales del bucket `catalog-images` en catálogo, ficha, rutas e historial (Coil). |
+| 25/11/2026 | Sellos con borde ondulado/dentado por colección y animación de estampado. |
