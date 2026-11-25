@@ -78,6 +78,7 @@ import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.ReportRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
+import com.unicauca.turinauta.data.repository.WalkingRouteRepository
 import com.unicauca.turinauta.feature.reports.DataReportSheet
 import com.unicauca.turinauta.feature.reports.ReportViewModel
 import com.unicauca.turinauta.feature.visits.ConfirmVisitSheet
@@ -92,6 +93,7 @@ fun PlaceDetailRoute(
     visitRepository: VisitRepository,
     authRepository: AuthRepository,
     reportRepository: ReportRepository,
+    walkingRouteRepository: WalkingRouteRepository,
     onBackClick: () -> Unit,
     onRequireAuth: () -> Unit,
     onNavigateToCollection: () -> Unit,
@@ -117,6 +119,10 @@ fun PlaceDetailRoute(
         key = "visit_$placeId",
         factory = VisitRegistrationViewModel.factory(visitRepository),
     )
+    val mapViewModel: PlaceMapViewModel = viewModel(
+        key = "place_map_$placeId",
+        factory = PlaceMapViewModel.factory(walkingRouteRepository),
+    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val reportUiState by reportViewModel.uiState.collectAsStateWithLifecycle()
     val visitUiState by visitViewModel.uiState.collectAsStateWithLifecycle()
@@ -141,6 +147,7 @@ fun PlaceDetailRoute(
     if (showMap && mapPlace != null) {
         FullScreenPlaceMap(
             place = mapPlace,
+            viewModel = mapViewModel,
             onBackClick = { showMap = false },
             modifier = modifier,
         )
@@ -395,7 +402,7 @@ private fun PlaceDetailContent(
             }
         }
 
-        // Mapa editorial desacoplado (sin permisos GPS)
+        // Vista previa pública: la ruta y el GPS se cargan al ampliar el mapa.
         PlaceLocationMap(
             latitude = place.latitude,
             longitude = place.longitude,

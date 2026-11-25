@@ -92,6 +92,7 @@ fun TurinautaNavHost(
                 visitRepository = container.visitRepository,
                 authRepository = container.authRepository,
                 reportRepository = container.reportRepository,
+                walkingRouteRepository = container.walkingRouteRepository,
                 onBackClick = { navController.popBackStack() },
                 onRequireAuth = { navController.navigate(TurinautaRoutes.AUTH) },
                 onNavigateToCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },

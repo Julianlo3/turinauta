@@ -7,12 +7,14 @@ import com.unicauca.turinauta.data.remote.SupabaseCollectionRepository
 import com.unicauca.turinauta.data.remote.SupabaseReportRepository
 import com.unicauca.turinauta.data.remote.SupabaseRouteRepository
 import com.unicauca.turinauta.data.remote.SupabaseVisitRepository
+import com.unicauca.turinauta.data.remote.OsrmWalkingRouteRepository
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
 import com.unicauca.turinauta.data.repository.ReportRepository
 import com.unicauca.turinauta.data.repository.RouteRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
+import com.unicauca.turinauta.data.repository.WalkingRouteRepository
 
 /**
  * Contenedor de dependencias de la aplicación con repositorios reales de Supabase.
@@ -21,6 +23,7 @@ import com.unicauca.turinauta.data.repository.VisitRepository
 class AppContainer(
     val supabaseClientProvider: SupabaseClientProvider = SupabaseClientProvider(),
 ) {
+    val walkingRouteRepository: WalkingRouteRepository by lazy { OsrmWalkingRouteRepository() }
     val catalogRepository: CatalogRepository by lazy {
         SupabaseCatalogRepository(supabaseClientProvider)
     }
