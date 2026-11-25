@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -182,7 +183,7 @@ fun FullScreenPlaceMap(
                 Surface(
                     color = PureWhite.copy(alpha = 0.96f),
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
+                    modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
                         when {
@@ -193,14 +194,19 @@ fun FullScreenPlaceMap(
                             }
                             state.route != null -> Text(
                                 "${formatDistance(state.route!!.distanceMeters)} · ${kotlin.math.ceil(state.route!!.durationSeconds / 60).toInt()} min aprox.",
-                                style = MaterialTheme.typography.titleLarge, color = SlateDark,
+                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp, lineHeight = 24.sp),
+                                color = SlateDark,
                             )
                             else -> Text(
                                 if (!hasPermission) "Permite la ubicación para ver la ruta." else state.message ?: "Buscando tu ubicación…",
                                 style = MaterialTheme.typography.bodyMedium, color = SlateDark,
                             )
                         }
-                        Text("Ruta a pie", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+                        Text(
+                            "Ruta a pie",
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
+                            color = SlateMedium,
+                        )
                         if (!state.loading && state.route == null) {
                             TextButton(onClick = {
                                 if (hasPermission) viewModel.load(context, place) else permissionLauncher.launch(permissions)
