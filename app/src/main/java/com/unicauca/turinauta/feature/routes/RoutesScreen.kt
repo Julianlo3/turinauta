@@ -9,19 +9,26 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -38,10 +45,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
+import com.unicauca.turinauta.core.designsystem.CategoryOverlineTextStyle
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.PlaceIllustration
@@ -50,25 +59,38 @@ import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
 import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
+import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.SurfaceThumbBeige
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.IllustrationKey
+import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.Route
 import com.unicauca.turinauta.core.model.RouteStop
 import com.unicauca.turinauta.core.network.SupabaseConfig
+import com.unicauca.turinauta.data.repository.AuthRepository
+import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.RouteRepository
+import com.unicauca.turinauta.data.repository.VisitRepository
 
 @Composable
 fun RoutesRoute(
     routeRepository: RouteRepository,
+    catalogRepository: CatalogRepository,
+    visitRepository: VisitRepository,
+    authRepository: AuthRepository,
     onRouteClick: (String) -> Unit,
     onExploreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: RoutesViewModel = viewModel(
-        factory = RoutesViewModel.factory(routeRepository),
+        factory = RoutesViewModel.factory(
+            routeRepository = routeRepository,
+            catalogRepository = catalogRepository,
+            visitRepository = visitRepository,
+            authRepository = authRepository,
+        ),
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -99,21 +121,14 @@ fun RoutesScreen(
             top = 16.dp,
             bottom = 24.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "routes_header") {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "Rutas temáticas",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = SlateDark,
-                )
-                Text(
-                    text = "Recorridos curados para explorar Popayán paso a paso.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SlateMedium,
-                )
-            }
+            RoutesEditorialHeader(
+                routesCount = uiState.routeItems.size,
+                placesCount = uiState.totalPlacesAcrossRoutes,
+                showCounts = !uiState.isLoading && uiState.routeItems.isNotEmpty(),
+            )
         }
 
         when {
@@ -131,7 +146,7 @@ fun RoutesScreen(
                         ) {
                             CircularProgressIndicator(color = DeepTeal)
                             Text(
-                                text = "Cargando rutas disponibles...",
+                                text = "Cargando rutas y paradas...",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SlateMedium,
                             )
@@ -155,7 +170,7 @@ fun RoutesScreen(
                 }
             }
 
-            uiState.routes.isEmpty() -> {
+            uiState.routeItems.isEmpty() -> {
                 item(key = "routes_empty") {
                     RoutesMessageCard(
                         title = "Aún no hay rutas publicadas",
@@ -168,12 +183,13 @@ fun RoutesScreen(
 
             else -> {
                 items(
-                    items = uiState.routes,
-                    key = { it.id },
-                ) { route ->
-                    RouteListCard(
-                        route = route,
-                        onClick = { onRouteClick(route.id) },
+                    items = uiState.routeItems,
+                    key = { it.route.id },
+                ) { item ->
+                    RouteRichCard(
+                        item = item,
+                        showVisitedProgress = uiState.isAuthenticated,
+                        onClick = { onRouteClick(item.route.id) },
                     )
                 }
             }
@@ -182,16 +198,113 @@ fun RoutesScreen(
 }
 
 @Composable
-private fun RouteListCard(
-    route: Route,
+private fun RoutesEditorialHeader(
+    routesCount: Int,
+    placesCount: Int,
+    showCounts: Boolean,
+) {
+    Surface(
+        color = SurfaceLowSand,
+        shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(SoftTealContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.AltRoute,
+                        contentDescription = null,
+                        tint = DeepTeal,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                Column {
+                    Text(
+                        text = "Rutas temáticas",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = SlateDark,
+                    )
+                    Text(
+                        text = "Recorridos curados para explorar Popayán",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SlateMedium,
+                    )
+                }
+            }
+
+            if (showCounts) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    HeaderMetricPill(
+                        icon = Icons.AutoMirrored.Rounded.AltRoute,
+                        text = if (routesCount == 1) "1 recorrido" else "$routesCount recorridos",
+                    )
+                    if (placesCount > 0) {
+                        HeaderMetricPill(
+                            icon = Icons.Outlined.Place,
+                            text = if (placesCount == 1) "1 lugar" else "$placesCount lugares",
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderMetricPill(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+) {
+    Surface(
+        color = PureWhite,
+        shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
+        modifier = Modifier.border(1.dp, SubtleOutline, RoundedCornerShape(TurinautaDimens.ChipCornerRadius)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = DeepTeal,
+                modifier = Modifier.size(15.dp),
+            )
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                color = SlateDark,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RouteRichCard(
+    item: RouteCardItem,
+    showVisitedProgress: Boolean,
     onClick: () -> Unit,
 ) {
+    val route = item.route
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
-    val stopCount = route.stops.size
+    val stopCount = item.totalStopsCount
     val stopsLabel = when (stopCount) {
         0 -> "Recorrido sugerido"
-        1 -> "1 parada sugerida"
-        else -> "$stopCount paradas sugeridas"
+        1 -> "1 parada"
+        else -> "$stopCount paradas"
     }
 
     Surface(
@@ -205,63 +318,174 @@ private fun RouteListCard(
             .semantics(mergeDescendants = true) {},
     ) {
         Column {
-            RouteCardMedia(imagePath = route.imagePath)
+            // Cabecera visual tipo mosaico editorial con fotos de la ruta y sus paradas
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(172.dp),
+            ) {
+                RouteMediaCollage(
+                    routeImagePath = route.imagePath,
+                    stopPlaces = item.stopPlaces,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                // Etiquetas discretas con alto contraste sobre el mosaico
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Surface(
+                        color = PureWhite.copy(alpha = 0.95f),
+                        shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.AltRoute,
+                                contentDescription = null,
+                                tint = DeepTeal,
+                                modifier = Modifier.size(15.dp),
+                            )
+                            Text(
+                                text = stopsLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = SlateDark,
+                            )
+                        }
+                    }
+
+                    if (showVisitedProgress && stopCount > 0 && item.visitedStopsCount > 0) {
+                        Surface(
+                            color = SoftTealContainer.copy(alpha = 0.96f),
+                            shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.CheckCircle,
+                                    contentDescription = null,
+                                    tint = OnSoftTealContainer,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Text(
+                                    text = "${item.visitedStopsCount}/$stopCount visitadas",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = OnSoftTealContainer,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             Column(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Surface(
-                    color = SoftTealContainer,
-                    shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.AltRoute,
-                            contentDescription = null,
-                            tint = OnSoftTealContainer,
-                            modifier = Modifier.size(15.dp),
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (item.categoriesOverline.isNotBlank()) {
                         Text(
-                            text = stopsLabel,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = OnSoftTealContainer,
+                            text = item.categoriesOverline,
+                            style = CategoryOverlineTextStyle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
+                    }
+                    Text(
+                        text = route.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = SlateDark,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = route.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SlateMedium,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                if (!route.visitConditions.isNullOrBlank()) {
+                    Surface(
+                        color = SurfaceLowSand,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                tint = DeepTeal,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = route.visitConditions,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SlateDark,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
 
+                // Vista previa de las paradas del recorrido (miniatura + nombre + breve descripción)
+                if (item.stopPlaces.isNotEmpty()) {
+                    HorizontalDivider(color = SubtleOutline)
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "Lugares incluidos",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = SlateDark,
+                        )
+                        item.stopPlaces.take(3).forEachIndexed { index, place ->
+                            RouteStopPreviewRow(
+                                orderNumber = index + 1,
+                                place = place,
+                            )
+                        }
+                        if (item.stopPlaces.size > 3) {
+                            Text(
+                                text = "+ ${item.stopPlaces.size - 3} parada(s) adicional(es) en este recorrido",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = DeepTeal,
+                            )
+                        }
+                    }
+                }
+
+                HorizontalDivider(color = SubtleOutline)
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Text(
-                            text = route.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = SlateDark,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = route.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = SlateMedium,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
+                    Text(
+                        text = "Ver recorrido completo",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = DeepTeal,
+                    )
                     Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                         contentDescription = null,
-                        tint = SlateMedium,
+                        tint = DeepTeal,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
@@ -270,22 +494,192 @@ private fun RouteListCard(
 }
 
 @Composable
-private fun RouteCardMedia(imagePath: String?) {
-    val resolvedUrl = remember(imagePath) {
-        SupabaseConfig.resolvePublicMediaUrl(imagePath, defaultBucket = "routes")
+private fun RouteStopPreviewRow(
+    orderNumber: Int,
+    place: Place,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(SoftTealContainer),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "$orderNumber",
+                style = MaterialTheme.typography.labelMedium,
+                color = OnSoftTealContainer,
+            )
+        }
+
+        RouteMiniMediaTile(
+            imagePath = place.imagePath,
+            bucket = "places",
+            illustrationKey = place.illustrationKey,
+            size = 48.dp,
+            cornerRadius = 12.dp,
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = place.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = SlateDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = place.summary.ifBlank { place.locationReference },
+                style = MaterialTheme.typography.bodySmall,
+                color = SlateMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+/**
+ * Mosaico editorial reutilizable para `RoutesScreen` y `RouteDetailScreen`.
+ * Combina la imagen principal de la ruta y las imágenes/ilustraciones de sus paradas
+ * en un diseño de 1, 2 o 3 paneles sin depender de degradados estridentes.
+ */
+@Composable
+internal fun RouteMediaCollage(
+    routeImagePath: String?,
+    stopPlaces: List<Place>,
+    modifier: Modifier = Modifier,
+) {
+    val panels = remember(routeImagePath, stopPlaces) {
+        buildList {
+            if (!routeImagePath.isNullOrBlank()) {
+                add(
+                    CollageTile(
+                        imagePath = routeImagePath,
+                        bucket = "routes",
+                        illustrationKey = stopPlaces.firstOrNull()?.illustrationKey ?: IllustrationKey.GENERIC,
+                    ),
+                )
+            }
+            stopPlaces.forEach { place ->
+                add(
+                    CollageTile(
+                        imagePath = place.imagePath,
+                        bucket = "places",
+                        illustrationKey = place.illustrationKey,
+                    ),
+                )
+            }
+            if (isEmpty()) {
+                add(
+                    CollageTile(
+                        imagePath = null,
+                        bucket = "routes",
+                        illustrationKey = IllustrationKey.GENERIC,
+                    ),
+                )
+            }
+        }.take(3)
+    }
+
+    when (panels.size) {
+        1 -> {
+            CollageImageTile(
+                tile = panels[0],
+                modifier = modifier.fillMaxSize(),
+            )
+        }
+
+        2 -> {
+            Row(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(WarmIvory),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CollageImageTile(
+                    tile = panels[0],
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                )
+                CollageImageTile(
+                    tile = panels[1],
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                )
+            }
+        }
+
+        else -> {
+            Row(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(WarmIvory),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                CollageImageTile(
+                    tile = panels[0],
+                    modifier = Modifier
+                        .weight(1.35f)
+                        .fillMaxHeight(),
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    CollageImageTile(
+                        tile = panels[1],
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                    )
+                    CollageImageTile(
+                        tile = panels[2],
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private data class CollageTile(
+    val imagePath: String?,
+    val bucket: String,
+    val illustrationKey: IllustrationKey,
+)
+
+@Composable
+private fun CollageImageTile(
+    tile: CollageTile,
+    modifier: Modifier = Modifier,
+) {
+    val resolvedUrl = remember(tile.imagePath, tile.bucket) {
+        SupabaseConfig.resolvePublicMediaUrl(tile.imagePath, defaultBucket = tile.bucket)
     }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(132.dp)
-            .background(SurfaceThumbBeige),
+        modifier = modifier.background(SurfaceThumbBeige),
         contentAlignment = Alignment.Center,
     ) {
         if (resolvedUrl == null) {
             PlaceIllustration(
-                illustrationKey = IllustrationKey.GENERIC,
-                size = 88.dp,
-                cornerRadius = 16.dp,
+                illustrationKey = tile.illustrationKey,
+                size = 76.dp,
+                cornerRadius = 14.dp,
             )
         } else {
             SubcomposeAsyncImage(
@@ -293,14 +687,52 @@ private fun RouteCardMedia(imagePath: String?) {
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 loading = {
-                    PlaceIllustration(illustrationKey = IllustrationKey.GENERIC, size = 88.dp)
+                    PlaceIllustration(illustrationKey = tile.illustrationKey, size = 76.dp, cornerRadius = 14.dp)
                 },
                 error = {
-                    PlaceIllustration(illustrationKey = IllustrationKey.GENERIC, size = 88.dp)
+                    PlaceIllustration(illustrationKey = tile.illustrationKey, size = 76.dp, cornerRadius = 14.dp)
                 },
                 modifier = Modifier.fillMaxSize(),
             )
         }
+    }
+}
+
+@Composable
+internal fun RouteMiniMediaTile(
+    imagePath: String?,
+    bucket: String,
+    illustrationKey: IllustrationKey,
+    size: Dp,
+    cornerRadius: Dp,
+    modifier: Modifier = Modifier,
+) {
+    val resolvedUrl = remember(imagePath, bucket) {
+        SupabaseConfig.resolvePublicMediaUrl(imagePath, defaultBucket = bucket)
+    }
+    if (resolvedUrl == null) {
+        PlaceIllustration(
+            illustrationKey = illustrationKey,
+            size = size,
+            cornerRadius = cornerRadius,
+            modifier = modifier,
+        )
+    } else {
+        SubcomposeAsyncImage(
+            model = resolvedUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            loading = {
+                PlaceIllustration(illustrationKey = illustrationKey, size = size, cornerRadius = cornerRadius)
+            },
+            error = {
+                PlaceIllustration(illustrationKey = illustrationKey, size = size, cornerRadius = cornerRadius)
+            },
+            modifier = modifier
+                .size(size)
+                .clip(RoundedCornerShape(cornerRadius))
+                .background(SurfaceThumbBeige),
+        )
     }
 }
 
@@ -350,30 +782,66 @@ private fun RoutesScreenPreview() {
     TurinautaTheme {
         RoutesScreen(
             uiState = RoutesUiState(
-                routes = listOf(
-                    Route(
-                        id = "r1",
-                        name = "Oficios y saberes locales",
-                        slug = "oficios-saberes",
-                        description = "Un recorrido por talleres artesanales y espacios culturales que mantienen vivas las técnicas tradicionales.",
-                        stops = listOf(
-                            RouteStop("r1", "p1", 1),
-                            RouteStop("r1", "p2", 2),
-                            RouteStop("r1", "p3", 3),
+                isAuthenticated = true,
+                isLoading = false,
+                routeItems = listOf(
+                    RouteCardItem(
+                        route = Route(
+                            id = "r1",
+                            name = "Oficios y saberes locales",
+                            slug = "oficios-saberes",
+                            description = "Un recorrido por talleres artesanales y espacios culturales que mantienen vivas las técnicas tradicionales del Cauca.",
+                            visitConditions = "Ideal para recorrer a pie entre martes y sábado en horario diurno.",
+                            stops = listOf(
+                                RouteStop("r1", "p1", 1),
+                                RouteStop("r1", "p2", 2),
+                                RouteStop("r1", "p3", 3),
+                            ),
                         ),
-                    ),
-                    Route(
-                        id = "r2",
-                        name = "Sabores cotidianos de Popayán",
-                        slug = "sabores-cotidianos",
-                        description = "Paradas recomendadas para descubrir cocinas de barrio, amasijos y café de origen.",
-                        stops = listOf(
-                            RouteStop("r2", "p4", 1),
-                            RouteStop("r2", "p5", 2),
+                        stopPlaces = listOf(
+                            Place(
+                                id = "p1",
+                                categoryId = "2",
+                                categoryName = "Artesanías",
+                                name = "Taller de tejido",
+                                slug = "taller-de-tejido",
+                                summary = "Piezas elaboradas en telar manual con fibras naturales.",
+                                description = "Desc",
+                                locationReference = "Centro",
+                                latitude = 2.4442,
+                                longitude = -76.6021,
+                                illustrationKey = IllustrationKey.ARTESANIAS,
+                            ),
+                            Place(
+                                id = "p2",
+                                categoryId = "3",
+                                categoryName = "Cultura",
+                                name = "Espacio cultural La Esquina",
+                                slug = "la-esquina",
+                                summary = "Encuentros musicales, literatura y memoria barrial.",
+                                description = "Desc",
+                                locationReference = "Centro",
+                                latitude = 2.4405,
+                                longitude = -76.6085,
+                                illustrationKey = IllustrationKey.CULTURA,
+                            ),
+                            Place(
+                                id = "p3",
+                                categoryId = "2",
+                                categoryName = "Artesanías",
+                                name = "Taller de cerámica ancestral",
+                                slug = "ceramica",
+                                summary = "Moldeado en barro y quema artesanal con saberes heredados.",
+                                description = "Desc",
+                                locationReference = "Centro",
+                                latitude = 2.4431,
+                                longitude = -76.6074,
+                                illustrationKey = IllustrationKey.CERAMICA,
+                            ),
                         ),
+                        visitedStopsCount = 1,
                     ),
                 ),
-                isLoading = false,
             ),
             onRouteClick = {},
             onRetryClick = {},

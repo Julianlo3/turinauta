@@ -82,9 +82,16 @@ class Phase4ViewModelsTest {
             ),
         )
 
-        val routesVm = RoutesViewModel(routeRepo)
+        val routesVm = RoutesViewModel(
+            routeRepository = routeRepo,
+            catalogRepository = catalogRepo,
+            visitRepository = visitRepo,
+            authRepository = authRepo,
+        )
         advanceUntilIdle()
         assertEquals(1, routesVm.uiState.value.routes.size)
+        assertEquals(listOf("p1", "p2"), routesVm.uiState.value.routeItems.first().stopPlaces.map { it.id })
+        assertEquals(1, routesVm.uiState.value.routeItems.first().visitedStopsCount)
 
         val detailVm = RouteDetailViewModel(
             routeId = "r1",

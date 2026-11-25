@@ -101,6 +101,9 @@ fun TurinautaNavHost(
         composable(TurinautaRoutes.ROUTES) {
             RoutesRoute(
                 routeRepository = container.routeRepository,
+                catalogRepository = container.catalogRepository,
+                visitRepository = container.visitRepository,
+                authRepository = container.authRepository,
                 onRouteClick = { routeId ->
                     navController.navigate(TurinautaRoutes.routeDetail(routeId))
                 },
