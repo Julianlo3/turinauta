@@ -447,7 +447,7 @@ private fun RouteRichCard(
                     }
                 }
 
-                // Vista previa de las paradas del recorrido (miniatura + nombre + breve descripción)
+                // Vista previa de las paradas del recorrido (miniatura y nombre)
                 if (item.stopPlaces.isNotEmpty()) {
                     HorizontalDivider(color = SubtleOutline)
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -527,25 +527,14 @@ private fun RouteStopPreviewRow(
             cornerRadius = 12.dp,
         )
 
-        Column(
+        Text(
+            text = place.name,
+            style = MaterialTheme.typography.titleSmall,
+            color = SlateDark,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = place.name,
-                style = MaterialTheme.typography.titleSmall,
-                color = SlateDark,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = place.summary.ifBlank { place.locationReference },
-                style = MaterialTheme.typography.bodySmall,
-                color = SlateMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        )
     }
 }
 
