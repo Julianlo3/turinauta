@@ -8,6 +8,7 @@ import com.unicauca.turinauta.core.model.Category
 import com.unicauca.turinauta.core.model.GeoPoint
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.data.repository.CatalogRepository
+import com.unicauca.turinauta.data.repository.VisitRepository
 import com.unicauca.turinauta.data.supabase.friendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,8 @@ data class ExploreUiState(
     /** Banner informativo cuando se negó la ubicación: se sigue con el orden habitual. */
     val locationUnavailable: Boolean = false,
     val message: String? = null,
+    /** Lugares que la cuenta ya registró (vacío sin sesión). */
+    val visitedPlaceIds: Set<String> = emptySet(),
 ) {
     val visiblePlaces: List<Place>
         get() {
@@ -61,6 +64,9 @@ data class ExploreUiState(
 
     val isCatalogEmpty: Boolean get() = !isLoading && loadError == null && allPlaces.isEmpty()
     val isSearching: Boolean get() = query.isNotBlank()
+
+    /** El primer lugar se destaca en grande solo en la vista inicial del catálogo. */
+    val showFeatured: Boolean get() = !isSearching && selectedCategory == null && sortOrder == SortOrder.FEATURED
 }
 
 /** Compara sin mayúsculas ni tildes («cafe» encuentra «Café»). */
@@ -70,10 +76,17 @@ private fun String.normalized(): String =
 class ExploreViewModel(
     private val catalog: CatalogRepository,
     private val location: LocationProvider,
+    visits: VisitRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExploreUiState())
     val uiState: StateFlow<ExploreUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            visits.visits.collect { list -> _uiState.update { it.copy(visitedPlaceIds = list.map { v -> v.placeId }.toSet()) } }
+        }
+    }
 
     /** Recarga el catálogo; solo muestra carga a pantalla completa si aún no hay datos. */
     fun load() {

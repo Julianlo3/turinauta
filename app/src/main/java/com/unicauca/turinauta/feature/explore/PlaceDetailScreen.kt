@@ -50,6 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +60,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unicauca.turinauta.core.designsystem.CatalogImage
+import com.unicauca.turinauta.core.designsystem.DisplayFontFamily
+import com.unicauca.turinauta.core.designsystem.StampArt
+import com.unicauca.turinauta.core.designsystem.stampStyleFor
+import com.unicauca.turinauta.core.model.RewardBadge
+import com.unicauca.turinauta.core.model.ThematicCollection
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.InfoRow
 import com.unicauca.turinauta.core.designsystem.LoadingState
@@ -106,6 +117,16 @@ fun PlaceDetailScreen(
 
     LaunchedEffect(state.message) {
         state.message?.let { snackbar.showSnackbar(it); viewModel.onMessageShown() }
+    }
+
+    // La cabecera es una foto oscura: íconos claros en la barra de estado mientras se ve la ficha.
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        val previous = controller?.isAppearanceLightStatusBars
+        controller?.isAppearanceLightStatusBars = false
+        onDispose { if (previous != null) controller.isAppearanceLightStatusBars = previous }
     }
 
     val place = state.place
@@ -201,14 +222,37 @@ private fun PlaceContent(
 ) {
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            Box {
+            Box(Modifier.fillMaxWidth().height(320.dp)) {
                 CatalogImage(
                     imageUrl = place.imageUrl,
                     illustration = place.illustration,
                     contentDescription = "Foto de ${place.name}",
-                    modifier = Modifier.fillMaxWidth().height(240.dp),
+                    modifier = Modifier.fillMaxSize(),
                     fallback = { PlaceHeaderArt(place.illustration, it) },
                 )
+                // Degradado para que el nombre se lea sobre cualquier foto.
+                Box(
+                    Modifier.fillMaxSize().background(
+                        Brush.verticalGradient(0.45f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.72f)),
+                    ),
+                )
+                Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+                    Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer) {
+                        Text(
+                            place.category.label,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        place.name,
+                        style = MaterialTheme.typography.headlineMedium.copy(fontFamily = DisplayFontFamily, fontWeight = FontWeight.Bold),
+                        color = Color.White,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier.statusBarsPadding().padding(8.dp),
@@ -219,7 +263,7 @@ private fun PlaceContent(
                     Surface(
                         color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.75f),
                         shape = PillShape,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp),
+                        modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(14.dp),
                     ) {
                         Text("Imagen ilustrativa", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.inverseOnSurface, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
                     }
@@ -237,16 +281,6 @@ private fun PlaceContent(
                     }
                     Spacer(Modifier.height(12.dp))
                 }
-                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer) {
-                    Text(
-                        place.category.label,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(place.name, style = MaterialTheme.typography.headlineSmall, modifier = Modifier.semantics { heading() })
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Place, contentDescription = null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.width(4.dp))
@@ -310,6 +344,7 @@ private fun PlaceContent(
 
         Surface(color = MaterialTheme.colorScheme.background, shadowElevation = 6.dp) {
             Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp)) {
+                state.reward?.let { reward -> RewardPreview(reward, state.rewardCollection, earned = state.existingVisit != null) }
                 if (state.existingVisit != null) {
                     OutlinedButton(
                         onClick = {},
@@ -339,3 +374,30 @@ private fun PlaceContent(
     }
 }
 
+/** Muestra el sello que se gana (o que ya se ganó) junto al botón de registrar. */
+@Composable
+private fun RewardPreview(reward: RewardBadge, collection: ThematicCollection?, earned: Boolean) {
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp).semantics(mergeDescendants = true) {},
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StampArt(
+            reward.stamp.illustration,
+            obtained = earned,
+            size = 44.dp,
+            style = stampStyleFor(collection?.styleIndex ?: 0),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                if (earned) "Tu sello" else "Al registrar la visita obtienes",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(reward.stamp.title, style = MaterialTheme.typography.titleSmall)
+            collection?.let {
+                Text("Colección ${it.name}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}

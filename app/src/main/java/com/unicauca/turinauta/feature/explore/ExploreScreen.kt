@@ -69,6 +69,10 @@ import com.unicauca.turinauta.core.designsystem.ChipShape
 import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.PillShape
 import com.unicauca.turinauta.core.designsystem.PlaceCard
+import com.unicauca.turinauta.core.designsystem.FeaturedPlaceCard
+import com.unicauca.turinauta.core.designsystem.CatalogImage
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
 import com.unicauca.turinauta.core.designsystem.TurinautaLogo
 import com.unicauca.turinauta.core.model.Category
 import com.unicauca.turinauta.core.navigation.TurinautaViewModelFactory
@@ -114,7 +118,7 @@ fun ExploreScreen(
         if (state.categories.isNotEmpty()) item { CategoryChips(state.categories, state.selectedCategory, viewModel::selectCategory) }
 
         if (!state.isLoading && state.loadError == null && !state.isSearching && state.selectedCategory == null && !state.isCatalogEmpty) {
-            item { RoutesBanner(onOpenRoutes) }
+            item { RoutesBanner(state.allPlaces.mapNotNull { it.imageUrl }.take(3), onOpenRoutes) }
         }
         if (state.locationUnavailable) {
             item {
@@ -228,8 +232,19 @@ private fun LazyListScope.placesSection(
             }
         }
     } else {
-        items(places, key = { it.id }) { place ->
-            PlaceCard(place, onClick = { onOpenPlace(place.id) }, distanceMeters = state.distanceTo(place))
+        val featured = if (state.showFeatured) places.first() else null
+        if (featured != null) {
+            item(key = "featured-" + featured.id) {
+                FeaturedPlaceCard(featured, onClick = { onOpenPlace(featured.id) }, visited = featured.id in state.visitedPlaceIds)
+            }
+        }
+        items(places.drop(if (featured != null) 1 else 0), key = { it.id }) { place ->
+            PlaceCard(
+                place,
+                onClick = { onOpenPlace(place.id) },
+                distanceMeters = state.distanceTo(place),
+                visited = place.id in state.visitedPlaceIds,
+            )
         }
     }
 }
@@ -324,7 +339,7 @@ private fun CategoryChips(categories: List<Category>, selected: Category?, onSel
 }
 
 @Composable
-private fun RoutesBanner(onClick: () -> Unit) {
+private fun RoutesBanner(photoUrls: List<String>, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         shape = CardShape,
@@ -332,10 +347,24 @@ private fun RoutesBanner(onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
     ) {
         Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Outlined.Route, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+            if (photoUrls.isEmpty()) {
+                Box(
+                    Modifier.size(48.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Outlined.Route, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+            } else {
+                // Miniaturas superpuestas de lugares que forman parte de las rutas.
+                Box(Modifier.width((44 + (photoUrls.size - 1) * 22).dp).height(44.dp)) {
+                    photoUrls.forEachIndexed { i, url ->
+                        CatalogImage(
+                            url,
+                            com.unicauca.turinauta.core.model.Illustration.BOWL,
+                            Modifier.offset(x = (i * 22).dp).size(44.dp).clip(CircleShape)
+                                .border(2.dp, MaterialTheme.colorScheme.surfaceContainerLow, CircleShape),
+                        )
+                    }
+                }
+            }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text("Rutas temáticas", style = MaterialTheme.typography.titleMedium)

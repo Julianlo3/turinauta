@@ -13,6 +13,9 @@ import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.core.navigation.Destinations
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
+import com.unicauca.turinauta.data.repository.CollectionRepository
+import com.unicauca.turinauta.core.model.RewardBadge
+import com.unicauca.turinauta.core.model.ThematicCollection
 import com.unicauca.turinauta.data.repository.RouteRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
 import com.unicauca.turinauta.data.supabase.friendlyMessage
@@ -49,6 +52,9 @@ data class PlaceDetailUiState(
     val photo: VisitPhoto? = null,
     val photoError: String? = null,
     val loadError: String? = null,
+    /** Sello que se obtiene al registrar la visita y la colección a la que pertenece. */
+    val reward: RewardBadge? = null,
+    val rewardCollection: ThematicCollection? = null,
     val message: String? = null,
 ) {
     val isBusy: Boolean get() = visitFlow == VisitFlow.Locating || visitFlow == VisitFlow.Saving
@@ -60,6 +66,7 @@ class PlaceDetailViewModel(
     private val routes: RouteRepository,
     auth: AuthRepository,
     visits: VisitRepository,
+    collections: CollectionRepository,
     private val location: LocationProvider,
     private val registerVisit: RegisterVisitUseCase,
 ) : ViewModel() {
@@ -74,6 +81,12 @@ class PlaceDetailViewModel(
     private var resumeAfterLogin = false
 
     init {
+        viewModelScope.launch {
+            collections.progress.collect { list ->
+                val match = list.firstNotNullOfOrNull { p -> p.badges.firstOrNull { it.stamp.placeId == placeId }?.let { p.collection to it } }
+                _uiState.update { it.copy(reward = match?.second, rewardCollection = match?.first) }
+            }
+        }
         loadPlace()
         viewModelScope.launch {
             combine(auth.currentUser, visits.visits) { user, list -> user to list.firstOrNull { it.placeId == placeId } }

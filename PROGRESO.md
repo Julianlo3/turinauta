@@ -108,10 +108,20 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 - Pantalla «Sello obtenido»: animación de estampado (escala + giro con rebote) y vibración leve; sin animación si el teléfono las tiene desactivadas.
 - **Verificado en el emulador:** portadas de colección y sellos pendientes con flor y estrella; aspecto del sello obtenido con una compilación temporal. La animación queda por ver con una visita real.
 
+## Mejoras visuales de la propuesta ✅
+
+- **Ficha:** foto de 320 dp con el nombre encima sobre un degradado; íconos claros en la barra de estado; muestra el sello que se gana (o «Tu sello») junto al botón; **mapa real con MapLibre 13.7.1** y estilo gratuito de OpenFreeMap (sin API key, sin GPS, estático y con marcador al centro; plano dibujado de respaldo sin conexión).
+- **Horario:** se quita el prefijo «Horario:» / «Horario de muestra:» que llega de la base.
+- **Colección:** anillo de progreso alrededor del sello de portada; si está vacía, muestra los sellos que se pueden ganar; colección completa con sello dorado y distintivo «Colección completa».
+- **Explorar:** primer lugar destacado con foto a lo ancho; marca «Visitado» en lugares ya registrados; banner de rutas con miniaturas de fotos.
+- **Tipografía de marca:** Bricolage Grotesque (OFL, `res/font`, licencia en `licenses/`) en títulos; Roboto en el cuerpo.
+- **Modo oscuro:** sigue el tema del sistema (fondo petróleo profundo, verde claro y ocre luminoso).
+- **Verificado en el emulador:** Explorar, ficha con mapa real, Colección vacía con sellos y anillos, modo claro y oscuro.
+- **Sin verificar:** marca «Visitado», sello dorado y «Colección completa» (requieren visitas reales).
+
 ## Pendiente
 
 - Probar el registro de una visita en un teléfono real en Popayán (y con ella confirmar las columnas de `my_visit_history` con datos).
-- Inyectar MapLibre en `PlaceLocationMap`.
 - Pedir al backend versiones livianas de las fotos (hoy pesan entre 1,5 y 4,5 MB y el plan gratuito de Supabase no permite redimensionarlas al vuelo).
 
 ## Bitácora
@@ -129,3 +139,4 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 | 25/11/2026 | Redirect URL agregada en Supabase; inicio con Google verificado en el emulador (perfil, historial vacío y colecciones reales). |
 | 25/11/2026 | Fotos reales del bucket `catalog-images` en catálogo, ficha, rutas e historial (Coil). |
 | 25/11/2026 | Sellos con borde ondulado/dentado por colección y animación de estampado. |
+| 25/11/2026 | Mejoras visuales: ficha con foto alta y mapa MapLibre, colección con anillos y sellos por ganar, Explorar con destacado, fuente de marca y modo oscuro. |

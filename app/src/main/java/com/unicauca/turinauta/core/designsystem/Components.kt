@@ -76,7 +76,7 @@ fun ConditionType.icon(): ImageVector = when (this) {
 
 /** Tarjeta del catálogo: máximo 4 datos clave (categoría, nombre, resumen, horario). */
 @Composable
-fun PlaceCard(place: Place, onClick: () -> Unit, modifier: Modifier = Modifier, distanceMeters: Double? = null) {
+fun PlaceCard(place: Place, onClick: () -> Unit, modifier: Modifier = Modifier, distanceMeters: Double? = null, visited: Boolean = false) {
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
@@ -107,6 +107,7 @@ fun PlaceCard(place: Place, onClick: () -> Unit, modifier: Modifier = Modifier, 
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                if (visited) VisitedTag(Modifier.padding(top = 4.dp))
                 if (distanceMeters != null) {
                     Text(
                         "A ${formatDistance(distanceMeters)} de ti",
@@ -229,5 +230,56 @@ fun NoteBox(icon: ImageVector, text: String, modifier: Modifier = Modifier) {
     ) {
         Icon(icon, contentDescription = null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Marca de lugar ya visitado: sello en miniatura + texto (no depende solo del color). */
+@Composable
+fun VisitedTag(modifier: Modifier = Modifier) {
+    Row(
+        modifier.clip(PillShape).background(MaterialTheme.colorScheme.primaryContainer).padding(start = 4.dp, end = 10.dp, top = 2.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        StampArt(com.unicauca.turinauta.core.model.Illustration.BOWL, obtained = true, size = 18.dp, style = StampStyle.FLOWER)
+        Spacer(Modifier.width(4.dp))
+        Text("Visitado", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+    }
+}
+
+/** Primer lugar del catálogo en grande, con la foto a lo ancho y el nombre encima. */
+@Composable
+fun FeaturedPlaceCard(place: Place, onClick: () -> Unit, visited: Boolean, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        shape = CardShape,
+        modifier = modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+    ) {
+        Box(Modifier.fillMaxWidth().height(220.dp)) {
+            CatalogImage(place.imageUrl, place.illustration, Modifier.fillMaxSize())
+            Box(
+                Modifier.fillMaxSize().background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        0.35f to androidx.compose.ui.graphics.Color.Transparent,
+                        1f to androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.75f),
+                    ),
+                ),
+            )
+            Column(Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+                Text("DESTACADO · ${place.category.label.uppercase(esLocale)}", style = OverlineStyle, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f))
+                Text(
+                    place.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = androidx.compose.ui.graphics.Color.White,
+                )
+                Text(
+                    place.summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.9f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (visited) VisitedTag(Modifier.padding(top = 6.dp))
+            }
+        }
     }
 }

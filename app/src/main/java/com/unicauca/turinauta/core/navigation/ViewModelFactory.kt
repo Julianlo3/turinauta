@@ -20,7 +20,7 @@ private fun CreationExtras.container(): AppContainer = (this[APPLICATION_KEY] as
 
 /** Fábrica única de ViewModels con inyección manual desde AppContainer. */
 val TurinautaViewModelFactory = viewModelFactory {
-    initializer { ExploreViewModel(container().catalog, container().location) }
+    initializer { ExploreViewModel(container().catalog, container().location, container().visits) }
     initializer {
         val c = container()
         PlaceDetailViewModel(
@@ -29,6 +29,7 @@ val TurinautaViewModelFactory = viewModelFactory {
             routes = c.routes,
             auth = c.auth,
             visits = c.visits,
+            collections = c.collections,
             location = c.location,
             registerVisit = RegisterVisitUseCase(c.visits),
         )

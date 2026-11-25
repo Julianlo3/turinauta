@@ -30,6 +30,13 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -86,14 +93,7 @@ fun CollectionScreen(
                     }
                 }
                 if (state.earned == 0) {
-                    item {
-                        EmptyState(
-                            icon = Icons.Outlined.WorkspacePremium,
-                            title = "Tu colección está vacía",
-                            message = "Registra tu primera visita para obtener un sello. Los sellos pendientes se marcan con borde punteado y la etiqueta «Pendiente».",
-                            primaryAction = "Ver rutas temáticas" to onOpenRoutes,
-                        )
-                    }
+                    item { EmptyCollectionPreview(state.collections, onOpenRoutes) }
                 }
                 item { Text("Colecciones temáticas", style = MaterialTheme.typography.titleMedium) }
                 items(state.collections, key = { it.collection.id }) { progress ->
@@ -127,28 +127,40 @@ private fun CollectionCard(progress: CollectionProgress, onClick: () -> Unit) {
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
     ) {
+        val complete = progress.totalStamps > 0 && progress.earnedStamps == progress.totalStamps
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            StampArt(
-                progress.collection.illustration,
-                obtained = progress.earnedStamps > 0,
-                size = 60.dp,
-                style = stampStyleFor(progress.collection.styleIndex),
-            )
+            // Anillo de progreso alrededor del sello de portada.
+            Box(Modifier.size(76.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { progress.fraction },
+                    modifier = Modifier.fillMaxSize(),
+                    strokeWidth = 4.dp,
+                    color = if (complete) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    strokeCap = StrokeCap.Round,
+                )
+                StampArt(
+                    progress.badges.firstOrNull { it.earned }?.stamp?.illustration ?: progress.collection.illustration,
+                    obtained = progress.earnedStamps > 0,
+                    size = 58.dp,
+                    style = stampStyleFor(progress.collection.styleIndex),
+                    golden = complete,
+                )
+            }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(progress.collection.name, style = MaterialTheme.typography.titleSmall)
                 Text(progress.collection.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(8.dp))
-                LinearProgressIndicator(
-                    progress = { progress.fraction },
-                    modifier = Modifier.fillMaxWidth().height(6.dp),
-                    trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                )
                 Spacer(Modifier.height(6.dp))
-                Text(
-                    "${progress.earnedStamps} de ${progress.totalStamps} sellos obtenidos",
-                    style = MaterialTheme.typography.bodySmall,
-                )
+                if (complete) {
+                    CompleteChip()
+                } else {
+                    Text(
+                        "${progress.earnedStamps} de ${progress.totalStamps} sellos obtenidos",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
         }
@@ -183,6 +195,10 @@ fun CollectionDetailScreen(
             ) {
                 item(span = { GridItemSpan(2) }) {
                     Column {
+                        if (progress.totalStamps > 0 && progress.earnedStamps == progress.totalStamps) {
+                            CompleteBanner(progress)
+                            Spacer(Modifier.height(12.dp))
+                        }
                         Row {
                             Text("Tu progreso", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                             Text("${progress.earnedStamps} de ${progress.totalStamps} sellos", style = MaterialTheme.typography.titleSmall)
@@ -241,3 +257,80 @@ private fun BadgeTile(badge: RewardBadge, style: StampStyle, onClick: () -> Unit
     }
 }
 
+/** Distintivo de colección completa (texto + icono, no solo color). */
+@Composable
+private fun CompleteChip() {
+    Surface(shape = PillShape, color = MaterialTheme.colorScheme.secondaryContainer) {
+        Row(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.Star, contentDescription = null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.secondary)
+            Spacer(Modifier.width(4.dp))
+            Text("Colección completa", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+        }
+    }
+}
+
+@Composable
+private fun CompleteBanner(progress: CollectionProgress) {
+    Surface(shape = CardShape, color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            StampArt(
+                progress.collection.illustration,
+                obtained = true,
+                size = 56.dp,
+                style = stampStyleFor(progress.collection.styleIndex),
+                golden = true,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text("¡Colección completa!", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text(
+                    "Visitaste los ${progress.totalStamps} lugares de ${progress.collection.name}.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+        }
+    }
+}
+
+/** Colección vacía: en vez de un mensaje genérico, muestra los sellos que se pueden ganar. */
+@Composable
+private fun EmptyCollectionPreview(collections: List<CollectionProgress>, onOpenRoutes: () -> Unit) {
+    val pending = collections.flatMap { p -> p.badges.map { it to stampStyleFor(p.collection.styleIndex) } }.take(8)
+    Surface(shape = CardShape, color = MaterialTheme.colorScheme.surfaceContainerLow, modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(vertical = 16.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp)) {
+                Text("Tu primer sello te espera", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Registra una visita para empezar tu colección. Estos son algunos de los sellos que puedes ganar.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                items(pending.size) { i ->
+                    val (badge, style) = pending[i]
+                    Column(Modifier.width(76.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        StampArt(badge.stamp.illustration, obtained = false, size = 64.dp, style = style)
+                        Text(
+                            badge.placeName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = onOpenRoutes, modifier = Modifier.padding(horizontal = 16.dp).heightIn(min = 48.dp), shape = PillShape) {
+                Text("Ver rutas temáticas")
+            }
+        }
+    }
+}

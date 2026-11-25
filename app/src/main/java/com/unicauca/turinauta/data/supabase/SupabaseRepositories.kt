@@ -65,6 +65,9 @@ import java.util.UUID
  * Las lecturas públicas funcionan sin sesión; las privadas usan el JWT de Supabase Auth.
  */
 
+/** Prefijo redundante en `opening_hours` («Horario:», «Horario de muestra:»). */
+private val SCHEDULE_PREFIX = Regex("^\\s*horario(\\s+de\\s+muestra)?\\s*:\\s*", RegexOption.IGNORE_CASE)
+
 /** Mensaje entendible para errores de red o de la API. */
 internal fun Throwable.friendlyMessage(): String = when (this) {
     is HttpRequestException -> "No pudimos conectarnos. Revisa tu conexión e inténtalo de nuevo."
@@ -117,7 +120,7 @@ class SupabaseCatalogRepository(private val client: SupabaseClient) : CatalogRep
         category = category,
         summary = summary,
         description = description,
-        schedule = openingHours?.takeIf { it.isNotBlank() },
+        schedule = openingHours?.replace(SCHEDULE_PREFIX, "")?.trim()?.replaceFirstChar { it.uppercase() }?.takeIf { it.isNotBlank() },
         addressReference = locationReference,
         latitude = latitude,
         longitude = longitude,

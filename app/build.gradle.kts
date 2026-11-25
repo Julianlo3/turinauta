@@ -83,6 +83,9 @@ dependencies {
     // Imágenes del catálogo (bucket público catalog-images) con caché en disco.
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Mapa de la ficha (MapLibre + teselas gratuitas de OpenFreeMap, sin API key).
+    implementation(libs.maplibre.android)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     testImplementation(libs.junit)

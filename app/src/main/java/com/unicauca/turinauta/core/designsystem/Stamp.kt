@@ -87,6 +87,8 @@ fun StampArt(
     modifier: Modifier = Modifier,
     size: Dp = 72.dp,
     style: StampStyle = StampStyle.FLOWER,
+    /** Colección completa: papel dorado y doble borde ocre. */
+    golden: Boolean = false,
 ) {
     Canvas(modifier.size(size)) {
         val c = Offset(this.size.width / 2, this.size.height / 2)
@@ -95,8 +97,9 @@ fun StampArt(
         val outline = stampPath(style, c, radius)
 
         if (obtained) {
-            drawPath(outline, PaperColor)
+            drawPath(outline, if (golden) GoldenPaper else PaperColor)
             drawPath(outline, Ochre, style = Stroke(stroke, join = StrokeJoin.Round))
+            if (golden) drawPath(stampPath(style, c, radius * 0.93f), Ochre, style = Stroke(stroke * 0.6f, join = StrokeJoin.Round))
             drawPath(
                 stampPath(style, c, radius * 0.83f),
                 Ochre.copy(alpha = 0.9f),
@@ -126,6 +129,7 @@ fun StampArt(
 }
 
 private val PaperColor = Color(0xFFFBF6EC)
+private val GoldenPaper = Color(0xFFF6E4B8)
 
 private fun DrawScope.drawLock(center: Offset, w: Float) {
     val h = w * 0.75f
