@@ -355,7 +355,7 @@ private fun CollectionProgressCard(
                     top = 16.dp,
                     bottom = 16.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Text(
                     text = collection.name,
