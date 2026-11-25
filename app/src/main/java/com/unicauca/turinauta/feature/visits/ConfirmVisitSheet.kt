@@ -423,7 +423,7 @@ fun ConfirmVisitSheetContent(
                                     text = if (withinRange) {
                                         "Distancia estimada: ${uiState.distanceMeters} m del lugar (precisión aproximada: ${uiState.locationAccuracyMeters} m). El servidor confirmará el límite de ${VisitRecord.MAX_VISIT_DISTANCE_METERS} m."
                                     } else {
-                                        "Distancia estimada: ${uiState.distanceMeters} m del lugar (precisión aproximada: ${uiState.locationAccuracyMeters} m). El servidor exige estar a máximo ${VisitRecord.MAX_VISIT_DISTANCE_METERS} m."
+                                        "Parece que estás lejos de este lugar. Acércate o actualiza tu ubicación si crees que no es correcta."
                                     },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (withinRange) OnSoftTealContainer else OnSoftOchreContainer,

@@ -7,7 +7,7 @@ El radio original de registro es **200 m**. Para probar el flujo desde lugares m
 ## Implementación temporal
 
 - `app/src/main/java/com/unicauca/turinauta/feature/visits/VisitRegistrationViewModel.kt`: `TEMP_VISIT_TEST_RADIUS_METERS = 10_000` controla el botón y el envío de la visita.
-- `VisitRecord.MAX_VISIT_DISTANCE_METERS = 200` y los textos, iconos y colores de la ventana permanecen como estaban por solicitud expresa. **Entre 200 m y 10 km, la interfaz aún muestra el aviso de 200 m aunque permite enviar la visita.** Esto puede resultar confuso durante las pruebas.
+- `VisitRecord.MAX_VISIT_DISTANCE_METERS = 200` se conserva para la cabecera y el aviso visual. La advertencia cuando se superan 200 m usa un texto sencillo sin afirmar que el envío esté bloqueado. **Entre 200 m y 10 km, la interfaz aún muestra la cabecera de 200 m aunque permite enviar la visita.** Esto puede resultar confuso durante las pruebas.
 - La aplicación todavía exige foto y ubicación. La distancia se calcula con Haversine y el backend sigue decidiendo si registra la visita.
 
 ## Para restablecer 200 m
