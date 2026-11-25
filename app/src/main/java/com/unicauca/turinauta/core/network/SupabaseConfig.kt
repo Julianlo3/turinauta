@@ -17,6 +17,12 @@ object SupabaseConfig {
     const val OAUTH_SCHEME = "turinauta"
     const val OAUTH_HOST = "auth-callback"
 
+    /**
+     * Deep link exacto que debe estar registrado en Supabase Dashboard:
+     * Authentication -> URL Configuration -> Redirect URLs.
+     */
+    const val OAUTH_REDIRECT_URL = "$OAUTH_SCHEME://$OAUTH_HOST"
+
     val isConfigured: Boolean
         get() = url.startsWith("https://") && publishableKey.isNotBlank()
 

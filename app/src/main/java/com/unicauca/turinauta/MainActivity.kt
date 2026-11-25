@@ -44,6 +44,8 @@ class MainActivity : ComponentActivity() {
 
     private fun handleOAuthCallback(intent: Intent?) {
         if (intent == null) return
+        // Garantiza que AuthRepository ya esté escuchando sessionStatus antes de procesar el callback
+        appContainer.authRepository
         val client = appContainer.supabaseClientProvider.getClientOrNull() ?: return
         runCatching { client.handleDeeplinks(intent) }
     }

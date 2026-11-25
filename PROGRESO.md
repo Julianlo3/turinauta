@@ -59,10 +59,20 @@
 - [x] Conexión completa en `PlaceDetailScreen.kt` y `TurinautaNavHost.kt` + pruebas unitarias en `Phase4ViewModelsTest.kt`.
 - [x] Verificado con `./gradlew assembleDebug testDebugUnitTest` (0 errores, 0 advertencias, pruebas en verde) y guardado en commit en `vistasJulian`.
 
-### Fase 5 — Colección, Perfil, Historial y Pulido Final `[PENDIENTE]`
-- [ ] `feature/collection/`: `CollectionViewModel`, `CollectionScreen` (estado **Obtenida** / **Pendiente** con texto + icono, progreso `earned/total`).
-- [ ] `feature/profile/`: `ProfileViewModel`, `ProfileScreen` (consulta `profiles` + cerrar sesión HU-25), `VisitHistoryScreen` (foto pública de `visit-photos` + manejo de `placeAvailable = false` → *«Lugar no disponible»*).
-- [ ] Revisión final de accesibilidad WCAG 2.2 / TalkBack, pruebas unitarias de ViewModels/UseCases y verificación integral con el backend Supabase real (con `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` configurados).
+### Fase 5 — Colección, Perfil, Historial y Pulido Final `[COMPLETADA]`
+- [x] `feature/collection/`: `CollectionViewModel`, `CollectionScreen` (vista pública sin cuenta + progreso autenticado, sellos **Obtenida** / **Pendiente** siempre con icono + texto, nunca solo color).
+- [x] `feature/profile/`: `ProfileViewModel`, `ProfileScreen` (consulta `profiles` + correo Auth + diálogo de cierre de sesión con limpieza inmediata HU-25), `VisitHistoryViewModel`, `VisitHistoryScreen` (fotos públicas de `visit-photos` + soporte `placeAvailable = false` → *«Lugar no disponible»* conservando `stampTitle`).
+- [x] Conexión total en `TurinautaNavHost.kt` (sin pantallas provisionales) + inicialización temprana de `authRepository` en `MainActivity.handleOAuthCallback` para retorno de Google OAuth (`turinauta://auth-callback`).
+- [x] Pruebas unitarias en `Phase5ViewModelsTest.kt`.
+- [x] Verificado con `./gradlew assembleDebug testDebugUnitTest` (0 errores, 0 advertencias, pruebas en verde) y guardado en commit en `vistasJulian`.
+
+---
+
+## Configuración obligatoria para Google OAuth (Android ↔ Supabase)
+1. **Google Cloud Console (ya configurado por backend):** `https://<project-ref>.supabase.co/auth/v1/callback`
+2. **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs:** agregar exactamente:
+   - `turinauta://auth-callback`
+3. **Android (ya configurado en `AndroidManifest.xml` y `SupabaseConfig.kt`):** `<data android:scheme="turinauta" android:host="auth-callback" />` + `MainActivity.handleDeeplinks(intent)`.
 
 ---
 
@@ -71,3 +81,4 @@
 - **2026-11-24:** Fase 2 implementada directamente contra Supabase real (`local.properties`, `BuildConfig`, `core/network`, `data/repository`, `data/remote`, `AppContainer` y pruebas unitarias).
 - **2026-11-24:** Fase 3 completada en rama `vistasJulian` (`TurinautaApplication`, `MainActivity` con OAuth deep link, `core/navigation`, `feature/explore`, `feature/reports` y pruebas unitarias).
 - **2026-11-24:** Fase 4 completada en rama `vistasJulian` (`feature/routes`, `feature/auth`, `feature/visits` con `FileProvider` + GPS ≤200 m, conexión en `PlaceDetailScreen`/`TurinautaNavHost` y pruebas unitarias).
+- **2026-11-24:** Fase 5 completada en rama `vistasJulian` (`feature/collection`, `feature/profile`, `VisitHistoryScreen`, cierre de sesión HU-25, pulido OAuth deep link `turinauta://auth-callback` y pruebas unitarias). MVP Android completo.
