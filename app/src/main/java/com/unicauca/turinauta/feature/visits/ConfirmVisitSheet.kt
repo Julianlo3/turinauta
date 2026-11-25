@@ -6,11 +6,14 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.SystemClock
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +49,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,6 +59,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -85,8 +91,11 @@ import java.io.File
 import java.util.UUID
 import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+enum class LocationButtonFeedback { IDLE, LOADING, UPDATED }
 
 /**
  * ModalBottomSheet de confirmación y envío de visita (`CONTRATO_API_MVP.md` + R3/R4):
@@ -111,6 +120,8 @@ fun ConfirmVisitSheet(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var locationFeedback by remember { mutableStateOf(LocationButtonFeedback.IDLE) }
+    var locationRequestId by remember { mutableIntStateOf(0) }
 
     fun handlePickedUri(uri: Uri) {
         scope.launch {
@@ -139,13 +150,25 @@ fun ConfirmVisitSheet(
     }
 
     fun requestCurrentLocation() {
+        val requestId = ++locationRequestId
+        locationFeedback = LocationButtonFeedback.LOADING
         onLocationLoading()
         scope.launch {
+            val startedAt = SystemClock.elapsedRealtime()
             val location = getDeviceLocation(context, LocationPurpose.VISIT)
             if (location != null) {
                 onLocationResolved(location.latitude, location.longitude, location.accuracy)
             } else {
                 onLocationError("No obtuvimos una ubicación reciente. Activa la ubicación y vuelve a intentar.")
+            }
+            // Keep the in-button indicator visible even when Android returns a cached fix instantly.
+            delay((600L - (SystemClock.elapsedRealtime() - startedAt)).coerceAtLeast(0L))
+            if (requestId == locationRequestId) {
+                locationFeedback = if (location != null) LocationButtonFeedback.UPDATED else LocationButtonFeedback.IDLE
+                if (location != null) {
+                    delay(1_200L)
+                    if (requestId == locationRequestId) locationFeedback = LocationButtonFeedback.IDLE
+                }
             }
         }
     }
@@ -179,6 +202,7 @@ fun ConfirmVisitSheet(
         ConfirmVisitSheetContent(
             placeName = place.name,
             uiState = uiState,
+            locationFeedback = locationFeedback,
             onPickFromGalleryClick = { galleryLauncher.launch("image/*") },
             onTakePhotoClick = {
                 runCatching { createCameraOutputUri(context) }
@@ -212,6 +236,7 @@ fun ConfirmVisitSheet(
 fun ConfirmVisitSheetContent(
     placeName: String,
     uiState: VisitRegistrationUiState,
+    locationFeedback: LocationButtonFeedback = LocationButtonFeedback.IDLE,
     onPickFromGalleryClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onVerifyLocationClick: () -> Unit,
@@ -456,19 +481,49 @@ fun ConfirmVisitSheetContent(
                     }
                 }
 
+                val buttonColor by animateColorAsState(
+                    targetValue = if (locationFeedback == LocationButtonFeedback.IDLE) PureWhite else SoftTealContainer,
+                    label = "Estado del botón de ubicación",
+                )
                 OutlinedButton(
                     onClick = onVerifyLocationClick,
-                    enabled = !uiState.isSubmitting && !uiState.isFetchingLocation,
+                    enabled = !uiState.isSubmitting && !uiState.isFetchingLocation &&
+                        locationFeedback != LocationButtonFeedback.LOADING,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = buttonColor,
+                        disabledContainerColor = buttonColor,
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (locationFeedback == LocationButtonFeedback.IDLE) SubtleOutline else DeepTeal,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = TurinautaDimens.MinTouchTarget),
+                        .heightIn(min = TurinautaDimens.MinTouchTarget)
+                        .semantics {
+                            stateDescription = when (locationFeedback) {
+                                LocationButtonFeedback.LOADING -> "Actualizando ubicación"
+                                LocationButtonFeedback.UPDATED -> "Ubicación actualizada"
+                                LocationButtonFeedback.IDLE -> "Listo para actualizar ubicación"
+                            }
+                        },
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.MyLocation,
-                        contentDescription = null,
-                        tint = DeepTeal,
-                        modifier = Modifier.size(18.dp),
-                    )
+                    if (locationFeedback == LocationButtonFeedback.LOADING) {
+                        CircularProgressIndicator(
+                            color = DeepTeal,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    } else {
+                        Icon(
+                            imageVector = if (locationFeedback == LocationButtonFeedback.UPDATED) {
+                                Icons.Rounded.CheckCircle
+                            } else Icons.Outlined.MyLocation,
+                            contentDescription = null,
+                            tint = DeepTeal,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = if (uiState.hasLocation) "Actualizar ubicación" else "Verificar ubicación",
