@@ -1,15 +1,19 @@
 package com.unicauca.turinauta.feature
 
 import com.unicauca.turinauta.core.model.CollectionProgress
+import com.unicauca.turinauta.core.model.Category
+import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.RecordVisitRequest
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.model.UserProfile
 import com.unicauca.turinauta.core.model.VisitRecord
 import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.data.repository.AuthRepository
+import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
 import com.unicauca.turinauta.feature.collection.CollectionViewModel
+import com.unicauca.turinauta.feature.collection.StampDetailViewModel
 import com.unicauca.turinauta.feature.profile.ProfileViewModel
 import com.unicauca.turinauta.feature.profile.VisitHistoryViewModel
 import kotlinx.coroutines.Dispatchers
@@ -136,6 +140,28 @@ class Phase5ViewModelsTest {
         assertEquals("Hilos y Telar", item.stampTitle)
     }
 
+    @Test
+    fun stampDetailOnlyOpensEarnedBadgeAndClearsItOnSignOut() = runTest(testDispatcher) {
+        val authRepo = MutableAuthRepo(
+            initialUser = UserProfile("u1", "Julián", "julian@unicauca.edu.co"),
+        )
+        val collectionRepo = StubCollectionRepo()
+        val catalogRepo = StubCatalogRepo()
+        val earned = StampDetailViewModel("s1", collectionRepo, catalogRepo, authRepo)
+        val pending = StampDetailViewModel("s2", collectionRepo, catalogRepo, authRepo)
+        advanceUntilIdle()
+
+        assertEquals("Sello 1", earned.uiState.value.badge?.title)
+        assertEquals("Sabores", earned.uiState.value.collectionName)
+        assertNull(pending.uiState.value.badge)
+        assertTrue(pending.uiState.value.errorMessage?.contains("todavía") == true)
+
+        authRepo.signOut()
+        advanceUntilIdle()
+        assertNull(earned.uiState.value.badge)
+        assertNull(pending.uiState.value.badge)
+    }
+
     private class MutableAuthRepo(initialUser: UserProfile?) : AuthRepository {
         private val _user = MutableStateFlow(initialUser)
         private val _auth = MutableStateFlow(initialUser != null)
@@ -208,5 +234,14 @@ class Phase5ViewModelsTest {
             latitude: Double,
             longitude: Double,
         ): VisitResult = VisitResult.VisitUnauthenticated
+    }
+
+    private class StubCatalogRepo : CatalogRepository {
+        override suspend fun getCategories(): Result<List<Category>> = Result.success(emptyList())
+        override suspend fun getPlaces(categoryId: String?, searchQuery: String?): Result<List<Place>> =
+            Result.success(emptyList())
+        override suspend fun getPlaceBySlug(slug: String): Result<Place?> = Result.success(null)
+        override suspend fun getPlaceById(id: String): Result<Place?> = Result.success(null)
+        override suspend fun getPlacesByIds(ids: List<String>): Result<List<Place>> = Result.success(emptyList())
     }
 }

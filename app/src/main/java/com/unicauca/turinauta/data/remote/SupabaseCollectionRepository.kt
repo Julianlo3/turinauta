@@ -80,19 +80,19 @@ class SupabaseCollectionRepository(
 
         // La vista privada no expone image_path; las imágenes publicadas están en stamps.
         val stampIds = stampDtos.map { it.stampId }.distinct()
-        val publishedImagesByStampId = if (stampIds.isEmpty()) {
+        val publishedStampsById = if (stampIds.isEmpty()) {
             emptyMap()
         } else {
             client.postgrest["stamps"]
-                .select(columns = Columns.list("id", "place_id", "title", "image_path")) {
+                .select(columns = Columns.list("id", "place_id", "title", "description", "image_path")) {
                     filter { isIn("id", stampIds) }
                 }
                 .decodeList<StampDto>()
-                .associate { it.id to it.imagePath }
+                .associateBy { it.id }
         }
 
         val stampsByCollection = stampDtos
-            .map { it.toDomain(publishedImagePath = publishedImagesByStampId[it.stampId]) }
+            .map { it.toDomain(publishedStamp = publishedStampsById[it.stampId]) }
             .groupBy { it.collectionId.orEmpty() }
 
         progressDtos

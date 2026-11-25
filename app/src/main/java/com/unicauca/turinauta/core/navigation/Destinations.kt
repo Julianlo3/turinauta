@@ -61,9 +61,12 @@ object TurinautaRoutes {
 
     const val AUTH = "auth"
     const val VISIT_HISTORY = "visit_history"
+    const val ARG_STAMP_ID = "stampId"
+    const val STAMP_DETAIL_PATTERN = "stamp_detail/{$ARG_STAMP_ID}"
 
     fun placeDetail(placeId: String): String = "place_detail/${Uri.encode(placeId)}"
     fun routeDetail(routeId: String): String = "route_detail/${Uri.encode(routeId)}"
+    fun stampDetail(stampId: String): String = "stamp_detail/${Uri.encode(stampId)}"
 
     val topLevelRoutes: Set<String> = setOf(EXPLORE, ROUTES, COLLECTION, PROFILE)
 }

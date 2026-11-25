@@ -10,6 +10,7 @@ import com.unicauca.turinauta.core.model.VisitRecord
 import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.data.remote.dto.MyVisitHistoryDto
 import com.unicauca.turinauta.data.remote.dto.MyCollectionStampDto
+import com.unicauca.turinauta.data.remote.dto.StampDto
 import com.unicauca.turinauta.data.remote.dto.PlaceDto
 import com.unicauca.turinauta.data.remote.dto.RecordVisitResponseDto
 import com.unicauca.turinauta.data.remote.mapper.ContentReportValidator
@@ -35,10 +36,18 @@ class SupabaseMappersAndValidatorsTest {
             earned = true,
         )
 
-        val badge = dto.toDomain(publishedImagePath = "stamps/cafe/cover.png")
+        val badge = dto.toDomain(publishedStamp = StampDto(
+            id = "stamp-1",
+            title = "Sello del café",
+            description = "Recuerdo de la visita",
+            imagePath = "stamps/cafe/cover.png",
+            placeId = "place-1",
+        ))
 
         assertEquals("stamps/cafe/cover.png", badge.imagePath)
         assertEquals("Sello del café", badge.title)
+        assertEquals("Recuerdo de la visita", badge.description)
+        assertEquals("place-1", badge.placeId)
         assertTrue(badge.isEarned)
         assertNull(dto.toDomain().imagePath)
     }

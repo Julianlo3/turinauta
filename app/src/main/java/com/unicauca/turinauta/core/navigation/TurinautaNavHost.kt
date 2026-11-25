@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.unicauca.turinauta.data.AppContainer
 import com.unicauca.turinauta.feature.auth.AuthRoute
 import com.unicauca.turinauta.feature.collection.CollectionRoute
+import com.unicauca.turinauta.feature.collection.StampDetailRoute
 import com.unicauca.turinauta.feature.explore.ExploreRoute
 import com.unicauca.turinauta.feature.explore.PlaceDetailRoute
 import com.unicauca.turinauta.feature.profile.ProfileRoute
@@ -136,6 +137,22 @@ fun TurinautaNavHost(
                 authRepository = container.authRepository,
                 onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
                 onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
+                onStampClick = { stampId -> navController.navigate(TurinautaRoutes.stampDetail(stampId)) },
+            )
+        }
+
+        composable(
+            route = TurinautaRoutes.STAMP_DETAIL_PATTERN,
+            arguments = listOf(navArgument(TurinautaRoutes.ARG_STAMP_ID) { type = NavType.StringType }),
+        ) { entry ->
+            val stampId = entry.arguments?.getString(TurinautaRoutes.ARG_STAMP_ID).orEmpty()
+            StampDetailRoute(
+                stampId = stampId,
+                collectionRepository = container.collectionRepository,
+                catalogRepository = container.catalogRepository,
+                authRepository = container.authRepository,
+                onBackClick = { navController.popBackStack() },
+                onPlaceClick = { placeId -> navController.navigate(TurinautaRoutes.placeDetail(placeId)) },
             )
         }
 

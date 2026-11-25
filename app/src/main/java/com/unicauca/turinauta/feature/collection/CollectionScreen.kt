@@ -1,7 +1,10 @@
 package com.unicauca.turinauta.feature.collection
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -34,15 +38,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
@@ -66,6 +77,8 @@ import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
+import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 fun CollectionRoute(
@@ -73,6 +86,7 @@ fun CollectionRoute(
     authRepository: AuthRepository,
     onSignInClick: () -> Unit,
     onExploreClick: () -> Unit,
+    onStampClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CollectionViewModel = viewModel(
@@ -88,6 +102,7 @@ fun CollectionRoute(
         onSignInClick = onSignInClick,
         onExploreClick = onExploreClick,
         onRetryClick = viewModel::refresh,
+        onStampClick = onStampClick,
         modifier = modifier,
     )
 }
@@ -98,6 +113,7 @@ fun CollectionScreen(
     onSignInClick: () -> Unit,
     onExploreClick: () -> Unit,
     onRetryClick: () -> Unit,
+    onStampClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -199,7 +215,7 @@ fun CollectionScreen(
                     items = uiState.collections,
                     key = { it.id },
                 ) { collection ->
-                    CollectionProgressCard(collection = collection)
+                    CollectionProgressCard(collection = collection, onStampClick = onStampClick)
                 }
             }
         }
@@ -304,6 +320,7 @@ private fun AnonymousCollectionBanner(
 @Composable
 private fun CollectionProgressCard(
     collection: CollectionProgress,
+    onStampClick: (String) -> Unit,
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
     Surface(
@@ -369,7 +386,7 @@ private fun CollectionProgressCard(
                 HorizontalDivider(color = SubtleOutline)
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     collection.stamps.forEach { badge ->
-                        RewardBadgeRow(badge = badge)
+                        RewardBadgeRow(badge = badge, onStampClick = onStampClick)
                     }
                 }
             }
@@ -384,11 +401,36 @@ private fun CollectionProgressCard(
 @Composable
 private fun RewardBadgeRow(
     badge: RewardBadge,
+    onStampClick: (String) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
+    val shake = remember(badge.id) { Animatable(0f) }
+    val shift = with(LocalDensity.current) { 8.dp.toPx() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics(mergeDescendants = true) {},
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button) {
+                if (badge.isEarned) {
+                    onStampClick(badge.id)
+                } else {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    scope.launch {
+                        shake.snapTo(0f)
+                        for (target in listOf(-shift, shift, -shift * 0.7f, shift * 0.7f, 0f)) {
+                            shake.animateTo(target, tween(durationMillis = 55))
+                        }
+                    }
+                }
+            }
+            .semantics(mergeDescendants = true) {
+                contentDescription = if (badge.isEarned) {
+                    "Sello ${badge.title}, obtenido. Abrir detalle"
+                } else {
+                    "Sello ${badge.title}, pendiente. Bloqueado"
+                }
+            },
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -424,6 +466,7 @@ private fun RewardBadgeRow(
         Surface(
             color = if (badge.isEarned) SoftTealContainer else SurfaceLowSand,
             shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
+            modifier = Modifier.offset { IntOffset(shake.value.roundToInt(), 0) },
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -566,6 +609,7 @@ private fun CollectionScreenPreview() {
             onSignInClick = {},
             onExploreClick = {},
             onRetryClick = {},
+            onStampClick = {},
         )
     }
 }

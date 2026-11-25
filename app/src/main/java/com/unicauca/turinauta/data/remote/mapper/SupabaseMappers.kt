@@ -136,17 +136,20 @@ fun StampDto.toDomain(
     earnedAtMillis = earnedAtIso?.let(::parseIsoTimestampToMillis),
 )
 
-fun MyCollectionStampDto.toDomain(publishedImagePath: String? = null): RewardBadge {
+fun MyCollectionStampDto.toDomain(publishedStamp: StampDto? = null): RewardBadge {
     val resolvedTitle = title?.takeIf { it.isNotBlank() }
         ?: stampTitle?.takeIf { it.isNotBlank() }
+        ?: publishedStamp?.title?.takeIf { it.isNotBlank() }
         ?: "Sello"
     return RewardBadge(
         id = stampId,
         title = resolvedTitle,
-        description = (description ?: stampDescription)?.trim().orEmpty(),
-        placeId = placeId,
+        description = (description?.takeIf { it.isNotBlank() }
+            ?: stampDescription?.takeIf { it.isNotBlank() }
+            ?: publishedStamp?.description)?.trim().orEmpty(),
+        placeId = placeId ?: publishedStamp?.placeId,
         collectionId = collectionId,
-        imagePath = (publishedImagePath ?: imagePath ?: stampImagePath)?.trim()?.takeIf { it.isNotEmpty() },
+        imagePath = (publishedStamp?.imagePath ?: imagePath ?: stampImagePath)?.trim()?.takeIf { it.isNotEmpty() },
         illustrationKey = inferIllustrationKey(categorySlug = null, titleOrSlug = resolvedTitle),
         sortOrder = sortOrder,
         isEarned = earned,
