@@ -93,11 +93,18 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 - Columnas exactas de `my_visit_history` (sin sesión responde «permission denied»); se leen de forma tolerante (`place_id`, `place_name`, `place_available`, `stamp_title`, `photo_path`, `visited_at`).
 - Subida de foto + `record_visit` (exige estar a ≤ 200 m del lugar con GPS real).
 
+## Imágenes del catálogo ✅
+
+- `image_path` (p. ej. `places/<slug>/cover.jpg`) se sirve desde el bucket público `catalog-images`: `<SUPABASE_URL>/storage/v1/object/public/catalog-images/<image_path>`.
+- Se cargan con Coil 3.3.0 (compatible con Kotlin 2.2) en `CatalogImage`: tarjetas del catálogo, cabecera de la ficha, tarjetas y cabecera de rutas (si la ruta no tiene imagen, se usa la de su primera parada) e historial.
+- Mientras carga, si falla la red o si no hay imagen, se ve la ilustración de la categoría. La etiqueta «Imagen ilustrativa» solo aparece cuando no hay foto.
+- Coil reduce cada foto al tamaño de la vista y la guarda en caché de disco.
+
 ## Pendiente
 
 - Probar el registro de una visita en un teléfono real en Popayán (y con ella confirmar las columnas de `my_visit_history` con datos).
 - Inyectar MapLibre en `PlaceLocationMap`.
-- Mostrar las imágenes de `image_path` cuando existan.
+- Pedir al backend versiones livianas de las fotos (hoy pesan entre 1,5 y 4,5 MB y el plan gratuito de Supabase no permite redimensionarlas al vuelo).
 
 ## Bitácora
 
@@ -112,3 +119,4 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 | 25/11/2026 | Datos simulados reemplazados por Supabase (catálogo, rutas, colecciones, Google, visitas, reportes); verificado el catálogo real en el emulador. |
 | 25/11/2026 | Inicio con Google en Custom Tab + PKCE; diagnóstico: Supabase redirige a localhost:3000 porque falta la Redirect URL de la app. |
 | 25/11/2026 | Redirect URL agregada en Supabase; inicio con Google verificado en el emulador (perfil, historial vacío y colecciones reales). |
+| 25/11/2026 | Fotos reales del bucket `catalog-images` en catálogo, ficha, rutas e historial (Coil). |

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unicauca.turinauta.core.designsystem.BackTopBar
+import com.unicauca.turinauta.core.designsystem.CatalogImage
 import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.InfoRow
 import com.unicauca.turinauta.core.designsystem.LoadingState
@@ -72,7 +73,12 @@ fun RouteDetailScreen(
                 contentPadding = PaddingValues(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item { RouteBannerArt(route.illustration, Modifier.fillMaxWidth().height(120.dp)) }
+                item { CatalogImage(
+                route.imageUrl,
+                route.illustration,
+                Modifier.fillMaxWidth().height(160.dp),
+                fallback = { RouteBannerArt(route.illustration, it) },
+            ) }
                 item {
                     Column(Modifier.padding16()) {
                         Text("RUTA TEMÁTICA", style = OverlineStyle, color = MaterialTheme.colorScheme.primary)

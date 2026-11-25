@@ -56,6 +56,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.unicauca.turinauta.core.designsystem.CatalogImage
 import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.InfoRow
 import com.unicauca.turinauta.core.designsystem.LoadingState
@@ -201,18 +202,27 @@ private fun PlaceContent(
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
             Box {
-                PlaceHeaderArt(place.illustration, Modifier.fillMaxWidth().height(220.dp))
+                CatalogImage(
+                    imageUrl = place.imageUrl,
+                    illustration = place.illustration,
+                    contentDescription = "Foto de ${place.name}",
+                    modifier = Modifier.fillMaxWidth().height(240.dp),
+                    fallback = { PlaceHeaderArt(place.illustration, it) },
+                )
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier.statusBarsPadding().padding(8.dp),
                     colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surface),
                 ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") }
-                Surface(
-                    color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.75f),
-                    shape = PillShape,
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp),
-                ) {
-                    Text("Imagen ilustrativa", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.inverseOnSurface, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                // La etiqueta solo aparece cuando aún no hay foto autorizada del lugar.
+                if (place.imageUrl == null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.75f),
+                        shape = PillShape,
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp),
+                    ) {
+                        Text("Imagen ilustrativa", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.inverseOnSurface, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp))
+                    }
                 }
             }
             Column(Modifier.padding(16.dp)) {

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unicauca.turinauta.core.designsystem.CardShape
+import com.unicauca.turinauta.core.designsystem.CatalogImage
 import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.LoadingState
 import com.unicauca.turinauta.core.designsystem.PillShape
@@ -98,7 +99,12 @@ private fun RouteCard(route: Route, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
     ) {
         Column {
-            RouteBannerArt(route.illustration, Modifier.fillMaxWidth().height(72.dp))
+            CatalogImage(
+                route.imageUrl,
+                route.illustration,
+                Modifier.fillMaxWidth().height(120.dp),
+                fallback = { RouteBannerArt(route.illustration, it) },
+            )
             Column(Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(route.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))

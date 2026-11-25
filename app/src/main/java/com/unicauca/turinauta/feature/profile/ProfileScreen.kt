@@ -55,7 +55,7 @@ import com.unicauca.turinauta.core.designsystem.BackTopBar
 import com.unicauca.turinauta.core.designsystem.EmptyState
 import com.unicauca.turinauta.core.designsystem.LocalSnackbarHostState
 import com.unicauca.turinauta.core.designsystem.NoteBox
-import com.unicauca.turinauta.core.designsystem.PlaceIllustration
+import com.unicauca.turinauta.core.designsystem.CatalogImage
 import com.unicauca.turinauta.core.designsystem.ThumbnailShape
 import com.unicauca.turinauta.core.designsystem.formatMonthYear
 import com.unicauca.turinauta.core.designsystem.formatShortDate
@@ -178,7 +178,7 @@ fun VisitHistoryScreen(
                             .semantics(mergeDescendants = true) {},
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        PlaceIllustration(visit.illustration, Modifier.size(48.dp).clip(ThumbnailShape))
+                        CatalogImage(visit.imageUrl, visit.illustration, Modifier.size(48.dp).clip(ThumbnailShape))
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
                             Text(visit.placeName, style = MaterialTheme.typography.bodyLarge)

@@ -79,6 +79,10 @@ dependencies {
     implementation(libs.supabase.storage)
     implementation(libs.ktor.client.android)
     implementation(libs.androidx.browser)
+
+    // Imágenes del catálogo (bucket público catalog-images) con caché en disco.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     testImplementation(libs.junit)

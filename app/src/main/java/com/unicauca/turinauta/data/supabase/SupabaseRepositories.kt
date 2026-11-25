@@ -21,6 +21,7 @@ import com.unicauca.turinauta.core.model.VisitPhoto
 import com.unicauca.turinauta.core.model.VisitRecord
 import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.core.network.AUTH_REDIRECT_URL
+import com.unicauca.turinauta.core.network.SupabaseConfig
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
@@ -122,6 +123,7 @@ class SupabaseCatalogRepository(private val client: SupabaseClient) : CatalogRep
         longitude = longitude,
         conditions = visitConditions.toConditions(),
         imagePath = imagePath,
+        imageUrl = SupabaseConfig.catalogImageUrl(imagePath),
         illustration = category.illustration,
         sortOrder = sortOrder,
     )
@@ -152,6 +154,8 @@ class SupabaseRouteRepository(
                 placeIds = routeStops.map { it.placeId },
                 hasSuggestedOrder = routeStops.any { it.suggestedOrder != null },
                 illustration = routeStops.firstNotNullOfOrNull { places[it.placeId]?.illustration } ?: Illustration.WEAVE,
+                imageUrl = SupabaseConfig.catalogImageUrl(dto.imagePath)
+                    ?: routeStops.firstNotNullOfOrNull { places[it.placeId]?.imageUrl },
                 sortOrder = dto.sortOrder,
             )
         }.filter { it.placeIds.isNotEmpty() }
@@ -329,6 +333,7 @@ class SupabaseVisitRepository(
             placeAvailable = available && place != null,
             category = place?.category ?: Category("", "Lugar", "", 0),
             illustration = place?.illustration ?: Illustration.CLAY,
+            imageUrl = place?.imageUrl,
             stampTitle = str("stamp_title") ?: "Sello",
             photoPath = str("photo_path").orEmpty(),
             visitedAt = str("visited_at")?.let { runCatching { OffsetDateTime.parse(it).toInstant().toEpochMilli() }.getOrNull() }
@@ -363,7 +368,7 @@ class SupabaseCollectionRepository(
             return collections.map { c ->
                 val stampList = links.filter { it.collectionId == c.id }.sortedBy { it.sortOrder }
                     .mapNotNull { stamps[it.stampId] }
-                    .map { Stamp(it.id, it.placeId, it.title, it.description, Illustration.CLAY) }
+                    .map { Stamp(it.id, it.placeId, it.title, it.description, Illustration.CLAY, SupabaseConfig.catalogImageUrl(it.imagePath)) }
                 LoadedCollection(
                     ThematicCollection(c.id, c.slug, c.name, c.description, Illustration.BOWL, stampList.map { it.id }, c.sortOrder),
                     stampList,

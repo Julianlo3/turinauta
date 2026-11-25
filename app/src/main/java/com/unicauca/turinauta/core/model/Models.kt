@@ -52,6 +52,8 @@ data class Place(
     /** `visit_conditions`. */
     val conditions: List<VisitCondition>,
     val imagePath: String? = null,
+    /** URL pública de `image_path` en el bucket `catalog-images`. */
+    val imageUrl: String? = null,
     val illustration: Illustration,
     val sortOrder: Int,
     val status: EditorialStatus = EditorialStatus.PUBLISHED,
@@ -72,6 +74,7 @@ data class Route(
     val placeIds: List<String>,
     val hasSuggestedOrder: Boolean,
     val illustration: Illustration,
+    val imageUrl: String? = null,
     val sortOrder: Int,
     val status: EditorialStatus = EditorialStatus.PUBLISHED,
 )
@@ -83,6 +86,7 @@ data class Stamp(
     val title: String,
     val description: String,
     val illustration: Illustration,
+    val imageUrl: String? = null,
 )
 
 /** `profiles(id, display_name)` + correo desde Supabase Auth. */
@@ -101,6 +105,7 @@ data class VisitRecord(
     val placeAvailable: Boolean,
     val category: Category,
     val illustration: Illustration,
+    val imageUrl: String? = null,
     val stampTitle: String,
     val photoPath: String,
     /** `visited_at`, hora del servidor (milisegundos). */

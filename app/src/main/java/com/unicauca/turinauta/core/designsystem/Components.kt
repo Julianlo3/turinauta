@@ -85,7 +85,7 @@ fun PlaceCard(place: Place, onClick: () -> Unit, modifier: Modifier = Modifier, 
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            PlaceIllustration(place.illustration, Modifier.size(96.dp).clip(ThumbnailShape))
+            CatalogImage(place.imageUrl, place.illustration, Modifier.size(96.dp).clip(ThumbnailShape))
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(place.category.label.uppercase(esLocale), style = OverlineStyle, color = MaterialTheme.colorScheme.primary)
