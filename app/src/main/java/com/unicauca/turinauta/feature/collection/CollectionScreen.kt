@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.Button
@@ -67,6 +68,7 @@ import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.MutedOchre
 import com.unicauca.turinauta.core.designsystem.OnDeepTeal
+import com.unicauca.turinauta.core.designsystem.OnSoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.PlaceIllustration
 import com.unicauca.turinauta.core.designsystem.PureWhite
@@ -401,7 +403,7 @@ private fun CollectionProgressCard(
         }
         if (completed) {
             CompletedCollectionMedal(
-                modifier = Modifier.align(Alignment.TopEnd).offset(y = (-16).dp),
+                modifier = Modifier.align(Alignment.TopEnd).offset(y = (-8).dp),
             )
         }
     }
@@ -462,6 +464,12 @@ private fun CompletedCollectionMedal(
                 style = Stroke(width = 1.8.dp.toPx()),
             )
         }
+        Icon(
+            imageVector = Icons.Rounded.Check,
+            contentDescription = null,
+            tint = OnSoftOchreContainer,
+            modifier = Modifier.align(Alignment.TopCenter).offset(y = 19.dp).size(28.dp),
+        )
     }
 }
 
