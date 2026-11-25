@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocationOn
@@ -34,17 +33,13 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -72,6 +67,7 @@ import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.SurfaceThumbBeige
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
+import com.unicauca.turinauta.core.designsystem.TurinautaBackTopBar
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.IllustrationKey
@@ -116,7 +112,6 @@ fun RouteDetailRoute(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouteDetailScreen(
     uiState: RouteDetailUiState,
@@ -129,28 +124,7 @@ fun RouteDetailScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = WarmIvory,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Detalle de ruta",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SlateDark,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.size(TurinautaDimens.MinTouchTarget),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = SlateDark,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = WarmIvory),
-            )
+            TurinautaBackTopBar(title = "Detalle de ruta", onBackClick = onBackClick)
         },
     ) { innerPadding ->
         when {

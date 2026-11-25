@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.coil.compose)
+    implementation(libs.osmdroid.android)
 
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.auth)

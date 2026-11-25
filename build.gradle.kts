@@ -4,3 +4,11 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
 }
+
+// Los archivos generados fuera de OneDrive evitan que la sincronización bloquee los .dex.
+val buildKey = Integer.toHexString(rootDir.canonicalPath.lowercase().hashCode())
+val localBuildRoot = File(gradle.gradleUserHomeDir, "turinauta-build/$buildKey")
+layout.buildDirectory.set(localBuildRoot.resolve("root"))
+subprojects {
+    layout.buildDirectory.set(localBuildRoot.resolve(name))
+}

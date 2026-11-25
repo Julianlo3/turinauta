@@ -9,6 +9,7 @@ import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.model.VisitRecord
 import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.data.remote.dto.MyVisitHistoryDto
+import com.unicauca.turinauta.data.remote.dto.MyCollectionStampDto
 import com.unicauca.turinauta.data.remote.dto.PlaceDto
 import com.unicauca.turinauta.data.remote.dto.RecordVisitResponseDto
 import com.unicauca.turinauta.data.remote.mapper.ContentReportValidator
@@ -24,6 +25,23 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SupabaseMappersAndValidatorsTest {
+
+    @Test
+    fun authenticatedCollectionStampUsesPublishedImageAndKeepsEarnedState() {
+        val dto = MyCollectionStampDto(
+            collectionId = "collection-1",
+            stampId = "stamp-1",
+            stampTitle = "Sello del café",
+            earned = true,
+        )
+
+        val badge = dto.toDomain(publishedImagePath = "stamps/cafe/cover.png")
+
+        assertEquals("stamps/cafe/cover.png", badge.imagePath)
+        assertEquals("Sello del café", badge.title)
+        assertTrue(badge.isEarned)
+        assertNull(dto.toDomain().imagePath)
+    }
 
     @Test
     fun placeWithoutOpeningHoursShowsRuleR5Fallback() {

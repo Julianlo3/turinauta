@@ -1,5 +1,6 @@
 package com.unicauca.turinauta.feature.explore
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocationOn
@@ -28,23 +28,20 @@ import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +66,7 @@ import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceThumbBeige
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
+import com.unicauca.turinauta.core.designsystem.TurinautaBackTopBar
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.IllustrationKey
@@ -124,6 +122,8 @@ fun PlaceDetailRoute(
     val visitUiState by visitViewModel.uiState.collectAsStateWithLifecycle()
     var showReportSheet by remember { mutableStateOf(false) }
     var showVisitSheet by remember { mutableStateOf(false) }
+    var showMap by rememberSaveable(placeId) { mutableStateOf(false) }
+    BackHandler(enabled = showMap) { showMap = false }
 
     LaunchedEffect(visitUiState.visitResult) {
         when (visitUiState.visitResult) {
@@ -137,24 +137,34 @@ fun PlaceDetailRoute(
         }
     }
 
-    PlaceDetailScreen(
-        uiState = uiState,
-        onBackClick = onBackClick,
-        onRetryClick = viewModel::loadPlaceDetail,
-        onRegisterVisitClick = {
-            if (uiState.isAuthenticated) {
-                visitViewModel.reset()
-                showVisitSheet = true
-            } else {
-                onRequireAuth()
-            }
-        },
-        onReportIncorrectDataClick = {
-            reportViewModel.reset()
-            showReportSheet = true
-        },
-        modifier = modifier,
-    )
+    val mapPlace = uiState.place
+    if (showMap && mapPlace != null) {
+        FullScreenPlaceMap(
+            place = mapPlace,
+            onBackClick = { showMap = false },
+            modifier = modifier,
+        )
+    } else {
+        PlaceDetailScreen(
+            uiState = uiState,
+            onBackClick = onBackClick,
+            onRetryClick = viewModel::loadPlaceDetail,
+            onOpenMapClick = { showMap = true },
+            onRegisterVisitClick = {
+                if (uiState.isAuthenticated) {
+                    visitViewModel.reset()
+                    showVisitSheet = true
+                } else {
+                    onRequireAuth()
+                }
+            },
+            onReportIncorrectDataClick = {
+                reportViewModel.reset()
+                showReportSheet = true
+            },
+            modifier = modifier,
+        )
+    }
 
     val currentPlace = uiState.place
     if (showReportSheet && currentPlace != null) {
@@ -224,12 +234,12 @@ fun PlaceDetailRoute(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaceDetailScreen(
     uiState: PlaceDetailUiState,
     onBackClick: () -> Unit,
     onRetryClick: () -> Unit,
+    onOpenMapClick: () -> Unit,
     onRegisterVisitClick: (Place) -> Unit,
     onReportIncorrectDataClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -238,30 +248,7 @@ fun PlaceDetailScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = WarmIvory,
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Ficha del lugar",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SlateDark,
-                    )
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.size(TurinautaDimens.MinTouchTarget),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = SlateDark,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WarmIvory,
-                ),
-            )
+            TurinautaBackTopBar(title = "Ficha del lugar", onBackClick = onBackClick)
         },
     ) { innerPadding ->
         when {
@@ -318,6 +305,7 @@ fun PlaceDetailScreen(
                     isAuthenticated = uiState.isAuthenticated,
                     onRegisterVisitClick = { onRegisterVisitClick(uiState.place) },
                     onReportIncorrectDataClick = onReportIncorrectDataClick,
+                    onOpenMapClick = onOpenMapClick,
                     contentPadding = innerPadding,
                 )
             }
@@ -332,6 +320,7 @@ private fun PlaceDetailContent(
     isAuthenticated: Boolean,
     onRegisterVisitClick: () -> Unit,
     onReportIncorrectDataClick: () -> Unit,
+    onOpenMapClick: () -> Unit,
     contentPadding: PaddingValues,
 ) {
     Column(
@@ -412,6 +401,8 @@ private fun PlaceDetailContent(
             longitude = place.longitude,
             placeName = place.name,
             addressReference = place.locationReference,
+            imagePath = place.imagePath,
+            onOpenMapClick = onOpenMapClick,
         )
 
         // Estado de visita (R4) o acción principal «Registrar visita»
@@ -600,6 +591,7 @@ private fun PlaceDetailScreenPreview() {
             ),
             onBackClick = {},
             onRetryClick = {},
+            onOpenMapClick = {},
             onRegisterVisitClick = {},
             onReportIncorrectDataClick = {},
         )
