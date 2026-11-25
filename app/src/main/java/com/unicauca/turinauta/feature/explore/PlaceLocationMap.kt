@@ -227,16 +227,6 @@ fun FullScreenPlaceMap(
                         }
                     }
                 }
-                if (state.userLocation != null) {
-                    Surface(
-                        color = PureWhite.copy(alpha = 0.96f),
-                        shape = RoundedCornerShape(6.dp),
-                        modifier = Modifier.align(Alignment.BottomStart).padding(8.dp).padding(bottom = 22.dp),
-                    ) {
-                        Text("● Tú   📍 ${place.name}", style = MaterialTheme.typography.labelSmall,
-                            color = SlateDark, modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp))
-                    }
-                }
                 MapAttribution(Modifier.align(Alignment.BottomEnd), showRoutingSource = state.route != null)
             }
         }
