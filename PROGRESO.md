@@ -56,6 +56,17 @@ Registro del avance de las pantallas de la app.
 - Probado en el emulador (Medium Phone, Android 16) el recorrido esencial: Explorar → ficha de Cocina del Barrio → «Registrar visita» sin sesión → «Continuar con Google» → vuelve sola a la hoja de registro → foto desde la galería → «Guardando tu visita…» → «Sello Sabores de Fogón» con progreso 2 de 3 → Mi colección (2 obtenidos, 4 pendientes) → Perfil → Rutas → detalle de «Oficios y saberes locales».
 - **No probado todavía en el emulador:** tomar la foto con la cámara, «Más cercanos» con permiso real, distancia mayor a 200 m con GPS real (el Modo pruebas simula estar junto al lugar por defecto), los estados de error del Modo pruebas y TalkBack.
 
+## Configuración de Supabase
+
+Cada integrante agrega en su `local.properties` (no se sube al repositorio):
+
+```properties
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+`app/build.gradle.kts` las pasa a `BuildConfig.SUPABASE_URL` y `BuildConfig.SUPABASE_PUBLISHABLE_KEY`, y la app las lee desde `core/network/SupabaseConfig.kt`. Si están vacías, `SupabaseConfig.isConfigured` es `false` y la app sigue con los datos simulados. Nunca poner la clave secret ni `service_role`.
+
 ## Pendiente (siguiente fase: conexión a Supabase)
 
 - Cambiar los `Fake*` por implementaciones con `supabase-kt` (Auth con Google y deep link, PostgREST, Storage `visit-photos`, RPC `record_visit` y `submit_content_report`).
@@ -70,3 +81,4 @@ Registro del avance de las pantallas de la app.
 | 24/11/2026 | Fase 1 escrita; configuración Gradle compilada con éxito. |
 | 24/11/2026 | Recibido `CONTRATO_API_MVP.md`; el equipo decide seguir el contrato. Modelos, repositorios y flujos ajustados (Google, foto + ubicación, cercanía, reporte obligatorio). |
 | 24/11/2026 | Fases 2 y 3 completas; APK compilado y recorrido esencial probado en el emulador. |
+| 24/11/2026 | `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` leídas de `local.properties` hacia `BuildConfig` y `SupabaseConfig`. |

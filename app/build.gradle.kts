@@ -1,7 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Configuración de Supabase (CONTRATO_API_MVP.md) leída de local.properties,
+// que no se sube al repositorio. Si falta, queda vacía y la app sigue con datos simulados.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+fun localProperty(name: String): String =
+    (localProperties.getProperty(name) ?: "").trim().replace("\\", "\\\\").replace("\"", "\\\"")
 
 android {
     namespace = "com.unicauca.turinauta"
@@ -17,6 +29,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", "\"${localProperty("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_PUBLISHABLE_KEY", "\"${localProperty("SUPABASE_PUBLISHABLE_KEY")}\"")
     }
 
     buildTypes {
@@ -33,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
