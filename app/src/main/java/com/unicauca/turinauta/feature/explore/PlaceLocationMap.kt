@@ -184,30 +184,28 @@ fun FullScreenPlaceMap(
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.align(Alignment.TopCenter).padding(12.dp),
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Text("Ruta a pie", style = MaterialTheme.typography.titleSmall, color = SlateDark)
+                    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
                         when {
                             state.loading -> Row(verticalAlignment = Alignment.CenterVertically) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                                 Text(if (state.locating) "  Obteniendo ubicación…" else "  Calculando recorrido…",
-                                    style = MaterialTheme.typography.bodySmall)
+                                    style = MaterialTheme.typography.titleSmall, color = SlateDark)
                             }
                             state.route != null -> Text(
                                 "${formatDistance(state.route!!.distanceMeters)} · ${kotlin.math.ceil(state.route!!.durationSeconds / 60).toInt()} min aprox.",
-                                style = MaterialTheme.typography.bodySmall, color = SlateMedium,
+                                style = MaterialTheme.typography.titleLarge, color = SlateDark,
                             )
                             else -> Text(
                                 if (!hasPermission) "Permite la ubicación para ver la ruta." else state.message ?: "Buscando tu ubicación…",
-                                style = MaterialTheme.typography.bodySmall, color = SlateMedium,
+                                style = MaterialTheme.typography.bodyMedium, color = SlateDark,
                             )
                         }
+                        Text("Ruta a pie", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
                         if (!state.loading && state.route == null) {
                             TextButton(onClick = {
                                 if (hasPermission) viewModel.load(context, place) else permissionLauncher.launch(permissions)
                             }) { Text(if (hasPermission) "Reintentar" else "Permitir ubicación") }
                         }
-                        Text("Ruta: FOSSGIS. Se envía tu ubicación para calcularla.",
-                            style = MaterialTheme.typography.labelSmall, color = SlateMedium)
                     }
                 }
                 if (state.userLocation != null) {
@@ -220,7 +218,7 @@ fun FullScreenPlaceMap(
                             color = SlateDark, modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp))
                     }
                 }
-                MapAttribution(Modifier.align(Alignment.BottomEnd))
+                MapAttribution(Modifier.align(Alignment.BottomEnd), showRoutingSource = state.route != null)
             }
         }
     }
@@ -328,14 +326,14 @@ private fun formatDistance(meters: Double): String =
     if (meters < 1000) "${meters.toInt()} m" else String.format(java.util.Locale.forLanguageTag("es-CO"), "%.1f km", meters / 1000)
 
 @Composable
-private fun MapAttribution(modifier: Modifier = Modifier) {
+private fun MapAttribution(modifier: Modifier = Modifier, showRoutingSource: Boolean = false) {
     Surface(
         color = PureWhite.copy(alpha = 0.96f),
         shape = RoundedCornerShape(6.dp),
         modifier = modifier.padding(8.dp),
     ) {
         Text(
-            "© OpenStreetMap contributors",
+            if (showRoutingSource) "© OpenStreetMap contributors · Ruta FOSSGIS" else "© OpenStreetMap contributors",
             style = MaterialTheme.typography.labelSmall,
             color = SlateDark,
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
