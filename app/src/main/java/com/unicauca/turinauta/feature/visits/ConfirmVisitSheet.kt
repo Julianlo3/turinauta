@@ -68,6 +68,7 @@ import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.ErrorContainerLight
+import com.unicauca.turinauta.core.designsystem.ErrorRed
 import com.unicauca.turinauta.core.designsystem.OnDeepTeal
 import com.unicauca.turinauta.core.designsystem.OnErrorContainerDark
 import com.unicauca.turinauta.core.designsystem.OnSoftOchreContainer
@@ -562,11 +563,13 @@ fun ConfirmVisitSheetContent(
             OutlinedButton(
                 onClick = onCancelClick,
                 enabled = !uiState.isSubmitting,
+                border = BorderStroke(1.dp, if (uiState.isSubmitting) ErrorRed.copy(alpha = 0.35f) else ErrorRed),
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = TurinautaDimens.MinTouchTarget),
             ) {
-                Text("Cancelar", color = DeepTeal)
+                Text("Cancelar", color = if (uiState.isSubmitting) ErrorRed.copy(alpha = 0.35f) else ErrorRed)
             }
         }
 
