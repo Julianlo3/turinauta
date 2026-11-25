@@ -37,7 +37,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -420,6 +422,7 @@ private fun RouteRichCard(
                 }
 
                 if (!route.visitConditions.isNullOrBlank()) {
+                    var conditionTruncated by remember(route.id, route.visitConditions) { mutableStateOf(false) }
                     Surface(
                         color = SurfaceLowSand,
                         shape = RoundedCornerShape(12.dp),
@@ -436,13 +439,23 @@ private fun RouteRichCard(
                                 tint = DeepTeal,
                                 modifier = Modifier.size(16.dp),
                             )
-                            Text(
-                                text = route.visitConditions,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SlateDark,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = route.visitConditions,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SlateDark,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    onTextLayout = { conditionTruncated = it.hasVisualOverflow },
+                                )
+                                if (conditionTruncated) {
+                                    Text(
+                                        text = "Ver condición completa al abrir la ruta",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = DeepTeal,
+                                    )
+                                }
+                            }
                         }
                     }
                 }

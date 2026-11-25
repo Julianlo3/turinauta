@@ -563,7 +563,7 @@ private fun RouteDetailedStopCard(
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (place.locationReference.isNotBlank()) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Top,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         Icon(
@@ -576,8 +576,6 @@ private fun RouteDetailedStopCard(
                             text = place.locationReference,
                             style = MaterialTheme.typography.bodySmall,
                             color = SlateMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                 }
@@ -585,11 +583,11 @@ private fun RouteDetailedStopCard(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = Alignment.Top,
                 ) {
                     Row(
                         modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
+                        verticalAlignment = Alignment.Top,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         Icon(
@@ -602,8 +600,6 @@ private fun RouteDetailedStopCard(
                             text = place.displayOpeningHours,
                             style = MaterialTheme.typography.bodySmall,
                             color = SlateMedium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     Icon(

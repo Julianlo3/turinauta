@@ -18,6 +18,7 @@ val OnSoftTealContainer = Color(0xFF0E3A3D) // onPrimaryContainer
 
 // Color secundario — Ocre discreto (solo hitos, insignias e ilustraciones; prohibido en texto pequeño sobre claro)
 val MutedOchre = Color(0xFFC48A2D)         // secondary
+val MedalInnerOchre = Color(0xFF9B651A)    // centro de medalla con texto blanco legible
 val OnMutedOchre = Color(0xFFFFFFFF)       // onSecondary
 val SoftOchreContainer = Color(0xFFF6E7CE) // secondaryContainer
 val OnSoftOchreContainer = Color(0xFF3E2907) // onSecondaryContainer

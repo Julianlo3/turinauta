@@ -1,7 +1,8 @@
 package com.unicauca.turinauta.feature.reports
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -166,6 +167,7 @@ fun DataReportSheetContent(
                 color = SlateDark,
             )
             FlowRow(
+                modifier = Modifier.selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -178,7 +180,8 @@ fun DataReportSheetContent(
                         modifier = Modifier
                             .heightIn(min = TurinautaDimens.MinTouchTarget)
                             .clip(RoundedCornerShape(TurinautaDimens.ChipCornerRadius))
-                            .clickable(
+                            .selectable(
+                                selected = selected,
                                 enabled = !uiState.isSubmitting,
                                 role = Role.RadioButton,
                                 onClick = { onFieldSelected(field) },

@@ -534,19 +534,10 @@ fun ConfirmVisitSheetContent(
         }
 
         // Botones de acción (R3: siempre incluir «Cancelar»; R4: bloquear doble toque)
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            OutlinedButton(
-                onClick = onCancelClick,
-                enabled = !uiState.isSubmitting,
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = TurinautaDimens.MinTouchTarget),
-            ) {
-                Text("Cancelar", color = DeepTeal)
-            }
             Button(
                 onClick = onConfirmClick,
                 enabled = uiState.canSubmit,
@@ -555,7 +546,7 @@ fun ConfirmVisitSheetContent(
                     contentColor = OnDeepTeal,
                 ),
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .heightIn(min = TurinautaDimens.MinTouchTarget),
             ) {
                 if (uiState.isSubmitting) {
@@ -567,6 +558,15 @@ fun ConfirmVisitSheetContent(
                 } else {
                     Text("Confirmar visita")
                 }
+            }
+            OutlinedButton(
+                onClick = onCancelClick,
+                enabled = !uiState.isSubmitting,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = TurinautaDimens.MinTouchTarget),
+            ) {
+                Text("Cancelar", color = DeepTeal)
             }
         }
 

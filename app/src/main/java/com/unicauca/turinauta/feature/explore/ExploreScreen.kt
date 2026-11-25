@@ -30,7 +30,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -50,6 +51,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,7 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -382,66 +385,31 @@ private fun ExploreSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
 ) {
-    Surface(
-        color = SurfaceLowSand,
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        label = { Text("Buscar lugares por nombre") },
+        leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = SlateMedium) },
+        trailingIcon = if (query.isNotEmpty()) {
+            {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(Icons.Rounded.Close, contentDescription = "Limpiar búsqueda", tint = SlateMedium)
+                }
+            }
+        } else null,
+        singleLine = true,
         shape = RoundedCornerShape(TurinautaDimens.PillCornerRadius),
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 52.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Search,
-                contentDescription = null,
-                tint = SlateMedium,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(vertical = 14.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                if (query.isEmpty()) {
-                    Text(
-                        text = "Buscar lugares por nombre",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = SlateMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = SlateDark),
-                    cursorBrush = SolidColor(DeepTeal),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            if (query.isNotEmpty()) {
-                IconButton(
-                    onClick = { onQueryChange("") },
-                    modifier = Modifier.size(TurinautaDimens.MinTouchTarget),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "Limpiar búsqueda",
-                        tint = SlateMedium,
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-        }
-    }
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = SurfaceLowSand,
+            unfocusedContainerColor = SurfaceLowSand,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            focusedLabelColor = DeepTeal,
+            unfocusedLabelColor = SlateMedium,
+            cursorColor = DeepTeal,
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable
@@ -451,6 +419,7 @@ private fun CategoryChipsRow(
     onCategorySelected: (String?) -> Unit,
 ) {
     LazyRow(
+        modifier = Modifier.selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item(key = "cat_all") {
@@ -490,7 +459,7 @@ private fun CategoryFilterPill(
         modifier = Modifier
             .heightIn(min = TurinautaDimens.MinTouchTarget)
             .clip(RoundedCornerShape(TurinautaDimens.ChipCornerRadius))
-            .clickable(role = Role.Tab, onClick = onClick)
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
             .semantics(mergeDescendants = true) {},
     ) {
         Row(
