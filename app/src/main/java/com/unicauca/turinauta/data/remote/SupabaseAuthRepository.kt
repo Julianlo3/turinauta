@@ -8,6 +8,7 @@ import com.unicauca.turinauta.data.repository.AuthRepository
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.status.SessionStatus
+import io.github.jan.supabase.auth.user.UserInfo
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Columns
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +21,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Autenticación real con Google OAuth vía Supabase Auth.
@@ -54,12 +58,14 @@ class SupabaseAuthRepository(
                     is SessionStatus.Authenticated -> {
                         val user = status.session.user
                         if (user != null) {
-                            // Provisión inmediata antes de consultar `profiles`
-                            if (_currentUser.value?.id != user.id) {
+                            // Provisión inmediata con metadatos de Google antes de consultar `profiles`
+                            if (_currentUser.value?.id != user.id || _currentUser.value?.avatarUrl == null) {
                                 _currentUser.value = UserProfile(
                                     id = user.id,
-                                    displayName = UserProfile.DEFAULT_DISPLAY_NAME,
+                                    displayName = user.extractGoogleDisplayName()
+                                        ?: UserProfile.DEFAULT_DISPLAY_NAME,
                                     email = user.email,
+                                    avatarUrl = user.extractGoogleAvatarUrl(),
                                 )
                             }
                             refreshProfile()
@@ -95,12 +101,18 @@ class SupabaseAuthRepository(
             .decodeList<ProfileDto>()
             .firstOrNull()
 
-        val profile = profileDto?.toDomain(email = authUser.email)
-            ?: UserProfile(
-                id = authUser.id,
-                displayName = UserProfile.DEFAULT_DISPLAY_NAME,
-                email = authUser.email,
-            )
+        val avatarUrl = authUser.extractGoogleAvatarUrl()
+        val fallbackName = authUser.extractGoogleDisplayName() ?: UserProfile.DEFAULT_DISPLAY_NAME
+
+        val profile = profileDto?.toDomain(
+            email = authUser.email,
+            avatarUrl = avatarUrl,
+        ) ?: UserProfile(
+            id = authUser.id,
+            displayName = fallbackName,
+            email = authUser.email,
+            avatarUrl = avatarUrl,
+        )
 
         _currentUser.value = profile
         profile
@@ -111,5 +123,37 @@ class SupabaseAuthRepository(
         _currentUser.value = null
         val client = clientProvider.getClientOrNull() ?: return@runCatching
         client.auth.signOut()
+    }
+
+    private fun UserInfo.extractGoogleAvatarUrl(): String? {
+        val fromMeta = userMetadata.firstHttpUrl("avatar_url", "picture")
+        if (fromMeta != null) return fromMeta
+        return identities
+            ?.firstNotNullOfOrNull { it.identityData.firstHttpUrl("avatar_url", "picture") }
+    }
+
+    private fun UserInfo.extractGoogleDisplayName(): String? {
+        val fromMeta = userMetadata.firstNonBlankString("full_name", "name")
+        if (fromMeta != null) return fromMeta
+        return identities
+            ?.firstNotNullOfOrNull { it.identityData.firstNonBlankString("full_name", "name") }
+    }
+
+    private fun JsonObject?.firstHttpUrl(vararg keys: String): String? {
+        if (this == null) return null
+        return keys.firstNotNullOfOrNull { key ->
+            runCatching { this[key]?.jsonPrimitive?.contentOrNull?.trim() }
+                .getOrNull()
+                ?.takeIf { it.startsWith("http://") || it.startsWith("https://") }
+        }
+    }
+
+    private fun JsonObject?.firstNonBlankString(vararg keys: String): String? {
+        if (this == null) return null
+        return keys.firstNotNullOfOrNull { key ->
+            runCatching { this[key]?.jsonPrimitive?.contentOrNull?.trim() }
+                .getOrNull()
+                ?.takeIf { it.isNotEmpty() }
+        }
     }
 }

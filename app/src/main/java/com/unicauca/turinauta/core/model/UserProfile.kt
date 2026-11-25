@@ -9,6 +9,7 @@ data class UserProfile(
     val id: String,
     val displayName: String,
     val email: String? = null,
+    val avatarUrl: String? = null,
     val createdAtIso: String? = null,
 ) {
     companion object {

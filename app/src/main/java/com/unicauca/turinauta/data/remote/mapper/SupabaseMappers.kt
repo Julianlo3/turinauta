@@ -82,11 +82,15 @@ fun RouteStopDto.toDomain(): RouteStop = RouteStop(
     suggestedOrder = suggestedOrder,
 )
 
-fun ProfileDto.toDomain(email: String?): UserProfile = UserProfile(
+fun ProfileDto.toDomain(
+    email: String?,
+    avatarUrl: String? = null,
+): UserProfile = UserProfile(
     id = id,
     displayName = displayName?.trim()?.takeIf { it.isNotEmpty() }
         ?: UserProfile.DEFAULT_DISPLAY_NAME,
     email = email,
+    avatarUrl = avatarUrl,
     createdAtIso = createdAt,
 )
 

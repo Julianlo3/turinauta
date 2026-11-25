@@ -45,12 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.ErrorContainerLight
 import com.unicauca.turinauta.core.designsystem.ErrorRed
@@ -248,19 +250,11 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(CircleShape)
-                            .background(SoftTealContainer),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = initials,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = OnSoftTealContainer,
-                        )
-                    }
+                    ProfileAvatar(
+                        avatarUrl = user.avatarUrl,
+                        initials = initials,
+                        displayName = user.displayName,
+                    )
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = user.displayName,
@@ -388,6 +382,46 @@ fun ProfileScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileAvatar(
+    avatarUrl: String?,
+    initials: String,
+    displayName: String,
+) {
+    if (avatarUrl.isNullOrBlank()) {
+        InitialsAvatar(initials = initials)
+    } else {
+        SubcomposeAsyncImage(
+            model = avatarUrl,
+            contentDescription = "Foto de perfil de $displayName",
+            contentScale = ContentScale.Crop,
+            loading = { InitialsAvatar(initials = initials) },
+            error = { InitialsAvatar(initials = initials) },
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(SoftTealContainer),
+        )
+    }
+}
+
+@Composable
+private fun InitialsAvatar(initials: String) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(CircleShape)
+            .background(SoftTealContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = initials,
+            style = MaterialTheme.typography.titleLarge,
+            color = OnSoftTealContainer,
+        )
     }
 }
 
