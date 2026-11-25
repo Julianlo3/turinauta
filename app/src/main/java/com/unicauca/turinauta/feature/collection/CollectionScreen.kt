@@ -357,40 +357,35 @@ private fun CollectionProgressCard(
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = collection.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SlateDark,
-                    )
-                    if (collection.description.isNotBlank()) {
-                        Text(
-                            text = collection.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = SlateMedium,
-                        )
-                    }
-                }
-
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    LinearProgressIndicator(
-                        progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
-                        color = if (completed) MutedOchre else DeepTeal,
-                        trackColor = if (completed) PureWhite else SurfaceLowSand,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(7.dp)
-                            .clip(RoundedCornerShape(4.dp)),
-                    )
+                Text(
+                    text = collection.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SlateDark,
+                )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
                         text = "${collection.earnedStamps}/${collection.totalStamps} sellos",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = SlateMedium,
                     )
+                    Text(
+                        text = "${collection.progressPercent}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (completed) SlateDark else DeepTeal,
+                        modifier = Modifier.padding(end = if (completed) 72.dp else 0.dp),
+                    )
                 }
+                LinearProgressIndicator(
+                    progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
+                    color = if (completed) MutedOchre else DeepTeal,
+                    trackColor = if (completed) PureWhite else SurfaceLowSand,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(7.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                )
 
                 if (collection.stamps.isNotEmpty()) {
-                    HorizontalDivider(color = if (completed) MutedOchre.copy(alpha = 0.3f) else SubtleOutline)
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         collection.stamps.forEach { badge ->
                             RewardBadgeRow(badge = badge, onStampClick = onStampClick)
