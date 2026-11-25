@@ -235,7 +235,7 @@ private fun CollectionSummaryBanner(
                 )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Progreso general",
+                        text = "Progreso general en Popayán",
                         style = MaterialTheme.typography.labelLarge,
                         color = OnSoftTealContainer,
                     )
