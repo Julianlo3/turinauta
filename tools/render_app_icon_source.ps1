@@ -108,6 +108,21 @@ public static class TurinautaTaperedIconPreview
             graphics.ResetClip();
             graphics.FillEllipse(gold, 348, 121, 78, 78);
             bitmap.Save(Path.Combine(outputDirectory, "app_icon_source.png"), ImageFormat.Png);
+
+            using (var foregroundBitmap = new Bitmap(1024, 1024, PixelFormat.Format32bppArgb))
+            using (var foregroundGraphics = Graphics.FromImage(foregroundBitmap))
+            {
+                foregroundGraphics.Clear(Color.Transparent);
+                foregroundGraphics.SmoothingMode = SmoothingMode.AntiAlias;
+                foregroundGraphics.CompositingQuality = CompositingQuality.HighQuality;
+                foregroundGraphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                foregroundGraphics.ScaleTransform(2f, 2f);
+                foregroundGraphics.SetClip(disc);
+                foregroundGraphics.FillPath(ivory, road);
+                foregroundGraphics.ResetClip();
+                foregroundGraphics.FillEllipse(gold, 348, 121, 78, 78);
+                foregroundBitmap.Save(Path.Combine(outputDirectory, "app_icon_foreground.png"), ImageFormat.Png);
+            }
         }
 
         var svg = new StringBuilder();
