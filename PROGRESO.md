@@ -82,3 +82,4 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 | 24/11/2026 | Recibido `CONTRATO_API_MVP.md`; el equipo decide seguir el contrato. Modelos, repositorios y flujos ajustados (Google, foto + ubicación, cercanía, reporte obligatorio). |
 | 24/11/2026 | Fases 2 y 3 completas; APK compilado y recorrido esencial probado en el emulador. |
 | 24/11/2026 | `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` leídas de `local.properties` hacia `BuildConfig` y `SupabaseConfig`. |
+| 24/11/2026 | AGP bajado de 9.5.1 a 9.2.1 y Gradle de 9.6.0 a 9.4.1 (máximo soportado por Android Studio 2026.1); se activa `android.r8.gradual.support` para conservar `optimization { enable = true }` en release. |
