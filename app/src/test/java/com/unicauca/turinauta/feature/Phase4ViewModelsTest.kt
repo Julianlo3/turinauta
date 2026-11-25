@@ -174,6 +174,28 @@ class Phase4ViewModelsTest {
         assertEquals(2, visitRepo.registerCalls)
     }
 
+    @Test
+    fun temporaryVisitRadiusAllowsFiveKilometersButBlocksBeyondTen() = runTest(testDispatcher) {
+        val visitRepo = StubVisitRepository()
+        val vm = VisitRegistrationViewModel(RegisterVisitUseCase(visitRepo))
+        vm.onPhotoSelected("content://test", ByteArray(2048) { 1 }, "jpg")
+
+        vm.onLocationResolved(2.4869, -76.6063, 100f, 2.4419, -76.6063)
+        assertFalse(vm.uiState.value.isWithinRange) // El aviso visual conserva los 200 m.
+        assertTrue(vm.uiState.value.canSubmit)
+        assertTrue(vm.uiState.value.copy(distanceMeters = 10_000).canSubmit)
+        assertFalse(vm.uiState.value.copy(distanceMeters = 10_001).canSubmit)
+        vm.submitVisit("p1")
+        advanceUntilIdle()
+        assertEquals(1, visitRepo.registerCalls)
+
+        vm.onLocationResolved(2.5419, -76.6063, 100f, 2.4419, -76.6063)
+        assertFalse(vm.uiState.value.canSubmit)
+        vm.submitVisit("p1")
+        advanceUntilIdle()
+        assertEquals(1, visitRepo.registerCalls)
+    }
+
     private fun samplePlace(id: String, name: String) = Place(
         id = id,
         categoryId = "c1",

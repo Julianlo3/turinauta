@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// Límite temporal para pruebas. El límite visual/original de 200 m se conserva en VisitRecord.
+internal const val TEMP_VISIT_TEST_RADIUS_METERS = 10_000
+
 data class VisitRegistrationUiState(
     val selectedPhotoUri: String? = null,
     val photoBytes: ByteArray? = null,
@@ -40,7 +43,8 @@ data class VisitRegistrationUiState(
         get() = distanceMeters != null && distanceMeters <= VisitRecord.MAX_VISIT_DISTANCE_METERS
 
     val canSubmit: Boolean
-        get() = !isSubmitting && hasValidPhoto && hasLocation
+        get() = !isSubmitting && hasValidPhoto && hasLocation &&
+            distanceMeters != null && distanceMeters <= TEMP_VISIT_TEST_RADIUS_METERS
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -191,6 +195,7 @@ class VisitRegistrationViewModel(
             _uiState.update { it.copy(locationError = "Verifica tu ubicación actual antes de confirmar la visita.") }
             return
         }
+        if (!current.canSubmit) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, visitResult = null) }
