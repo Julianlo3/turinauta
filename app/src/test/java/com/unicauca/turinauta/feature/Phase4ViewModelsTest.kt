@@ -141,6 +141,13 @@ class Phase4ViewModelsTest {
         assertTrue(vm.uiState.value.canSubmit)
         assertTrue(vm.uiState.value.isWithinRange)
 
+        // Un nuevo intento no puede reutilizar una posición previa si la lectura falla.
+        vm.onLocationLoading()
+        assertFalse(vm.uiState.value.hasLocation)
+        vm.onLocationError("Sin señal")
+        assertFalse(vm.uiState.value.canSubmit)
+        vm.onLocationResolved(2.4419, -76.6063, 2.4420, -76.6063)
+
         // Primer intento falla con error de red (HU-18)
         vm.submitVisit("p1")
         advanceUntilIdle()

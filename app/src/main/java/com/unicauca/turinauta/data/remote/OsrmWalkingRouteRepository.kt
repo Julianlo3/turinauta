@@ -20,8 +20,8 @@ class OsrmWalkingRouteRepository : WalkingRouteRepository {
         val url = routeUrl(from, to)
         val connection = URL(url).openConnection() as HttpURLConnection
         try {
-            connection.connectTimeout = 10_000
-            connection.readTimeout = 15_000
+            connection.connectTimeout = 6_000
+            connection.readTimeout = 8_000
             connection.setRequestProperty("User-Agent", "Turinauta/1.0 (com.unicauca.turinauta)")
             if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                 error("El servicio de rutas no está disponible (${connection.responseCode}).")

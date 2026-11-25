@@ -189,7 +189,8 @@ fun FullScreenPlaceMap(
                         when {
                             state.loading -> Row(verticalAlignment = Alignment.CenterVertically) {
                                 CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                                Text("  Calculando recorrido…", style = MaterialTheme.typography.bodySmall)
+                                Text(if (state.locating) "  Obteniendo ubicación…" else "  Calculando recorrido…",
+                                    style = MaterialTheme.typography.bodySmall)
                             }
                             state.route != null -> Text(
                                 "${formatDistance(state.route!!.distanceMeters)} · ${kotlin.math.ceil(state.route!!.durationSeconds / 60).toInt()} min aprox.",

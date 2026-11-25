@@ -1,15 +1,11 @@
 package com.unicauca.turinauta.feature.visits
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.location.Location
-import android.location.LocationManager
 import android.net.Uri
-import android.os.Build
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,6 +78,8 @@ import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.VisitRecord
+import com.unicauca.turinauta.core.location.LocationPurpose
+import com.unicauca.turinauta.core.location.getDeviceLocation
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.UUID
@@ -142,11 +140,14 @@ fun ConfirmVisitSheet(
 
     fun requestCurrentLocation() {
         onLocationLoading()
-        resolveDeviceLocation(
-            context = context,
-            onSuccess = { loc -> onLocationResolved(loc.latitude, loc.longitude) },
-            onFailure = { msg -> onLocationError(msg) },
-        )
+        scope.launch {
+            val location = getDeviceLocation(context, LocationPurpose.VISIT)
+            if (location != null) {
+                onLocationResolved(location.latitude, location.longitude)
+            } else {
+                onLocationError("No obtuvimos una ubicación reciente y precisa. Activa la ubicación precisa y vuelve a intentar.")
+            }
+        }
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -595,58 +596,6 @@ private fun hasVisitLocationPermission(context: Context): Boolean {
     val coarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
         PackageManager.PERMISSION_GRANTED
     return fine || coarse
-}
-
-@SuppressLint("MissingPermission")
-private fun resolveDeviceLocation(
-    context: Context,
-    onSuccess: (Location) -> Unit,
-    onFailure: (String) -> Unit,
-) {
-    val manager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-    if (manager == null) {
-        onFailure("No pudimos acceder al servicio de ubicación del dispositivo.")
-        return
-    }
-
-    val bestLastKnown = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-        .mapNotNull { provider -> runCatching { manager.getLastKnownLocation(provider) }.getOrNull() }
-        .maxByOrNull { it.time }
-
-    val activeProvider = when {
-        runCatching { manager.isProviderEnabled(LocationManager.GPS_PROVIDER) }.getOrDefault(false) ->
-            LocationManager.GPS_PROVIDER
-        runCatching { manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) }.getOrDefault(false) ->
-            LocationManager.NETWORK_PROVIDER
-        else -> null
-    }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && activeProvider != null) {
-        runCatching {
-            manager.getCurrentLocation(
-                activeProvider,
-                null,
-                ContextCompat.getMainExecutor(context),
-            ) { location ->
-                val resolved = location ?: bestLastKnown
-                if (resolved != null) {
-                    onSuccess(resolved)
-                } else {
-                    onFailure("No obtuvimos señal de ubicación. Activa el GPS e intenta nuevamente.")
-                }
-            }
-        }.onFailure {
-            if (bestLastKnown != null) {
-                onSuccess(bestLastKnown)
-            } else {
-                onFailure("No pudimos leer tu ubicación actual. Verifica que el GPS esté activo.")
-            }
-        }
-    } else if (bestLastKnown != null) {
-        onSuccess(bestLastKnown)
-    } else {
-        onFailure("No obtuvimos una ubicación reciente. Activa el GPS e intenta de nuevo.")
-    }
 }
 
 @Preview(showBackground = true)

@@ -129,6 +129,9 @@ class VisitRegistrationViewModel(
         _uiState.update {
             it.copy(
                 isFetchingLocation = true,
+                latitude = null,
+                longitude = null,
+                distanceMeters = null,
                 locationError = null,
             )
         }
@@ -156,6 +159,9 @@ class VisitRegistrationViewModel(
         _uiState.update {
             it.copy(
                 isFetchingLocation = false,
+                latitude = null,
+                longitude = null,
+                distanceMeters = null,
                 locationError = message,
             )
         }
