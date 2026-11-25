@@ -1,5 +1,7 @@
 package com.unicauca.turinauta.feature.collection
 
+import android.graphics.Paint
+import android.graphics.Typeface
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -49,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -59,6 +62,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -368,12 +372,13 @@ private fun CollectionProgressCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = SlateMedium,
                     )
-                    Text(
-                        text = "${collection.progressPercent}%",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (completed) SlateDark else DeepTeal,
-                        modifier = Modifier.padding(end = if (completed) 72.dp else 0.dp),
-                    )
+                    if (!completed) {
+                        Text(
+                            text = "${collection.progressPercent}%",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DeepTeal,
+                        )
+                    }
                 }
                 LinearProgressIndicator(
                     progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
@@ -410,7 +415,7 @@ private fun CompletedCollectionMedal(
         modifier = modifier.width(82.dp).height(96.dp)
             .graphicsLayer { rotationZ = 9f }
             .semantics(mergeDescendants = true) {
-                contentDescription = "Colección completada"
+                contentDescription = "Colección completada al 100%"
             },
         contentAlignment = Alignment.TopCenter,
     ) {
@@ -456,6 +461,20 @@ private fun CompletedCollectionMedal(
                 center = androidx.compose.ui.geometry.Offset(centerX, centerY),
                 style = Stroke(width = 1.8.dp.toPx()),
             )
+            val label = "100%"
+            val labelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = android.graphics.Color.WHITE
+                typeface = Typeface.create("cursive", Typeface.BOLD_ITALIC)
+                textAlign = Paint.Align.CENTER
+                textSize = 18.sp.toPx()
+            }
+            val maxLabelWidth = radius * 1.3f
+            val measuredWidth = labelPaint.measureText(label)
+            if (measuredWidth > maxLabelWidth) {
+                labelPaint.textSize *= maxLabelWidth / measuredWidth
+            }
+            val baseline = centerY - (labelPaint.ascent() + labelPaint.descent()) / 2f
+            drawContext.canvas.nativeCanvas.drawText(label, centerX, baseline, labelPaint)
         }
     }
 }
