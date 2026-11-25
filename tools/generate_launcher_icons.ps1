@@ -6,6 +6,10 @@ Add-Type -AssemblyName System.Drawing
 
 $resourceRoot = Join-Path $PSScriptRoot '..\app\src\main\res'
 $sourceBitmap = [System.Drawing.Bitmap]::new((Resolve-Path -LiteralPath $Source).Path)
+$minX = $sourceBitmap.Width
+$minY = $sourceBitmap.Height
+$maxX = 0
+$maxY = 0
 
 function Save-ScaledImage {
     param(
@@ -36,6 +40,12 @@ $monochrome = [System.Drawing.Bitmap]::new($sourceBitmap.Width, $sourceBitmap.He
 for ($y = 0; $y -lt $sourceBitmap.Height; $y++) {
     for ($x = 0; $x -lt $sourceBitmap.Width; $x++) {
         $pixel = $sourceBitmap.GetPixel($x, $y)
+        if ($pixel.A -gt 128) {
+            $minX = [Math]::Min($minX, $x)
+            $minY = [Math]::Min($minY, $y)
+            $maxX = [Math]::Max($maxX, $x)
+            $maxY = [Math]::Max($maxY, $y)
+        }
         $difference = [Math]::Abs([int]$pixel.R - 19) +
             [Math]::Abs([int]$pixel.G - 80) + [Math]::Abs([int]$pixel.B - 84)
         if ($pixel.A -gt 0 -and $difference -gt 40) {
@@ -43,6 +53,8 @@ for ($y = 0; $y -lt $sourceBitmap.Height; $y++) {
         }
     }
 }
+$artworkDiameter = [Math]::Max($maxX - $minX + 1, $maxY - $minY + 1)
+$artworkScale = $sourceBitmap.Width / $artworkDiameter
 
 try {
     foreach ($density in @(
@@ -55,12 +67,16 @@ try {
         $folder = Join-Path $resourceRoot "mipmap-$($density.Name)"
         $legacySize = [int](48 * $density.Scale)
         $adaptiveSize = [int](108 * $density.Scale)
-        $foregroundSize = [int](72 * $density.Scale)
-        Save-ScaledImage $sourceBitmap $legacySize $legacySize (Join-Path $folder 'ic_launcher.png')
-        Save-ScaledImage $sourceBitmap $legacySize $legacySize (Join-Path $folder 'ic_launcher_round.png')
+        $legacyArtworkSize = [int][Math]::Round($legacySize * $artworkScale)
+        $foregroundSize = [int][Math]::Round(72 * $density.Scale * $artworkScale)
+        Save-ScaledImage $sourceBitmap $legacySize $legacyArtworkSize (Join-Path $folder 'ic_launcher.png')
+        Save-ScaledImage $sourceBitmap $legacySize $legacyArtworkSize (Join-Path $folder 'ic_launcher_round.png')
         Save-ScaledImage $sourceBitmap $adaptiveSize $foregroundSize (Join-Path $folder 'ic_launcher_foreground.png')
         Save-ScaledImage $monochrome $adaptiveSize $foregroundSize (Join-Path $folder 'ic_launcher_monochrome.png')
     }
+    $logoFolder = Join-Path $resourceRoot 'drawable-nodpi'
+    New-Item -ItemType Directory -Force -Path $logoFolder | Out-Null
+    Save-ScaledImage $sourceBitmap 512 ([int][Math]::Round(512 * $artworkScale)) (Join-Path $logoFolder 'turinauta_logo.png')
 } finally {
     $monochrome.Dispose()
     $sourceBitmap.Dispose()

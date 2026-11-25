@@ -1,6 +1,7 @@
 package com.unicauca.turinauta.core.designsystem
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,74 +31,27 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.unicauca.turinauta.R
 import com.unicauca.turinauta.core.model.IllustrationKey
 
-/**
- * Emblema circular de Turinauta: fondo verde petróleo (#135054) con trazo de ruta
- * en marfil claro y punto de destino en ocre (#C48A2D).
- */
+/** Emblema compartido por Explorar y el icono de instalación. */
 @Composable
 fun TurinautaLogoMark(
     modifier: Modifier = Modifier,
     size: Dp = 36.dp,
     contentDescription: String? = null,
 ) {
-    val semanticsModifier = if (contentDescription != null) {
-        modifier.semantics { this.contentDescription = contentDescription }
-    } else {
-        modifier
-    }
-
-    Canvas(modifier = semanticsModifier.size(size)) {
-        val w = this.size.width
-        val h = this.size.height
-        val radius = minOf(w, h) / 2f
-
-        // Fondo circular verde petróleo
-        drawCircle(
-            color = DeepTeal,
-            radius = radius,
-            center = Offset(w / 2f, h / 2f),
-        )
-
-        // Trazo de ruta curvo en marfil
-        val routePath = Path().apply {
-            moveTo(w * 0.26f, h * 0.68f)
-            cubicTo(
-                w * 0.34f, h * 0.34f,
-                w * 0.56f, h * 0.68f,
-                w * 0.68f, h * 0.34f,
-            )
-        }
-        drawPath(
-            path = routePath,
-            color = WarmIvory,
-            style = Stroke(
-                width = w * 0.085f,
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round,
-            ),
-        )
-
-        // Punto de inicio sutil en marfil
-        drawCircle(
-            color = WarmIvory,
-            radius = w * 0.055f,
-            center = Offset(w * 0.26f, h * 0.68f),
-        )
-
-        // Punto de destino / hito en ocre discreto
-        drawCircle(
-            color = MutedOchre,
-            radius = w * 0.11f,
-            center = Offset(w * 0.70f, h * 0.32f),
-        )
-    }
+    Image(
+        painter = painterResource(R.drawable.turinauta_logo),
+        contentDescription = contentDescription,
+        modifier = modifier.size(size),
+    )
 }
 
 /**
