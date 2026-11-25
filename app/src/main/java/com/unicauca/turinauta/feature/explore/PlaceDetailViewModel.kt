@@ -11,11 +11,11 @@ import com.unicauca.turinauta.core.model.VisitPhoto
 import com.unicauca.turinauta.core.model.VisitRecord
 import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.core.navigation.Destinations
-import com.unicauca.turinauta.core.network.FakeNetworkConfig
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
 import com.unicauca.turinauta.data.repository.RouteRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
+import com.unicauca.turinauta.data.supabase.friendlyMessage
 import com.unicauca.turinauta.feature.visits.RegisterVisitUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +48,7 @@ data class PlaceDetailUiState(
     val visitFlow: VisitFlow = VisitFlow.Idle,
     val photo: VisitPhoto? = null,
     val photoError: String? = null,
+    val loadError: String? = null,
     val message: String? = null,
 ) {
     val isBusy: Boolean get() = visitFlow == VisitFlow.Locating || visitFlow == VisitFlow.Saving
@@ -60,7 +61,6 @@ class PlaceDetailViewModel(
     auth: AuthRepository,
     visits: VisitRepository,
     private val location: LocationProvider,
-    private val network: FakeNetworkConfig,
     private val registerVisit: RegisterVisitUseCase,
 ) : ViewModel() {
 
@@ -74,11 +74,7 @@ class PlaceDetailViewModel(
     private var resumeAfterLogin = false
 
     init {
-        viewModelScope.launch {
-            val place = catalog.getPlace(placeId)
-            val route = routeId?.let { routes.getRoute(it) }
-            _uiState.update { it.copy(isLoading = false, place = place, route = route) }
-        }
+        loadPlace()
         viewModelScope.launch {
             combine(auth.currentUser, visits.visits) { user, list -> user to list.firstOrNull { it.placeId == placeId } }
                 .collect { (user, visit) ->
@@ -90,6 +86,20 @@ class PlaceDetailViewModel(
                         _uiState.update { it.copy(visitFlow = if (visit == null) VisitFlow.Preparing else VisitFlow.Idle) }
                     }
                 }
+        }
+    }
+
+    /** Carga la ficha; si falla la red se muestra el error con opción de reintentar. */
+    fun loadPlace() {
+        _uiState.update { it.copy(isLoading = true, loadError = null) }
+        viewModelScope.launch {
+            try {
+                val place = catalog.getPlace(placeId)
+                val route = routeId?.let { runCatching { routes.getRoute(it) }.getOrNull() }
+                _uiState.update { it.copy(isLoading = false, place = place, route = route) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, loadError = e.friendlyMessage()) }
+            }
         }
     }
 
@@ -123,7 +133,7 @@ class PlaceDetailViewModel(
         it.copy(visitFlow = VisitFlow.Idle, photo = null, photoError = null, message = "No se registró la visita.")
     }
 
-    fun needsLocationPermission(): Boolean = !network.state.value.simulateAtPlace && !location.hasPermission()
+    fun needsLocationPermission(): Boolean = !location.hasPermission()
 
     /** Se llama al pulsar «Confirmar visita» (tras pedir el permiso si hacía falta). */
     fun onConfirmVisit(locationGranted: Boolean = true) {
@@ -131,7 +141,7 @@ class PlaceDetailViewModel(
         val place = state.place ?: return
         val photo = state.photo ?: return
         if (state.isBusy) return
-        if (!locationGranted && !network.state.value.simulateAtPlace) {
+        if (!locationGranted) {
             _uiState.update {
                 it.copy(visitFlow = VisitFlow.Failed(
                     title = "Necesitamos tu ubicación",
@@ -143,7 +153,7 @@ class PlaceDetailViewModel(
         }
         _uiState.update { it.copy(visitFlow = VisitFlow.Locating) }
         viewModelScope.launch {
-            val here = if (network.state.value.simulateAtPlace) place.location else location.currentLocation()
+            val here = location.currentLocation()
             if (here == null) {
                 _uiState.update {
                     it.copy(visitFlow = VisitFlow.Failed(

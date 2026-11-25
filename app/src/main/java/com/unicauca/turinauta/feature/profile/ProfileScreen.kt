@@ -26,18 +26,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.outlined.ExpandLess
-import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MyLocation
-import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.WorkspacePremium
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,11 +46,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.selection.toggleable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unicauca.turinauta.core.designsystem.BackTopBar
@@ -130,8 +124,6 @@ fun ProfileScreen(
         }
 
         Spacer(Modifier.height(24.dp))
-        QaPanel(state, viewModel)
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -150,54 +142,6 @@ private fun ProfileRow(icon: ImageVector, title: String, subtitle: String?, onCl
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (!destructive) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
-    }
-}
-
-/** Panel discreto y colapsable para probar estados sin backend. */
-@Composable
-private fun QaPanel(state: ProfileUiState, viewModel: ProfileViewModel) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    Column(Modifier.padding(horizontal = 16.dp).clip(ThumbnailShape).background(MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Row(
-            Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { expanded = !expanded }.padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Outlined.Science, contentDescription = null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.width(10.dp))
-            Text("Modo pruebas (Simulación)", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Icon(
-                if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                contentDescription = if (expanded) "Ocultar opciones de prueba" else "Mostrar opciones de prueba",
-            )
-        }
-        if (expanded) {
-            QaSwitch("Simular sin conexión / error al guardar la visita", state.qa.failVisitSave, viewModel::setFailVisitSave)
-            QaSwitch("Simular que estoy junto al lugar (ignora el GPS)", state.qa.simulateAtPlace, viewModel::setSimulateAtPlace)
-            QaSwitch("Simular catálogo vacío", state.qa.emptyCatalog, viewModel::setEmptyCatalog)
-            QaSwitch("Simular rutas vacías", state.qa.emptyRoutes, viewModel::setEmptyRoutes)
-            QaSwitch("Simular error al entrar con Google", state.qa.failGoogleSignIn, viewModel::setFailGoogleSignIn)
-            Text(
-                "Solo para pruebas mientras la app no está conectada a Supabase.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(14.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun QaSwitch(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = 48.dp)
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
-            .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Spacer(Modifier.width(8.dp))
-        Switch(checked = checked, onCheckedChange = null)
     }
 }
 

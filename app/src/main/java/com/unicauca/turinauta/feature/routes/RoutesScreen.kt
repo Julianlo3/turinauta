@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Route
 import androidx.compose.material3.Icon
@@ -58,6 +59,12 @@ fun RoutesScreen(
         )
         when {
             state.isLoading -> LoadingState()
+            state.error != null -> EmptyState(
+                icon = Icons.Outlined.CloudOff,
+                title = "No pudimos cargar las rutas",
+                message = state.error!!,
+                primaryAction = "Reintentar" to viewModel::loadRoutes,
+            )
             state.routes.isEmpty() -> EmptyState(
                 icon = Icons.Outlined.Route,
                 title = "Todavía no hay rutas disponibles",

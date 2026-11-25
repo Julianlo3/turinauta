@@ -30,13 +30,12 @@ val TurinautaViewModelFactory = viewModelFactory {
             auth = c.auth,
             visits = c.visits,
             location = c.location,
-            network = c.network,
             registerVisit = RegisterVisitUseCase(c.visits),
         )
     }
     initializer { RoutesViewModel(container().routes) }
     initializer { AuthViewModel(createSavedStateHandle(), container().auth) }
     initializer { CollectionViewModel(container().auth, container().collections) }
-    initializer { ProfileViewModel(container().auth, container().visits, container().collections, container().network, container().location) }
+    initializer { ProfileViewModel(container().auth, container().visits, container().collections, container().location) }
     initializer { ReportViewModel(container().reports) }
 }

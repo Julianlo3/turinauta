@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Place
@@ -110,9 +111,9 @@ fun ExploreScreen(
     ) {
         item { ExploreTopBar() }
         item { SearchField(state.query, viewModel::onQueryChange, viewModel::clearQuery) }
-        item { CategoryChips(state.selectedCategory, viewModel::selectCategory) }
+        if (state.categories.isNotEmpty()) item { CategoryChips(state.categories, state.selectedCategory, viewModel::selectCategory) }
 
-        if (!state.isSearching && state.selectedCategory == null && !state.isCatalogEmpty) {
+        if (!state.isLoading && state.loadError == null && !state.isSearching && state.selectedCategory == null && !state.isCatalogEmpty) {
             item { RoutesBanner(onOpenRoutes) }
         }
         if (state.locationUnavailable) {
@@ -132,6 +133,14 @@ fun ExploreScreen(
                 Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
                     androidx.compose.material3.CircularProgressIndicator()
                 }
+            }
+            state.loadError != null -> item {
+                EmptyState(
+                    icon = Icons.Outlined.CloudOff,
+                    title = "No pudimos cargar los lugares",
+                    message = state.loadError!!,
+                    primaryAction = "Reintentar" to viewModel::load,
+                )
             }
             state.isCatalogEmpty -> item {
                 EmptyState(
@@ -284,8 +293,8 @@ private fun SearchField(query: String, onChange: (String) -> Unit, onClear: () -
 }
 
 @Composable
-private fun CategoryChips(selected: Category?, onSelect: (Category?) -> Unit) {
-    val options = listOf<Category?>(null) + Category.entries
+private fun CategoryChips(categories: List<Category>, selected: Category?, onSelect: (Category?) -> Unit) {
+    val options = listOf<Category?>(null) + categories
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(options) { category ->
             val isSelected = category == selected

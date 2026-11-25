@@ -6,7 +6,7 @@ Registro del avance de las pantallas de la app.
 - **Prototipos:** `Turinauta_prototipos` (34 pantallas).
 - **Rama de trabajo:** `Ventanas`.
 - **Paquete:** `com.unicauca.turinauta`; dentro se sigue la estructura `core / data / feature` de AGENTS.md.
-- **Datos:** simulados en memoria (repositorios `Fake*`) con las reglas del contrato; se cambian por Supabase en `AppContainer` (`TurinautaApplication.kt`) sin tocar la UI.
+- **Datos:** desde Supabase (`data/supabase`), con supabase-kt 3.2.6. La versión simulada anterior está en el historial de Git (commit `033d760`).
 
 ## Decisiones tomadas
 
@@ -21,7 +21,6 @@ Registro del avance de las pantallas de la app.
 | Permisos | Ubicación (opcional para ordenar, necesaria para registrar visita). Sin permiso de cámara: se usa la app de cámara del sistema y el selector de fotos | Contrato |
 | Ilustraciones | Vectoriales en Canvas (verde petróleo y ocre), sin imágenes remotas | AGENTS.md §3.2 |
 | Inyección de dependencias | Manual con `AppContainer` | Simplicidad para el piloto |
-| Cuenta de prueba | El inicio con Google simulado devuelve «Explorador Demo» (`explorador@turinauta.app`), con 1 visita previa | AGENTS.md §6 |
 
 ## Fase 1 — Base, diseño y capa de datos ✅
 
@@ -67,11 +66,32 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 `app/build.gradle.kts` las pasa a `BuildConfig.SUPABASE_URL` y `BuildConfig.SUPABASE_PUBLISHABLE_KEY`, y la app las lee desde `core/network/SupabaseConfig.kt`. Si están vacías, `SupabaseConfig.isConfigured` es `false` y la app sigue con los datos simulados. Nunca poner la clave secret ni `service_role`.
 
-## Pendiente (siguiente fase: conexión a Supabase)
+## Conexión a Supabase ✅
 
-- Cambiar los `Fake*` por implementaciones con `supabase-kt` (Auth con Google y deep link, PostgREST, Storage `visit-photos`, RPC `record_visit` y `submit_content_report`).
+- Dependencias: supabase-kt 3.2.6 (Auth, Postgrest, Storage), Ktor 3.3.1 y kotlinx.serialization. Se eligió 3.2.6 porque las versiones nuevas exigen Kotlin 2.3+ y el proyecto usa Kotlin 2.2.10 (AGP 9.2.1).
+- Repositorios reales en `data/supabase/SupabaseRepositories.kt`:
+  - Catálogo: `categories` + `places`; categorías dinámicas (hoy: Gastronomía, Artesanías, Emprendimientos).
+  - Rutas: `available_routes` + `route_places` (orden sugerido).
+  - Colecciones: `available_collections` + `collection_stamps` + `stamps`; lo obtenido se calcula con el historial.
+  - Cuenta: Google con `signInWith(Google)`; la sesión vuelve por `com.unicauca.turinauta://login-callback` (manifiesto + `handleDeeplinks` en `MainActivity`); nombre desde `profiles.display_name`.
+  - Visitas: `my_visit_history`; foto a Storage `visit-photos/<uid>/<uuid>.<ext>`; `rpc/record_visit`. La distancia se revisa antes de subir la foto para no dejar archivos sin asociar.
+  - Reportes: `rpc/submit_content_report`.
+- Eliminados: repositorios `Fake*`, datos ilustrativos, `FakeNetworkConfig` y el panel «Modo pruebas».
+- Estados de error de red con «Reintentar» en Explorar, Rutas y Ficha.
+- Fechas con `java.time` (desugaring activado para Android 7).
+
+**Verificado:** lectura de columnas reales de todas las tablas públicas; la app muestra en el emulador los 8 lugares, las categorías y las 2 rutas desde Supabase; «Continuar con Google» abre el navegador y Supabase redirige a Google.
+
+**Sin verificar (requiere una cuenta Google real en el dispositivo):**
+- Que `com.unicauca.turinauta://login-callback` esté en *Authentication → URL Configuration → Redirect URLs* de Supabase.
+- Columnas exactas de `my_visit_history` (sin sesión responde «permission denied»); se leen de forma tolerante (`place_id`, `place_name`, `place_available`, `stamp_title`, `photo_path`, `visited_at`).
+- Subida de foto + `record_visit` (exige estar a ≤ 200 m del lugar con GPS real).
+
+## Pendiente
+
+- Probar el inicio con Google y el registro de una visita en un teléfono real en Popayán.
 - Inyectar MapLibre en `PlaceLocationMap`.
-- Cargar las imágenes autorizadas desde `image_path` cuando existan.
+- Mostrar las imágenes de `image_path` cuando existan.
 
 ## Bitácora
 
@@ -83,3 +103,4 @@ SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 | 24/11/2026 | Fases 2 y 3 completas; APK compilado y recorrido esencial probado en el emulador. |
 | 24/11/2026 | `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` leídas de `local.properties` hacia `BuildConfig` y `SupabaseConfig`. |
 | 24/11/2026 | AGP bajado de 9.5.1 a 9.2.1 y Gradle de 9.6.0 a 9.4.1 (máximo soportado por Android Studio 2026.1); se activa `android.r8.gradual.support` para conservar `optimization { enable = true }` en release. |
+| 25/11/2026 | Datos simulados reemplazados por Supabase (catálogo, rutas, colecciones, Google, visitas, reportes); verificado el catálogo real en el emulador. |

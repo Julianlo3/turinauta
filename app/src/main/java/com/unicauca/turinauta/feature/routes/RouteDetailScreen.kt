@@ -56,6 +56,12 @@ fun RouteDetailScreen(
         val route = state.route
         when {
             state.isLoading -> LoadingState()
+            state.error != null -> EmptyState(
+                icon = Icons.Outlined.SearchOff,
+                title = "No pudimos cargar la ruta",
+                message = state.error!!,
+                primaryAction = "Volver" to onBack,
+            )
             route == null -> EmptyState(
                 icon = Icons.Outlined.SearchOff,
                 title = "Esta ruta no está disponible",

@@ -8,12 +8,22 @@ package com.unicauca.turinauta.core.model
 /** Estado editorial: el móvil solo recibe contenido publicado (RLS). */
 enum class EditorialStatus { DRAFT, PUBLISHED, WITHDRAWN }
 
-/** `categories(id, name, slug, sort_order)`. */
-enum class Category(val label: String, val slug: String) {
-    GASTRONOMIA("Gastronomía", "gastronomia"),
-    ARTESANIAS("Artesanías", "artesanias"),
-    CULTURA("Cultura", "cultura"),
-    EMPRENDIMIENTOS("Emprendimientos", "emprendimientos"),
+/** `categories(id, name, slug, sort_order)`: solo categorías activas. */
+data class Category(
+    val id: String,
+    val label: String,
+    val slug: String,
+    val sortOrder: Int,
+) {
+    /** Ilustración local por categoría mientras no haya imágenes autorizadas. */
+    val illustration: Illustration
+        get() = when (slug) {
+            "gastronomia" -> Illustration.BOWL
+            "artesanias" -> Illustration.WEAVE
+            "emprendimientos" -> Illustration.CUP
+            "cultura" -> Illustration.CIRCLES
+            else -> Illustration.CLAY
+        }
 }
 
 /** Ilustración vectorial local mientras `image_path` no tenga imágenes autorizadas. */
@@ -174,6 +184,8 @@ sealed interface VisitResult {
 
 sealed interface AuthResult {
     data class Success(val user: UserProfile) : AuthResult
+    /** Se abrió el navegador con Google; la sesión llega por el deep link. */
+    data object Started : AuthResult
     data object Cancelled : AuthResult
     data class Error(val message: String) : AuthResult
 }

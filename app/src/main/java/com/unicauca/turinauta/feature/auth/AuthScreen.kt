@@ -61,6 +61,8 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val signedIn: Boolean = false,
+    /** Se abrió Google en el navegador; esperamos el regreso a la app. */
+    val waitingForGoogle: Boolean = false,
 )
 
 /** Inicio de sesión con Google a través de Supabase Auth (contrato API). */
@@ -71,12 +73,21 @@ class AuthViewModel(savedStateHandle: SavedStateHandle, private val auth: AuthRe
     )
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            auth.currentUser.collect { user ->
+                if (user != null) _uiState.update { it.copy(isLoading = false, waitingForGoogle = false, signedIn = true) }
+            }
+        }
+    }
+
     fun signInWithGoogle() {
         if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, error = null) }
         viewModelScope.launch {
             when (val result = auth.signInWithGoogle()) {
                 is AuthResult.Success -> _uiState.update { it.copy(isLoading = false, signedIn = true) }
+                AuthResult.Started -> _uiState.update { it.copy(isLoading = false, waitingForGoogle = true) }
                 AuthResult.Cancelled -> _uiState.update { it.copy(isLoading = false) }
                 is AuthResult.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
             }
@@ -144,6 +155,15 @@ fun AuthScreen(
                     Spacer(Modifier.width(12.dp))
                     Text("Continuar con Google", color = MaterialTheme.colorScheme.onSurface)
                 }
+            }
+            if (state.waitingForGoogle) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Completa el inicio de sesión en la ventana de Google. Al terminar volverás a Turinauta.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
             }
             Spacer(Modifier.height(16.dp))
             NoteBox(

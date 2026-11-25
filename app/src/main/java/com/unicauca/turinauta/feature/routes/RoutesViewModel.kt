@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.Route
 import com.unicauca.turinauta.data.repository.RouteRepository
+import com.unicauca.turinauta.data.supabase.friendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,12 +15,14 @@ import kotlinx.coroutines.launch
 data class RoutesUiState(
     val isLoading: Boolean = true,
     val routes: List<Route> = emptyList(),
+    val error: String? = null,
 )
 
 data class RouteDetailUiState(
     val isLoading: Boolean = true,
     val route: Route? = null,
     val places: List<Place> = emptyList(),
+    val error: String? = null,
 )
 
 /** Rutas temáticas publicadas (HU-08 a HU-10). */
@@ -33,9 +36,13 @@ class RoutesViewModel(private val repository: RouteRepository) : ViewModel() {
 
     fun loadRoutes() {
         viewModelScope.launch {
-            _list.update { it.copy(isLoading = it.routes.isEmpty()) }
-            val routes = repository.getRoutes()
-            _list.update { RoutesUiState(isLoading = false, routes = routes) }
+            _list.update { it.copy(isLoading = it.routes.isEmpty(), error = null) }
+            try {
+                val routes = repository.getRoutes()
+                _list.update { RoutesUiState(isLoading = false, routes = routes) }
+            } catch (e: Exception) {
+                _list.update { if (it.routes.isEmpty()) it.copy(isLoading = false, error = e.friendlyMessage()) else it.copy(isLoading = false) }
+            }
         }
     }
 
@@ -43,9 +50,13 @@ class RoutesViewModel(private val repository: RouteRepository) : ViewModel() {
         if (_detail.value.route?.id == routeId) return
         viewModelScope.launch {
             _detail.update { RouteDetailUiState(isLoading = true) }
-            val route = repository.getRoute(routeId)
-            val places = if (route != null) repository.getRoutePlaces(routeId) else emptyList()
-            _detail.update { RouteDetailUiState(isLoading = false, route = route, places = places) }
+            try {
+                val route = repository.getRoute(routeId)
+                val places = if (route != null) repository.getRoutePlaces(routeId) else emptyList()
+                _detail.update { RouteDetailUiState(isLoading = false, route = route, places = places) }
+            } catch (e: Exception) {
+                _detail.update { RouteDetailUiState(isLoading = false, error = e.friendlyMessage()) }
+            }
         }
     }
 }

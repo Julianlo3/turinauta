@@ -8,6 +8,7 @@ import com.unicauca.turinauta.core.model.Category
 import com.unicauca.turinauta.core.model.GeoPoint
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.data.repository.CatalogRepository
+import com.unicauca.turinauta.data.supabase.friendlyMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +28,8 @@ enum class SortOrder(val label: String, val description: String) {
 data class ExploreUiState(
     val isLoading: Boolean = true,
     val allPlaces: List<Place> = emptyList(),
+    val categories: List<Category> = emptyList(),
+    val loadError: String? = null,
     val query: String = "",
     val selectedCategory: Category? = null,
     val sortOrder: SortOrder = SortOrder.FEATURED,
@@ -56,7 +59,7 @@ data class ExploreUiState(
     fun distanceTo(place: Place): Double? =
         if (sortOrder == SortOrder.NEAREST) userLocation?.distanceMetersTo(place.location) else null
 
-    val isCatalogEmpty: Boolean get() = !isLoading && allPlaces.isEmpty()
+    val isCatalogEmpty: Boolean get() = !isLoading && loadError == null && allPlaces.isEmpty()
     val isSearching: Boolean get() = query.isNotBlank()
 }
 
@@ -75,9 +78,18 @@ class ExploreViewModel(
     /** Recarga el catálogo; solo muestra carga a pantalla completa si aún no hay datos. */
     fun load() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = it.allPlaces.isEmpty()) }
-            val places = catalog.getPlaces()
-            _uiState.update { it.copy(isLoading = false, allPlaces = places) }
+            _uiState.update { it.copy(isLoading = it.allPlaces.isEmpty(), loadError = null) }
+            try {
+                val places = catalog.getPlaces()
+                val categories = places.map { it.category }.distinctBy { it.id }.sortedBy { it.sortOrder }
+                _uiState.update { it.copy(isLoading = false, allPlaces = places, categories = categories) }
+            } catch (e: Exception) {
+                // Si ya había datos se conservan; si no, se muestra el error con «Reintentar».
+                _uiState.update {
+                    if (it.allPlaces.isEmpty()) it.copy(isLoading = false, loadError = e.friendlyMessage())
+                    else it.copy(isLoading = false, message = e.friendlyMessage())
+                }
+            }
         }
     }
 

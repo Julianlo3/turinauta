@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Route
@@ -109,6 +110,15 @@ fun PlaceDetailScreen(
     val place = state.place
     when {
         state.isLoading -> LoadingState()
+        state.loadError != null -> Column(Modifier.fillMaxSize().statusBarsPadding()) {
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") }
+            EmptyState(
+                icon = Icons.Outlined.CloudOff,
+                title = "No pudimos cargar la ficha",
+                message = state.loadError!!,
+                primaryAction = "Reintentar" to viewModel::loadPlace,
+            )
+        }
         place == null -> Column(Modifier.fillMaxSize().statusBarsPadding()) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver") }
             EmptyState(
