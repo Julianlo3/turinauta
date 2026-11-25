@@ -43,12 +43,14 @@
 - [x] Crear pruebas unitarias en `SupabaseMappersAndValidatorsTest.kt`.
 - [x] Verificado con `./gradlew assembleDebug testDebugUnitTest` (0 errores, 0 advertencias, pruebas en verde).
 
-### Fase 3 — Navegación, `MainActivity`, Explorar y Reportes `[PENDIENTE]`
-- [ ] Agregar dependencias `navigation-compose`, `lifecycle-runtime-compose`, `lifecycle-viewmodel-compose` y `coil-compose` (para imágenes remotas con fallback a `PlaceIllustration`).
-- [ ] `core/navigation/`: `Destinations.kt`, `MainScaffold.kt` (`NavigationBar` con Explorar, Rutas, Colección, Perfil), `TurinautaNavHost.kt`.
-- [ ] `MainActivity.kt` con edge-to-edge, `TurinautaTheme`, `supabase.handleDeeplinks(intent)` y `<intent-filter>` para `turinauta://auth-callback` en `AndroidManifest.xml`.
-- [ ] `feature/explore/`: `ExploreViewModel`, `ExploreScreen` (búsqueda, chips de categorías reales, banner rutas, ordenamiento Destacados / A-Z / Más cercanos), `PlaceDetailViewModel`, `PlaceDetailScreen`, `PlaceLocationMap`.
-- [ ] `feature/reports/`: `ReportViewModel`, `DataReportSheet` (modal privado conectado a `submit_content_report` sin cuenta).
+### Fase 3 — Navegación, `MainActivity`, Explorar y Reportes `[COMPLETADA]`
+- [x] Agregar dependencias `navigation-compose` (`2.8.9`), `lifecycle-runtime-compose` / `lifecycle-viewmodel-compose` (`2.8.7`) y `coil-compose` (`2.7.0`).
+- [x] `core/navigation/`: `Destinations.kt`, `MainScaffold.kt` (`NavigationBar` con Explorar, Rutas, Colección, Perfil), `TurinautaNavHost.kt` (`TurinautaApp`).
+- [x] `TurinautaApplication.kt` + `MainActivity.kt` con edge-to-edge, `TurinautaTheme`, `supabase.handleDeeplinks(intent)` y `<intent-filter>` para `turinauta://auth-callback` en `AndroidManifest.xml`.
+- [x] `feature/explore/`: `ExploreViewModel`, `ExploreScreen` (búsqueda, chips de categorías reales, banner rutas, ordenamiento Destacados / A-Z / Más cercanos opcional, tarjetas con Coil + fallback `PlaceIllustration`), `PlaceDetailViewModel`, `PlaceDetailScreen`, `PlaceLocationMap`.
+- [x] `feature/reports/`: `ReportViewModel`, `DataReportSheet` (modal privado conectado a `submit_content_report` sin cuenta).
+- [x] Pruebas unitarias en `ExploreAndReportViewModelTest.kt`.
+- [x] Verificado con `./gradlew assembleDebug testDebugUnitTest` (0 errores, 0 advertencias, pruebas en verde) y guardado en commit en `vistasJulian`.
 
 ### Fase 4 — Rutas, Autenticación Google OAuth y Registro de Visitas `[PENDIENTE]`
 - [ ] `feature/routes/`: `RoutesViewModel`, `RoutesScreen`, `RouteDetailScreen`.
@@ -65,3 +67,4 @@
 ## Registro de Cambios
 - **2026-11-24:** Fase 1 completada (`core/model`, `core/designsystem`, Compose en Gradle).
 - **2026-11-24:** Fase 2 implementada directamente contra Supabase real (`local.properties`, `BuildConfig`, `core/network`, `data/repository`, `data/remote`, `AppContainer` y pruebas unitarias).
+- **2026-11-24:** Fase 3 completada en rama `vistasJulian` (`TurinautaApplication`, `MainActivity` con OAuth deep link, `core/navigation`, `feature/explore`, `feature/reports` y pruebas unitarias).
