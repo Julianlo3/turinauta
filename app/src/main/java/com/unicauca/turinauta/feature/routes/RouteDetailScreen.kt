@@ -409,7 +409,7 @@ private fun RouteGalleryCard(
 ) {
     val place = stopItem.place
     val resolvedUrl = remember(place.imagePath) {
-        SupabaseConfig.resolvePublicMediaUrl(place.imagePath, defaultBucket = "places")
+        SupabaseConfig.resolvePublicMediaUrl(place.imagePath)
     }
     val shape = RoundedCornerShape(16.dp)
 
@@ -552,7 +552,6 @@ private fun RouteDetailedStopCard(
             ) {
                 RouteMiniMediaTile(
                     imagePath = place.imagePath,
-                    bucket = "places",
                     illustrationKey = place.illustrationKey,
                     size = 86.dp,
                     cornerRadius = 14.dp,

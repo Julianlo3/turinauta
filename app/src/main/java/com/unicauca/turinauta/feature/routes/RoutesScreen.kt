@@ -519,7 +519,6 @@ private fun RouteStopPreviewRow(
 
         RouteMiniMediaTile(
             imagePath = place.imagePath,
-            bucket = "places",
             illustrationKey = place.illustrationKey,
             size = 48.dp,
             cornerRadius = 12.dp,
@@ -564,7 +563,6 @@ internal fun RouteMediaCollage(
                 add(
                     CollageTile(
                         imagePath = routeImagePath,
-                        bucket = "routes",
                         illustrationKey = stopPlaces.firstOrNull()?.illustrationKey ?: IllustrationKey.GENERIC,
                     ),
                 )
@@ -573,7 +571,6 @@ internal fun RouteMediaCollage(
                 add(
                     CollageTile(
                         imagePath = place.imagePath,
-                        bucket = "places",
                         illustrationKey = place.illustrationKey,
                     ),
                 )
@@ -582,7 +579,6 @@ internal fun RouteMediaCollage(
                 add(
                     CollageTile(
                         imagePath = null,
-                        bucket = "routes",
                         illustrationKey = IllustrationKey.GENERIC,
                     ),
                 )
@@ -659,7 +655,6 @@ internal fun RouteMediaCollage(
 
 private data class CollageTile(
     val imagePath: String?,
-    val bucket: String,
     val illustrationKey: IllustrationKey,
 )
 
@@ -668,8 +663,8 @@ private fun CollageImageTile(
     tile: CollageTile,
     modifier: Modifier = Modifier,
 ) {
-    val resolvedUrl = remember(tile.imagePath, tile.bucket) {
-        SupabaseConfig.resolvePublicMediaUrl(tile.imagePath, defaultBucket = tile.bucket)
+    val resolvedUrl = remember(tile.imagePath) {
+        SupabaseConfig.resolvePublicMediaUrl(tile.imagePath)
     }
     Box(
         modifier = modifier.background(SurfaceThumbBeige),
@@ -701,14 +696,13 @@ private fun CollageImageTile(
 @Composable
 internal fun RouteMiniMediaTile(
     imagePath: String?,
-    bucket: String,
     illustrationKey: IllustrationKey,
     size: Dp,
     cornerRadius: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val resolvedUrl = remember(imagePath, bucket) {
-        SupabaseConfig.resolvePublicMediaUrl(imagePath, defaultBucket = bucket)
+    val resolvedUrl = remember(imagePath) {
+        SupabaseConfig.resolvePublicMediaUrl(imagePath)
     }
     if (resolvedUrl == null) {
         PlaceIllustration(

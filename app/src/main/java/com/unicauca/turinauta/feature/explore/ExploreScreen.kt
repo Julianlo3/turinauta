@@ -761,7 +761,7 @@ fun PlaceThumbnail(
     modifier: Modifier = Modifier,
 ) {
     val resolvedUrl = remember(imagePath) {
-        SupabaseConfig.resolvePublicMediaUrl(imagePath, defaultBucket = "places")
+        SupabaseConfig.resolvePublicMediaUrl(imagePath)
     }
     if (resolvedUrl == null) {
         PlaceIllustration(

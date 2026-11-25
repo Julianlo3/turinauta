@@ -503,7 +503,7 @@ private fun PlaceHeroMedia(
     illustrationKey: IllustrationKey,
 ) {
     val resolvedUrl = remember(imagePath) {
-        SupabaseConfig.resolvePublicMediaUrl(imagePath, defaultBucket = "places")
+        SupabaseConfig.resolvePublicMediaUrl(imagePath)
     }
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
 

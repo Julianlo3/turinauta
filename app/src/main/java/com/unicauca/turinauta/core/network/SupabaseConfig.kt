@@ -16,6 +16,7 @@ object SupabaseConfig {
 
     const val OAUTH_SCHEME = "turinauta"
     const val OAUTH_HOST = "auth-callback"
+    const val CATALOG_IMAGES_BUCKET = "catalog-images"
 
     /**
      * Deep link exacto que debe estar registrado en Supabase Dashboard:
@@ -33,22 +34,28 @@ object SupabaseConfig {
         val cleaned = photoPath?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) return cleaned
         if (url.isBlank()) return null
-        return "$url/storage/v1/object/public/${VisitRecord.VISIT_PHOTOS_BUCKET}/${cleaned.trimStart('/')}"
+        val trimmed = cleaned.trimStart('/')
+        val withoutBucket = trimmed.removePrefix("${VisitRecord.VISIT_PHOTOS_BUCKET}/")
+        return "$url/storage/v1/object/public/${VisitRecord.VISIT_PHOTOS_BUCKET}/$withoutBucket"
     }
 
     /**
-     * Resuelve la URL pública de un recurso en Storage si el backend devuelve una ruta relativa
-     * o devuelve la URL directa si ya viene completa.
+     * Resuelve la URL pública de una imagen del catálogo en Storage (`catalog-images`).
+     * Ejemplo: `places/fogon-de-la-plazuela/cover.jpg` ->
+     * `<SUPABASE_URL>/storage/v1/object/public/catalog-images/places/fogon-de-la-plazuela/cover.jpg`.
      */
-    fun resolvePublicMediaUrl(pathOrUrl: String?, defaultBucket: String): String? {
+    fun resolvePublicMediaUrl(
+        pathOrUrl: String?,
+        defaultBucket: String = CATALOG_IMAGES_BUCKET,
+    ): String? {
         val cleaned = pathOrUrl?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         if (cleaned.startsWith("http://") || cleaned.startsWith("https://")) return cleaned
         if (url.isBlank()) return null
         val trimmed = cleaned.trimStart('/')
-        return if (trimmed.startsWith("storage/v1/")) {
-            "$url/$trimmed"
-        } else {
-            "$url/storage/v1/object/public/$defaultBucket/$trimmed"
+        return when {
+            trimmed.startsWith("storage/v1/") -> "$url/$trimmed"
+            trimmed.startsWith("$defaultBucket/") -> "$url/storage/v1/object/public/$trimmed"
+            else -> "$url/storage/v1/object/public/$defaultBucket/$trimmed"
         }
     }
 }

@@ -452,7 +452,7 @@ private fun StampThumbnail(
     isEarned: Boolean,
 ) {
     val resolvedUrl = remember(imagePath) {
-        SupabaseConfig.resolvePublicMediaUrl(imagePath, defaultBucket = "stamps")
+        SupabaseConfig.resolvePublicMediaUrl(imagePath)
     }
     val visualAlpha = if (isEarned) 1f else 0.55f
 
