@@ -236,15 +236,20 @@ private fun CollectionSummaryBanner(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Progreso general en Popayán",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = OnSoftTealContainer,
-                    )
-                    Text(
-                        text = "$earnedStamps de $totalStamps sellos obtenidos ($progressPercent%)",
                         style = MaterialTheme.typography.titleMedium,
                         color = OnSoftTealContainer,
                     )
+                    Text(
+                        text = "$earnedStamps de $totalStamps sellos obtenidos",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SlateMedium,
+                    )
                 }
+                Text(
+                    text = "$progressPercent%",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = DeepTeal,
+                )
             }
             LinearProgressIndicator(
                 progress = { (progressPercent.coerceIn(0, 100)) / 100f },
