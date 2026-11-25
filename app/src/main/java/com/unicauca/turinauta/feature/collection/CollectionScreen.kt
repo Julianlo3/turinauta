@@ -54,12 +54,10 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -68,7 +66,6 @@ import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.MutedOchre
 import com.unicauca.turinauta.core.designsystem.OnDeepTeal
-import com.unicauca.turinauta.core.designsystem.OnSoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.PlaceIllustration
 import com.unicauca.turinauta.core.designsystem.PureWhite
@@ -338,18 +335,18 @@ private fun CollectionProgressCard(
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
     val completed = collection.isCompleted
-    Surface(
-        color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
-        shape = shape,
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                TurinautaDimens.CardBorderWidth,
-                if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
-                shape,
-            ),
-    ) {
-        Box {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Surface(
+            color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
+            shape = shape,
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    TurinautaDimens.CardBorderWidth,
+                    if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
+                    shape,
+                ),
+        ) {
             Column(
                 modifier = Modifier.padding(
                     start = 16.dp,
@@ -359,29 +356,12 @@ private fun CollectionProgressCard(
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(
-                    modifier = Modifier.padding(end = if (completed) 92.dp else 0.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = collection.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = SlateDark,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (!completed) {
-                            Text(
-                                text = "${collection.earnedStamps}/${collection.totalStamps}",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = DeepTeal,
-                            )
-                        }
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = collection.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = SlateDark,
+                    )
                     if (collection.description.isNotBlank()) {
                         Text(
                             text = collection.description,
@@ -402,18 +382,11 @@ private fun CollectionProgressCard(
                             .clip(RoundedCornerShape(4.dp)),
                     )
                     Text(
-                        text = if (completed) {
-                            "Colección completada (${collection.progressPercent}%)"
-                        } else {
-                            "${collection.progressPercent}% completado"
-                        },
-                        modifier = Modifier.padding(end = if (completed) 92.dp else 0.dp),
+                        text = "${collection.earnedStamps}/${collection.totalStamps} sellos",
                         style = MaterialTheme.typography.bodySmall,
                         color = SlateMedium,
                     )
                 }
-
-                if (completed) Spacer(modifier = Modifier.height(32.dp))
 
                 if (collection.stamps.isNotEmpty()) {
                     HorizontalDivider(color = if (completed) MutedOchre.copy(alpha = 0.3f) else SubtleOutline)
@@ -424,27 +397,23 @@ private fun CollectionProgressCard(
                     }
                 }
             }
-            if (completed) {
-                CompletedCollectionMedal(
-                    earnedStamps = collection.earnedStamps,
-                    totalStamps = collection.totalStamps,
-                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 8.dp),
-                )
-            }
+        }
+        if (completed) {
+            CompletedCollectionMedal(
+                modifier = Modifier.align(Alignment.TopEnd).padding(end = 8.dp).offset(y = (-16).dp),
+            )
         }
     }
 }
 
 @Composable
 private fun CompletedCollectionMedal(
-    earnedStamps: Int,
-    totalStamps: Int,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier = modifier.width(96.dp).height(112.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = "Colección completada, $earnedStamps de $totalStamps sellos obtenidos"
+                contentDescription = "Colección completada"
             },
         contentAlignment = Alignment.TopCenter,
     ) {
@@ -489,18 +458,6 @@ private fun CompletedCollectionMedal(
                 radius = radius * 0.76f,
                 center = androidx.compose.ui.geometry.Offset(centerX, centerY),
                 style = Stroke(width = 1.8.dp.toPx()),
-            )
-        }
-        Box(
-            modifier = Modifier.width(80.dp).height(76.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "$earnedStamps de $totalStamps",
-                color = OnSoftOchreContainer,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
             )
         }
     }
