@@ -174,9 +174,23 @@ class Phase5ViewModelsTest {
         advanceUntilIdle()
 
         assertEquals("Sello 1", earned.uiState.value.badge?.title)
-        assertEquals("Sabores", earned.uiState.value.collectionName)
+        assertEquals("Sabores", earned.uiState.value.collection?.name)
+        assertEquals(1, earned.uiState.value.collection?.earnedStamps)
+        earned.selectStamp("s2")
+        advanceUntilIdle()
+        assertEquals("Sello 1", earned.uiState.value.badge?.title)
         assertNull(pending.uiState.value.badge)
         assertTrue(pending.uiState.value.errorMessage?.contains("todavía") == true)
+
+        collectionRepo.earnedStamps = 2
+        earned.refresh()
+        advanceUntilIdle()
+        earned.selectStamp("s2")
+        advanceUntilIdle()
+        assertEquals("Sello 2", earned.uiState.value.badge?.title)
+        earned.selectStamp("s1")
+        advanceUntilIdle()
+        assertEquals("Sello 1", earned.uiState.value.badge?.title)
 
         authRepo.signOut()
         advanceUntilIdle()

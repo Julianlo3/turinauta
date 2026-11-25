@@ -3,6 +3,7 @@ package com.unicauca.turinauta.feature.collection
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.unicauca.turinauta.core.model.CollectionProgress
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.data.repository.AuthRepository
@@ -16,7 +17,7 @@ import kotlinx.coroutines.launch
 
 data class StampDetailUiState(
     val badge: RewardBadge? = null,
-    val collectionName: String = "",
+    val collection: CollectionProgress? = null,
     val place: Place? = null,
     val isLoading: Boolean = true,
     val isPlaceLoading: Boolean = false,
@@ -33,15 +34,19 @@ class StampDetailViewModel(
     private val mutableState = MutableStateFlow(StampDetailUiState())
     val uiState = mutableState.asStateFlow()
     private var requestVersion = 0L
+    private var selectedStampId = stampId
 
     init {
         viewModelScope.launch {
             authRepository.isAuthenticated.collectLatest { authenticated ->
                 val version = ++requestVersion
-                if (authenticated) loadStamp(version) else mutableState.value = StampDetailUiState(
-                    isLoading = false,
-                    errorMessage = "Inicia sesión para ver tus sellos obtenidos.",
-                )
+                if (authenticated) loadStamp(version) else {
+                    selectedStampId = stampId
+                    mutableState.value = StampDetailUiState(
+                        isLoading = false,
+                        errorMessage = "Inicia sesión para ver tus sellos obtenidos.",
+                    )
+                }
             }
         }
     }
@@ -51,6 +56,16 @@ class StampDetailViewModel(
             val version = ++requestVersion
             viewModelScope.launch { loadStamp(version) }
         }
+    }
+
+    fun selectStamp(id: String) {
+        val collection = mutableState.value.collection ?: return
+        val badge = collection.stamps.firstOrNull { it.id == id && it.isEarned } ?: return
+        if (badge.id == mutableState.value.badge?.id) return
+        selectedStampId = id
+        val version = ++requestVersion
+        showBadge(collection, badge)
+        viewModelScope.launch { loadPlace(badge, version) }
     }
 
     private fun isCurrentRequest(version: Long): Boolean =
@@ -68,7 +83,7 @@ class StampDetailViewModel(
             return
         }
         val match = collections.firstNotNullOfOrNull { collection ->
-            collection.stamps.firstOrNull { it.id == stampId && it.isEarned }?.let { collection to it }
+            collection.stamps.firstOrNull { it.id == selectedStampId && it.isEarned }?.let { collection to it }
         }
         if (match == null) {
             mutableState.value = StampDetailUiState(
@@ -78,12 +93,20 @@ class StampDetailViewModel(
             return
         }
         val (collection, badge) = match
+        showBadge(collection, badge)
+        loadPlace(badge, version)
+    }
+
+    private fun showBadge(collection: CollectionProgress, badge: RewardBadge) {
         mutableState.value = StampDetailUiState(
             badge = badge,
-            collectionName = collection.name,
+            collection = collection,
             isLoading = false,
             isPlaceLoading = badge.placeId != null,
         )
+    }
+
+    private suspend fun loadPlace(badge: RewardBadge, version: Long) {
         val placeId = badge.placeId ?: return
         val result = catalogRepository.getPlaceById(placeId)
         if (!isCurrentRequest(version)) return
