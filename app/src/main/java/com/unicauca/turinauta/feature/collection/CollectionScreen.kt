@@ -37,8 +37,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,9 +56,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -137,16 +133,13 @@ fun CollectionScreen(
     onStampClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    Box(modifier = modifier.fillMaxSize().background(WarmIvory)) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().background(WarmIvory),
         contentPadding = PaddingValues(
             start = TurinautaDimens.ScreenHorizontalPadding,
             end = TurinautaDimens.ScreenHorizontalPadding,
             top = 16.dp,
-            bottom = if (snackbarHostState.currentSnackbarData != null) 88.dp else 24.dp,
+            bottom = 24.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -237,26 +230,10 @@ fun CollectionScreen(
                     items = uiState.collections,
                     key = { it.id },
                 ) { collection ->
-                    CollectionProgressCard(
-                        collection = collection,
-                        onStampClick = onStampClick,
-                        onPendingStampClick = {
-                            scope.launch {
-                                snackbarHostState.currentSnackbarData?.dismiss()
-                                snackbarHostState.showSnackbar(
-                                    "Para obtener este sello, visita el lugar asociado y registra tu visita desde su ficha.",
-                                )
-                            }
-                        },
-                    )
+                    CollectionProgressCard(collection = collection, onStampClick = onStampClick)
                 }
             }
         }
-    }
-    SnackbarHost(
-        hostState = snackbarHostState,
-        modifier = Modifier.align(Alignment.BottomCenter).semantics { liveRegion = LiveRegionMode.Polite },
-    )
     }
 }
 
@@ -359,7 +336,6 @@ private fun AnonymousCollectionBanner(
 private fun CollectionProgressCard(
     collection: CollectionProgress,
     onStampClick: (String) -> Unit,
-    onPendingStampClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
     val completed = collection.isCompleted
@@ -416,8 +392,7 @@ private fun CollectionProgressCard(
                 if (collection.stamps.isNotEmpty()) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         collection.stamps.forEach { badge ->
-                            RewardBadgeRow(badge = badge, onStampClick = onStampClick,
-                                onPendingStampClick = onPendingStampClick)
+                            RewardBadgeRow(badge = badge, onStampClick = onStampClick)
                         }
                     }
                 }
@@ -512,7 +487,6 @@ private fun CompletedCollectionMedal(
 private fun RewardBadgeRow(
     badge: RewardBadge,
     onStampClick: (String) -> Unit,
-    onPendingStampClick: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
@@ -527,7 +501,6 @@ private fun RewardBadgeRow(
                     onStampClick(badge.id)
                 } else {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onPendingStampClick()
                     scope.launch {
                         shake.snapTo(0f)
                         for (target in listOf(-shift, shift, -shift * 0.7f, shift * 0.7f, 0f)) {
@@ -540,7 +513,7 @@ private fun RewardBadgeRow(
                 contentDescription = if (badge.isEarned) {
                     "Sello ${badge.title}, obtenido. Abrir detalle"
                 } else {
-                    "Sello ${badge.title}, pendiente. Toca para saber cómo obtenerlo"
+                    "Sello ${badge.title}, pendiente. Bloqueado"
                 }
             },
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -733,7 +706,6 @@ private fun CompletedCollectionCardPreview() {
                     ),
                 ),
                 onStampClick = {},
-                onPendingStampClick = {},
             )
         }
     }
