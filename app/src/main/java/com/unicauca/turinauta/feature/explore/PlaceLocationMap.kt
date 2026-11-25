@@ -1,6 +1,10 @@
 package com.unicauca.turinauta.feature.explore
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color as AndroidColor
 import android.graphics.drawable.GradientDrawable
@@ -67,6 +71,7 @@ import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import com.unicauca.turinauta.data.repository.MapPoint
 import com.unicauca.turinauta.data.repository.WalkingRoute
 import androidx.compose.ui.graphics.toArgb
@@ -147,6 +152,14 @@ fun FullScreenPlaceMap(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val activity = remember(context) { findActivity(context) }
+    DisposableEffect(activity) {
+        val previousOrientation = activity?.requestedOrientation
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+        onDispose {
+            if (previousOrientation != null) activity.requestedOrientation = previousOrientation
+        }
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val permissions = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
     val hasPermission = permissions.any {
@@ -230,6 +243,11 @@ fun FullScreenPlaceMap(
     }
 }
 
+private fun findActivity(context: Context): Activity? =
+    generateSequence(context) { (it as? ContextWrapper)?.baseContext }
+        .filterIsInstance<Activity>()
+        .firstOrNull()
+
 @Composable
 private fun OpenStreetMapView(
     latitude: Double,
@@ -256,6 +274,9 @@ private fun OpenStreetMapView(
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(interactive)
+            if (interactive) {
+                overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+            }
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             controller.setZoom(if (interactive) 17.0 else 16.0)
             val point = GeoPoint(latitude, longitude)
@@ -322,6 +343,25 @@ private fun OpenStreetMapView(
             lifecycleOwner.lifecycle.removeObserver(observer)
             mapView.onPause()
             mapView.onDetach()
+        }
+    }
+
+    DisposableEffect(mapView, lifecycleOwner, interactive, userLocation) {
+        val tracker = if (interactive && userLocation != null) {
+            PlaceMapHeadingTracker(context, mapView, userLocation)
+        } else null
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> tracker?.start()
+                Lifecycle.Event.ON_PAUSE -> tracker?.stop()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) tracker?.start()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            tracker?.stop()
         }
     }
 
