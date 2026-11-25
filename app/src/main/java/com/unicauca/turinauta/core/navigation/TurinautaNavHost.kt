@@ -10,13 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -34,9 +32,11 @@ import com.unicauca.turinauta.core.designsystem.OnDeepTeal
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaLogoMark
 import com.unicauca.turinauta.data.AppContainer
+import com.unicauca.turinauta.feature.auth.AuthRoute
 import com.unicauca.turinauta.feature.explore.ExploreRoute
 import com.unicauca.turinauta.feature.explore.PlaceDetailRoute
-import kotlinx.coroutines.launch
+import com.unicauca.turinauta.feature.routes.RouteDetailRoute
+import com.unicauca.turinauta.feature.routes.RoutesRoute
 
 @Composable
 fun TurinautaApp(
@@ -47,7 +47,6 @@ fun TurinautaApp(
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = currentRoute in TurinautaRoutes.topLevelRoutes
     val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
 
     fun navigateToTopLevel(destination: TopLevelDestination) {
         navController.navigate(destination.route) {
@@ -68,12 +67,7 @@ fun TurinautaApp(
         TurinautaNavHost(
             navController = navController,
             container = container,
-            onNavigateToRoutesTab = { navigateToTopLevel(TopLevelDestination.ROUTES) },
-            onShowFeedback = { message ->
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(message)
-                }
-            },
+            onNavigateToTopLevel = ::navigateToTopLevel,
             modifier = Modifier.padding(innerPadding),
         )
     }
@@ -83,8 +77,7 @@ fun TurinautaApp(
 fun TurinautaNavHost(
     navController: NavHostController,
     container: AppContainer,
-    onNavigateToRoutesTab: () -> Unit,
-    onShowFeedback: (String) -> Unit,
+    onNavigateToTopLevel: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -95,7 +88,7 @@ fun TurinautaNavHost(
         composable(TurinautaRoutes.EXPLORE) {
             ExploreRoute(
                 catalogRepository = container.catalogRepository,
-                onRoutesBannerClick = onNavigateToRoutesTab,
+                onRoutesBannerClick = { onNavigateToTopLevel(TopLevelDestination.ROUTES) },
                 onPlaceClick = { placeId ->
                     navController.navigate(TurinautaRoutes.placeDetail(placeId))
                 },
@@ -115,20 +108,43 @@ fun TurinautaNavHost(
                 reportRepository = container.reportRepository,
                 onBackClick = { navController.popBackStack() },
                 onRequireAuth = { navController.navigate(TurinautaRoutes.AUTH) },
-                onStartVisitRegistration = { place ->
-                    onShowFeedback(
-                        "Flujo de captura de foto y ubicación para ${place.name} se conectará en la Fase 4.",
-                    )
-                },
+                onNavigateToCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
             )
         }
 
         composable(TurinautaRoutes.ROUTES) {
-            PhasePendingSection(
-                title = "Rutas temáticas",
-                description = "Aquí se listarán los recorridos curados de Popayán con sus paradas sugeridas (Fase 4).",
-                primaryActionLabel = "Volver a Explorar",
-                onPrimaryAction = { navController.navigate(TurinautaRoutes.EXPLORE) },
+            RoutesRoute(
+                routeRepository = container.routeRepository,
+                onRouteClick = { routeId ->
+                    navController.navigate(TurinautaRoutes.routeDetail(routeId))
+                },
+                onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
+            )
+        }
+
+        composable(
+            route = TurinautaRoutes.ROUTE_DETAIL_PATTERN,
+            arguments = listOf(navArgument(TurinautaRoutes.ARG_ROUTE_ID) { type = NavType.StringType }),
+        ) { entry ->
+            val routeId = entry.arguments?.getString(TurinautaRoutes.ARG_ROUTE_ID).orEmpty()
+            RouteDetailRoute(
+                routeId = routeId,
+                routeRepository = container.routeRepository,
+                catalogRepository = container.catalogRepository,
+                visitRepository = container.visitRepository,
+                authRepository = container.authRepository,
+                onBackClick = { navController.popBackStack() },
+                onPlaceClick = { placeId ->
+                    navController.navigate(TurinautaRoutes.placeDetail(placeId))
+                },
+            )
+        }
+
+        composable(TurinautaRoutes.AUTH) {
+            AuthRoute(
+                authRepository = container.authRepository,
+                onBackClick = { navController.popBackStack() },
+                onAuthenticated = { navController.popBackStack() },
             )
         }
 
@@ -137,7 +153,7 @@ fun TurinautaNavHost(
                 title = "Tu colección de sellos",
                 description = "Aquí podrás consultar el progreso de tus colecciones y recompensas digitales (Fase 5).",
                 primaryActionLabel = "Volver a Explorar",
-                onPrimaryAction = { navController.navigate(TurinautaRoutes.EXPLORE) },
+                onPrimaryAction = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
             )
         }
 
@@ -145,29 +161,8 @@ fun TurinautaNavHost(
             PhasePendingSection(
                 title = "Perfil e historial",
                 description = "Aquí gestionarás tu sesión con Google y tu historial de visitas registradas (Fase 5).",
-                primaryActionLabel = "Ir a iniciar sesión",
+                primaryActionLabel = "Iniciar sesión con Google",
                 onPrimaryAction = { navController.navigate(TurinautaRoutes.AUTH) },
-            )
-        }
-
-        composable(TurinautaRoutes.AUTH) {
-            val coroutineScope = rememberCoroutineScope()
-            PhasePendingSection(
-                title = "Inicia sesión en Turinauta",
-                description = "Usa tu cuenta de Google para registrar visitas, recibir sellos y guardar tu progreso.",
-                primaryActionLabel = "Continuar con Google",
-                onPrimaryAction = {
-                    coroutineScope.launch {
-                        container.authRepository.signInWithGoogle()
-                            .onFailure {
-                                onShowFeedback(
-                                    "Configura SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en local.properties para iniciar sesión.",
-                                )
-                            }
-                    }
-                },
-                secondaryActionLabel = "Volver",
-                onSecondaryAction = { navController.popBackStack() },
             )
         }
     }
@@ -179,8 +174,6 @@ private fun PhasePendingSection(
     description: String,
     primaryActionLabel: String,
     onPrimaryAction: () -> Unit,
-    secondaryActionLabel: String? = null,
-    onSecondaryAction: (() -> Unit)? = null,
 ) {
     Column(
         modifier = Modifier
@@ -214,15 +207,6 @@ private fun PhasePendingSection(
             modifier = Modifier.heightIn(min = TurinautaDimens.MinTouchTarget),
         ) {
             Text(primaryActionLabel)
-        }
-        if (secondaryActionLabel != null && onSecondaryAction != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedButton(
-                onClick = onSecondaryAction,
-                modifier = Modifier.heightIn(min = TurinautaDimens.MinTouchTarget),
-            ) {
-                Text(secondaryActionLabel, color = DeepTeal)
-            }
         }
     }
 }

@@ -52,10 +52,12 @@
 - [x] Pruebas unitarias en `ExploreAndReportViewModelTest.kt`.
 - [x] Verificado con `./gradlew assembleDebug testDebugUnitTest` (0 errores, 0 advertencias, pruebas en verde) y guardado en commit en `vistasJulian`.
 
-### Fase 4 — Rutas, Autenticación Google OAuth y Registro de Visitas `[PENDIENTE]`
-- [ ] `feature/routes/`: `RoutesViewModel`, `RoutesScreen`, `RouteDetailScreen`.
-- [ ] `feature/auth/`: `AuthViewModel`, `AuthScreen` (flujo real Google OAuth con `signInWithGoogle()` + manejo de retorno por deep link).
-- [ ] `feature/visits/`: `RegisterVisitUseCase`, `ConfirmVisitSheet` (selector/cámara de foto JPG/PNG/WebP ≤5 MB + lectura de ubicación GPS con `play-services-location` o `LocationManager`), `VisitResultDialog` (éxito con sello, ya registrada, >200 m, error con «Reintentar» HU-18).
+### Fase 4 — Rutas, Autenticación Google OAuth y Registro de Visitas `[COMPLETADA]`
+- [x] `feature/routes/`: `RoutesViewModel`, `RoutesScreen`, `RouteDetailViewModel`, `RouteDetailScreen` (paradas ordenadas por `suggested_order` con insignia de lugar ya visitado).
+- [x] `feature/auth/`: `AuthViewModel`, `AuthScreen` (flujo real Google OAuth con `signInWithGoogle()` y retorno por deep link `turinauta://auth-callback`).
+- [x] `feature/visits/`: `RegisterVisitUseCase`, `VisitRegistrationViewModel`, `ConfirmVisitSheet` (cámara con `FileProvider` + galería, compresión segura ≤5 MB + lectura GPS fresca y cálculo de distancia ≤200 m), `VisitResultDialog` (éxito con sello, ya registrada, >200 m, foto inválida, sin sesión y error de red con «Reintentar» HU-18).
+- [x] Conexión completa en `PlaceDetailScreen.kt` y `TurinautaNavHost.kt` + pruebas unitarias en `Phase4ViewModelsTest.kt`.
+- [x] Verificado con `./gradlew assembleDebug testDebugUnitTest` (0 errores, 0 advertencias, pruebas en verde) y guardado en commit en `vistasJulian`.
 
 ### Fase 5 — Colección, Perfil, Historial y Pulido Final `[PENDIENTE]`
 - [ ] `feature/collection/`: `CollectionViewModel`, `CollectionScreen` (estado **Obtenida** / **Pendiente** con texto + icono, progreso `earned/total`).
@@ -68,3 +70,4 @@
 - **2026-11-24:** Fase 1 completada (`core/model`, `core/designsystem`, Compose en Gradle).
 - **2026-11-24:** Fase 2 implementada directamente contra Supabase real (`local.properties`, `BuildConfig`, `core/network`, `data/repository`, `data/remote`, `AppContainer` y pruebas unitarias).
 - **2026-11-24:** Fase 3 completada en rama `vistasJulian` (`TurinautaApplication`, `MainActivity` con OAuth deep link, `core/navigation`, `feature/explore`, `feature/reports` y pruebas unitarias).
+- **2026-11-24:** Fase 4 completada en rama `vistasJulian` (`feature/routes`, `feature/auth`, `feature/visits` con `FileProvider` + GPS ≤200 m, conexión en `PlaceDetailScreen`/`TurinautaNavHost` y pruebas unitarias).

@@ -41,6 +41,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,6 +74,7 @@ import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.IllustrationKey
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.VisitRecord
+import com.unicauca.turinauta.core.model.VisitResult
 import com.unicauca.turinauta.core.network.SupabaseConfig
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CatalogRepository
@@ -80,6 +82,9 @@ import com.unicauca.turinauta.data.repository.ReportRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
 import com.unicauca.turinauta.feature.reports.DataReportSheet
 import com.unicauca.turinauta.feature.reports.ReportViewModel
+import com.unicauca.turinauta.feature.visits.ConfirmVisitSheet
+import com.unicauca.turinauta.feature.visits.VisitRegistrationViewModel
+import com.unicauca.turinauta.feature.visits.VisitResultDialog
 import java.util.Locale
 
 @Composable
@@ -91,7 +96,7 @@ fun PlaceDetailRoute(
     reportRepository: ReportRepository,
     onBackClick: () -> Unit,
     onRequireAuth: () -> Unit,
-    onStartVisitRegistration: (Place) -> Unit,
+    onNavigateToCollection: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: PlaceDetailViewModel = viewModel(
@@ -110,17 +115,36 @@ fun PlaceDetailRoute(
             reportRepository = reportRepository,
         ),
     )
+    val visitViewModel: VisitRegistrationViewModel = viewModel(
+        key = "visit_$placeId",
+        factory = VisitRegistrationViewModel.factory(visitRepository),
+    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val reportUiState by reportViewModel.uiState.collectAsStateWithLifecycle()
+    val visitUiState by visitViewModel.uiState.collectAsStateWithLifecycle()
     var showReportSheet by remember { mutableStateOf(false) }
+    var showVisitSheet by remember { mutableStateOf(false) }
+
+    LaunchedEffect(visitUiState.visitResult) {
+        when (visitUiState.visitResult) {
+            is VisitResult.VisitCreated,
+            is VisitResult.VisitDuplicate,
+            -> {
+                showVisitSheet = false
+                viewModel.refreshExistingVisit()
+            }
+            else -> Unit
+        }
+    }
 
     PlaceDetailScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onRetryClick = viewModel::loadPlaceDetail,
-        onRegisterVisitClick = { place ->
+        onRegisterVisitClick = {
             if (uiState.isAuthenticated) {
-                onStartVisitRegistration(place)
+                visitViewModel.reset()
+                showVisitSheet = true
             } else {
                 onRequireAuth()
             }
@@ -143,6 +167,58 @@ fun PlaceDetailRoute(
             onDismiss = {
                 showReportSheet = false
                 reportViewModel.reset()
+            },
+        )
+    }
+
+    if (showVisitSheet && currentPlace != null) {
+        ConfirmVisitSheet(
+            place = currentPlace,
+            uiState = visitUiState,
+            onPhotoSelected = visitViewModel::onPhotoSelected,
+            onPhotoError = visitViewModel::onPhotoError,
+            onLocationLoading = visitViewModel::onLocationLoading,
+            onLocationResolved = { lat, lon ->
+                visitViewModel.onLocationResolved(
+                    userLat = lat,
+                    userLon = lon,
+                    placeLat = currentPlace.latitude,
+                    placeLon = currentPlace.longitude,
+                )
+            },
+            onLocationError = visitViewModel::onLocationError,
+            onConfirmClick = { visitViewModel.submitVisit(currentPlace.id) },
+            onDismiss = {
+                showVisitSheet = false
+                visitViewModel.reset()
+            },
+        )
+    }
+
+    val visitResult = visitUiState.visitResult
+    if (visitResult != null && currentPlace != null) {
+        VisitResultDialog(
+            result = visitResult,
+            placeName = currentPlace.name,
+            onDismiss = {
+                visitViewModel.dismissResult()
+                if (visitResult is VisitResult.VisitCreated || visitResult is VisitResult.VisitDuplicate) {
+                    visitViewModel.reset()
+                }
+            },
+            onRetry = {
+                visitViewModel.dismissResult()
+                visitViewModel.submitVisit(currentPlace.id)
+            },
+            onViewCollection = {
+                visitViewModel.reset()
+                showVisitSheet = false
+                onNavigateToCollection()
+            },
+            onGoToAuth = {
+                visitViewModel.reset()
+                showVisitSheet = false
+                onRequireAuth()
             },
         )
     }
