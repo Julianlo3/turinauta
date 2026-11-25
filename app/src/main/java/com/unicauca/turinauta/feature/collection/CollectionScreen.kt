@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -400,7 +401,7 @@ private fun CollectionProgressCard(
         }
         if (completed) {
             CompletedCollectionMedal(
-                modifier = Modifier.align(Alignment.TopEnd).padding(end = 8.dp).offset(y = (-16).dp),
+                modifier = Modifier.align(Alignment.TopEnd).offset(y = (-16).dp),
             )
         }
     }
@@ -411,7 +412,8 @@ private fun CompletedCollectionMedal(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.width(96.dp).height(112.dp)
+        modifier = modifier.width(82.dp).height(96.dp)
+            .graphicsLayer { rotationZ = 9f }
             .semantics(mergeDescendants = true) {
                 contentDescription = "Colección completada"
             },
