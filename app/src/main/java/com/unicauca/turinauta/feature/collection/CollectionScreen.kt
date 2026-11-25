@@ -47,16 +47,19 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -84,7 +87,10 @@ import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
+import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlinx.coroutines.launch
 
 @Composable
@@ -344,19 +350,19 @@ private fun CollectionProgressCard(
             ),
     ) {
         Box {
-            if (completed) CompletedCollectionRibbon(
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp),
-            )
             Column(
                 modifier = Modifier.padding(
                     start = 16.dp,
                     end = 16.dp,
-                    top = if (completed) 54.dp else 16.dp,
+                    top = 16.dp,
                     bottom = 16.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    modifier = Modifier.padding(end = if (completed) 92.dp else 0.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -368,11 +374,13 @@ private fun CollectionProgressCard(
                             color = SlateDark,
                             modifier = Modifier.weight(1f),
                         )
-                        Text(
-                            text = "${collection.earnedStamps}/${collection.totalStamps}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = DeepTeal,
-                        )
+                        if (!completed) {
+                            Text(
+                                text = "${collection.earnedStamps}/${collection.totalStamps}",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = DeepTeal,
+                            )
+                        }
                     }
                     if (collection.description.isNotBlank()) {
                         Text(
@@ -399,10 +407,13 @@ private fun CollectionProgressCard(
                         } else {
                             "${collection.progressPercent}% completado"
                         },
+                        modifier = Modifier.padding(end = if (completed) 92.dp else 0.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = SlateMedium,
                     )
                 }
+
+                if (completed) Spacer(modifier = Modifier.height(32.dp))
 
                 if (collection.stamps.isNotEmpty()) {
                     HorizontalDivider(color = if (completed) MutedOchre.copy(alpha = 0.3f) else SubtleOutline)
@@ -413,33 +424,84 @@ private fun CollectionProgressCard(
                     }
                 }
             }
+            if (completed) {
+                CompletedCollectionMedal(
+                    earnedStamps = collection.earnedStamps,
+                    totalStamps = collection.totalStamps,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(top = 8.dp, end = 8.dp),
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun CompletedCollectionRibbon(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.width(130.dp).height(32.dp), contentAlignment = Alignment.Center) {
+private fun CompletedCollectionMedal(
+    earnedStamps: Int,
+    totalStamps: Int,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.width(96.dp).height(112.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "Colección completada, $earnedStamps de $totalStamps sellos obtenidos"
+            },
+        contentAlignment = Alignment.TopCenter,
+    ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val notch = size.height * 0.28f
-            val ribbon = Path().apply {
-                moveTo(notch, 0f)
-                lineTo(size.width, 0f)
-                lineTo(size.width, size.height)
-                lineTo(notch, size.height)
-                lineTo(0f, size.height / 2f)
+            val w = size.width
+            val h = size.height
+            val leftTail = Path().apply {
+                moveTo(w * 0.23f, h * 0.48f)
+                lineTo(w * 0.51f, h * 0.54f)
+                lineTo(w * 0.39f, h)
+                lineTo(w * 0.28f, h * 0.87f)
+                lineTo(w * 0.08f, h * 0.94f)
                 close()
             }
-            drawPath(ribbon, MutedOchre)
+            val rightTail = Path().apply {
+                moveTo(w * 0.49f, h * 0.54f)
+                lineTo(w * 0.77f, h * 0.48f)
+                lineTo(w * 0.92f, h * 0.94f)
+                lineTo(w * 0.72f, h * 0.87f)
+                lineTo(w * 0.61f, h)
+                close()
+            }
+            drawPath(leftTail, DeepTeal)
+            drawPath(rightTail, DeepTeal)
+
+            val centerX = w * 0.5f
+            val centerY = h * 0.34f
+            val radius = w * 0.39f
+            val medal = Path().apply {
+                for (step in 0..240) {
+                    val angle = step * 2.0 * PI / 240.0 - PI / 2.0
+                    val scallop = 1f + 0.045f * cos(12.0 * angle).toFloat()
+                    val x = centerX + radius * scallop * cos(angle).toFloat()
+                    val y = centerY + radius * scallop * sin(angle).toFloat()
+                    if (step == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            drawPath(medal, MutedOchre)
+            drawCircle(
+                color = PureWhite.copy(alpha = 0.85f),
+                radius = radius * 0.76f,
+                center = androidx.compose.ui.geometry.Offset(centerX, centerY),
+                style = Stroke(width = 1.8.dp.toPx()),
+            )
         }
-        Row(
-            modifier = Modifier.padding(start = 13.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        Box(
+            modifier = Modifier.width(80.dp).height(76.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.WorkspacePremium, contentDescription = null,
-                tint = OnSoftOchreContainer, modifier = Modifier.size(17.dp))
-            Text("COMPLETA", style = MaterialTheme.typography.labelSmall, color = OnSoftOchreContainer)
+            Text(
+                text = "$earnedStamps de $totalStamps",
+                color = OnSoftOchreContainer,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
         }
     }
 }
