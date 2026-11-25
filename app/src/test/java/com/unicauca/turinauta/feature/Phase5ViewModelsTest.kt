@@ -78,6 +78,28 @@ class Phase5ViewModelsTest {
     }
 
     @Test
+    fun collectionViewModelReloadsProgressWhenScreenBecomesVisibleAgain() = runTest(testDispatcher) {
+        val authRepo = MutableAuthRepo(
+            initialUser = UserProfile("u1", "Julián", "julian@unicauca.edu.co"),
+        )
+        val collectionRepo = StubCollectionRepo()
+        val vm = CollectionViewModel(collectionRepo, authRepo)
+        advanceUntilIdle()
+        assertEquals(1, vm.uiState.value.earnedStamps)
+        assertEquals(1, collectionRepo.myProgressRequests)
+
+        vm.onScreenVisible()
+        advanceUntilIdle()
+        assertEquals(1, collectionRepo.myProgressRequests)
+
+        collectionRepo.earnedStamps = 2
+        vm.onScreenVisible()
+        advanceUntilIdle()
+        assertEquals(2, collectionRepo.myProgressRequests)
+        assertEquals(2, vm.uiState.value.earnedStamps)
+    }
+
+    @Test
     fun profileViewModelLoadsStatsAndClearsPrivateStateOnSignOut() = runTest(testDispatcher) {
         val authRepo = MutableAuthRepo(
             initialUser = UserProfile("u1", "Julián", "julian@unicauca.edu.co"),
@@ -184,6 +206,9 @@ class Phase5ViewModelsTest {
     }
 
     private class StubCollectionRepo : CollectionRepository {
+        var earnedStamps = 1
+        var myProgressRequests = 0
+
         override suspend fun getPublicCollections(): Result<List<CollectionProgress>> = Result.success(
             listOf(
                 CollectionProgress(
@@ -201,22 +226,25 @@ class Phase5ViewModelsTest {
             ),
         )
 
-        override suspend fun getMyCollectionProgress(): Result<List<CollectionProgress>> = Result.success(
-            listOf(
-                CollectionProgress(
-                    id = "c1",
-                    name = "Sabores",
-                    slug = "sabores",
-                    description = "Desc",
-                    totalStamps = 2,
-                    earnedStamps = 1,
-                    stamps = listOf(
-                        RewardBadge("s1", "Sello 1", "Desc 1", isEarned = true),
-                        RewardBadge("s2", "Sello 2", "Desc 2", isEarned = false),
+        override suspend fun getMyCollectionProgress(): Result<List<CollectionProgress>> {
+            myProgressRequests++
+            return Result.success(
+                listOf(
+                    CollectionProgress(
+                        id = "c1",
+                        name = "Sabores",
+                        slug = "sabores",
+                        description = "Desc",
+                        totalStamps = 2,
+                        earnedStamps = earnedStamps,
+                        stamps = listOf(
+                            RewardBadge("s1", "Sello 1", "Desc 1", isEarned = true),
+                            RewardBadge("s2", "Sello 2", "Desc 2", isEarned = earnedStamps == 2),
+                        ),
                     ),
                 ),
-            ),
-        )
+            )
+        }
     }
 
     private class StubVisitRepo(private val history: List<VisitRecord>) : VisitRepository {

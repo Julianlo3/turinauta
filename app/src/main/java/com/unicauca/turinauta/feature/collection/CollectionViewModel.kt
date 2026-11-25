@@ -10,6 +10,7 @@ import com.unicauca.turinauta.data.repository.CollectionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,9 @@ class CollectionViewModel(
     private val authRepository: AuthRepository,
 ) : ViewModel() {
 
+    private var hasBeenVisible = false
+    private var requestVersion = 0L
+
     private val _uiState = MutableStateFlow(
         CollectionUiState(isAuthenticated = authRepository.isAuthenticated.value),
     )
@@ -42,7 +46,7 @@ class CollectionViewModel(
 
     init {
         viewModelScope.launch {
-            authRepository.isAuthenticated.collect { authenticated ->
+            authRepository.isAuthenticated.collectLatest { authenticated ->
                 _uiState.update { it.copy(isAuthenticated = authenticated) }
                 loadCollections(authenticated)
             }
@@ -55,7 +59,12 @@ class CollectionViewModel(
         }
     }
 
+    fun onScreenVisible() {
+        if (hasBeenVisible) refresh() else hasBeenVisible = true
+    }
+
     private suspend fun loadCollections(authenticated: Boolean) {
+        val version = ++requestVersion
         _uiState.update {
             it.copy(
                 isLoading = true,
@@ -69,6 +78,7 @@ class CollectionViewModel(
         } else {
             collectionRepository.getPublicCollections()
         }
+        if (version != requestVersion || authRepository.isAuthenticated.value != authenticated) return
 
         result
             .onSuccess { list ->
