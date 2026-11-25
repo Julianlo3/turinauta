@@ -441,19 +441,19 @@ private fun ProfileStatCard(
             .semantics(mergeDescendants = true) {},
     ) {
         Row(
-            modifier = Modifier.padding(14.dp).heightIn(min = 76.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(10.dp).heightIn(min = 58.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier.size(42.dp).clip(CircleShape).background(iconBackground),
+                modifier = Modifier.size(38.dp).clip(CircleShape).background(iconBackground),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(22.dp))
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
             }
-            Box(modifier = Modifier.width(1.dp).height(42.dp).background(SubtleOutline))
+            Box(modifier = Modifier.width(1.dp).height(38.dp).background(SubtleOutline))
             Column(modifier = Modifier.weight(1f)) {
-                Text(value, style = MaterialTheme.typography.headlineLarge, color = DeepTeal)
+                Text(value, style = MaterialTheme.typography.headlineMedium, color = DeepTeal)
                 Text(label, style = MaterialTheme.typography.bodySmall, color = SlateMedium)
             }
         }
