@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -361,8 +362,10 @@ private fun RouteRichCard(
                     }
 
                     if (showVisitedProgress && stopCount > 0 && item.visitedStopsCount > 0) {
+                        val completed = item.visitedStopsCount >= stopCount
                         Surface(
-                            color = SoftTealContainer.copy(alpha = 0.96f),
+                            color = if (completed) SoftTealContainer.copy(alpha = 0.96f)
+                                else SurfaceLowSand.copy(alpha = 0.96f),
                             shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
                         ) {
                             Row(
@@ -371,15 +374,15 @@ private fun RouteRichCard(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.CheckCircle,
+                                    imageVector = if (completed) Icons.Rounded.CheckCircle else Icons.Rounded.Timelapse,
                                     contentDescription = null,
-                                    tint = OnSoftTealContainer,
+                                    tint = if (completed) OnSoftTealContainer else SlateDark,
                                     modifier = Modifier.size(14.dp),
                                 )
                                 Text(
                                     text = "${item.visitedStopsCount}/$stopCount visitadas",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = OnSoftTealContainer,
+                                    color = if (completed) OnSoftTealContainer else SlateDark,
                                 )
                             }
                         }
