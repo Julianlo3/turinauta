@@ -3,6 +3,7 @@ package com.unicauca.turinauta.core.designsystem
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,15 +30,15 @@ private val SectionTitleStyle = TextStyle(
 @Composable
 fun TurinautaSectionTitle(title: String, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        Text(text = title, style = SectionTitleStyle, color = DeepTeal, modifier = Modifier.weight(1f))
         Image(
             painter = painterResource(R.drawable.turinauta_header_mark),
             contentDescription = null,
             modifier = Modifier.size(width = 44.dp, height = 38.dp),
         )
-        Text(text = title, style = SectionTitleStyle, color = DeepTeal)
     }
 }
