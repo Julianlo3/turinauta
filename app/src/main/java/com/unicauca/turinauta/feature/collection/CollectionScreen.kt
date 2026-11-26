@@ -333,27 +333,55 @@ private fun CollectionProgressCard(
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
     val completed = collection.isCompleted
-    Box(modifier = Modifier.fillMaxWidth()) {
-        Surface(
-            color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
-            shape = shape,
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    TurinautaDimens.CardBorderWidth,
-                    if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
-                    shape,
-                ),
+    Surface(
+        color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
+        shape = shape,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                TurinautaDimens.CardBorderWidth,
+                if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
+                shape,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 16.dp,
-                    bottom = 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
+            if (completed) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = collection.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = SlateDark,
+                        )
+                        Text(
+                            text = "${collection.earnedStamps}/${collection.totalStamps} sellos",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = SlateMedium,
+                        )
+                        LinearProgressIndicator(
+                            progress = { 1f },
+                            color = MutedOchre,
+                            trackColor = PureWhite,
+                            modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(4.dp)),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.width(1.dp).height(64.dp)
+                            .background(MutedOchre.copy(alpha = 0.35f)),
+                    )
+                    CompletedCollectionMedal()
+                }
+            } else {
                 Text(
                     text = collection.name,
                     style = MaterialTheme.typography.titleMedium,
@@ -365,37 +393,30 @@ private fun CollectionProgressCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = SlateMedium,
                     )
-                    if (!completed) {
-                        Text(
-                            text = "${collection.progressPercent}%",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = DeepTeal,
-                        )
-                    }
+                    Text(
+                        text = "${collection.progressPercent}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DeepTeal,
+                    )
                 }
                 LinearProgressIndicator(
                     progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
-                    color = if (completed) MutedOchre else DeepTeal,
-                    trackColor = if (completed) PureWhite else SurfaceLowSand,
+                    color = DeepTeal,
+                    trackColor = SurfaceLowSand,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(7.dp)
                         .clip(RoundedCornerShape(4.dp)),
                 )
+            }
 
-                if (collection.stamps.isNotEmpty()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        collection.stamps.forEach { badge ->
-                            RewardBadgeRow(badge = badge, onStampClick = onStampClick)
-                        }
+            if (collection.stamps.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    collection.stamps.forEach { badge ->
+                        RewardBadgeRow(badge = badge, onStampClick = onStampClick)
                     }
                 }
             }
-        }
-        if (completed) {
-            CompletedCollectionMedal(
-                modifier = Modifier.align(Alignment.TopEnd).offset(y = (-8).dp),
-            )
         }
     }
 }
@@ -406,7 +427,7 @@ private fun CompletedCollectionMedal(
 ) {
     val scale = LocalDensity.current.fontScale.coerceAtLeast(1f)
     Box(
-        modifier = modifier.width(82.dp * scale).height(96.dp * scale)
+        modifier = modifier.width(76.dp * scale).height(88.dp * scale)
             .graphicsLayer { rotationZ = 9f }
             .semantics(mergeDescendants = true) {
                 contentDescription = "Colección completada al 100%"
