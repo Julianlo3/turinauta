@@ -29,6 +29,8 @@ import com.unicauca.turinauta.feature.explore.ExploreRoute
 import com.unicauca.turinauta.feature.explore.PlaceDetailRoute
 import com.unicauca.turinauta.feature.profile.ProfileRoute
 import com.unicauca.turinauta.feature.profile.AboutScreen
+import com.unicauca.turinauta.feature.profile.HowItWorksScreen
+import com.unicauca.turinauta.feature.profile.PhotosAndLocationScreen
 import com.unicauca.turinauta.feature.profile.VisitHistoryRoute
 import com.unicauca.turinauta.feature.routes.RouteDetailRoute
 import com.unicauca.turinauta.feature.routes.RoutesRoute
@@ -138,6 +140,8 @@ fun TurinautaNavHost(
                         onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
                         onOpenVisitHistory = { navController.navigate(TurinautaRoutes.VISIT_HISTORY) },
                         onOpenCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
+                        onOpenHowItWorks = { navController.navigate(TurinautaRoutes.HOW_IT_WORKS) },
+                        onOpenPhotosLocation = { navController.navigate(TurinautaRoutes.PHOTOS_AND_LOCATION) },
                         onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
                     )
                 }
@@ -198,6 +202,14 @@ fun TurinautaNavHost(
 
         composable(TurinautaRoutes.ABOUT) {
             AboutScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(TurinautaRoutes.HOW_IT_WORKS) {
+            HowItWorksScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(TurinautaRoutes.PHOTOS_AND_LOCATION) {
+            PhotosAndLocationScreen(onBackClick = { navController.popBackStack() })
         }
 
         composable(TurinautaRoutes.VISIT_HISTORY) {

@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.AlertDialog
@@ -85,6 +87,8 @@ fun ProfileRoute(
     onSignInClick: () -> Unit,
     onOpenVisitHistory: () -> Unit,
     onOpenCollection: () -> Unit,
+    onOpenHowItWorks: () -> Unit,
+    onOpenPhotosLocation: () -> Unit,
     onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -103,6 +107,8 @@ fun ProfileRoute(
         onSignInClick = onSignInClick,
         onOpenVisitHistory = onOpenVisitHistory,
         onOpenCollection = onOpenCollection,
+        onOpenHowItWorks = onOpenHowItWorks,
+        onOpenPhotosLocation = onOpenPhotosLocation,
         onOpenAbout = onOpenAbout,
         onRetryClick = viewModel::refresh,
         onSignOutRequest = { showSignOutDialog = true },
@@ -160,6 +166,8 @@ fun ProfileScreen(
     onSignInClick: () -> Unit,
     onOpenVisitHistory: () -> Unit,
     onOpenCollection: () -> Unit,
+    onOpenHowItWorks: () -> Unit,
+    onOpenPhotosLocation: () -> Unit,
     onOpenAbout: () -> Unit,
     onRetryClick: () -> Unit,
     onSignOutRequest: () -> Unit,
@@ -225,7 +233,7 @@ fun ProfileScreen(
                 }
             }
             item(key = "profile_about") {
-                ProfileAboutEntry(onOpenAbout = onOpenAbout)
+                ProfileApplicationSection(onOpenHowItWorks, onOpenPhotosLocation, onOpenAbout)
             }
             return@LazyColumn
         }
@@ -340,6 +348,7 @@ fun ProfileScreen(
         // Accesos privados
         item(key = "profile_actions") {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Tu actividad", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
                 ProfileActionCard(
                     icon = Icons.Outlined.History,
                     title = "Historial de visitas",
@@ -355,12 +364,15 @@ fun ProfileScreen(
             }
         }
 
+        item(key = "profile_application") {
+            ProfileApplicationSection(onOpenHowItWorks, onOpenPhotosLocation, onOpenAbout)
+        }
+
         // Cerrar sesión (HU-25)
         item(key = "sign_out_button") {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Cuenta", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
-                ProfileLocationCard()
+                Text("Sesión", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
                 val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
                 Surface(
                     color = PureWhite,
@@ -386,16 +398,30 @@ fun ProfileScreen(
                 }
             }
         }
-        item(key = "profile_about") {
-            ProfileAboutEntry(onOpenAbout = onOpenAbout)
-        }
     }
 }
 
 @Composable
-private fun ProfileAboutEntry(onOpenAbout: () -> Unit) {
+private fun ProfileApplicationSection(
+    onOpenHowItWorks: () -> Unit,
+    onOpenPhotosLocation: () -> Unit,
+    onOpenAbout: () -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("Aplicación", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+        ProfileLocationCard()
+        ProfileActionCard(
+            icon = Icons.Outlined.Explore,
+            title = "Cómo funciona Turinauta",
+            subtitle = "Descubre cómo registrar visitas y ganar sellos",
+            onClick = onOpenHowItWorks,
+        )
+        ProfileActionCard(
+            icon = Icons.Outlined.PhotoCamera,
+            title = "Uso de fotos y ubicación",
+            subtitle = "Conoce para qué se usan al registrar visitas",
+            onClick = onOpenPhotosLocation,
+        )
         ProfileActionCard(
             icon = Icons.Outlined.Info,
             title = "Acerca de Turinauta",
@@ -428,7 +454,7 @@ private fun ProfileLocationCard() {
                     tint = DeepTeal, modifier = Modifier.size(22.dp))
             }
             Column {
-                Text("Ubicación actual", style = MaterialTheme.typography.bodySmall, color = SlateMedium)
+                Text("Ciudad disponible", style = MaterialTheme.typography.bodySmall, color = SlateMedium)
                 Text("Popayán, Cauca", style = MaterialTheme.typography.titleMedium, color = SlateDark)
             }
         }
@@ -590,6 +616,8 @@ private fun ProfileScreenSignedInPreview() {
             onSignInClick = {},
             onOpenVisitHistory = {},
             onOpenCollection = {},
+            onOpenHowItWorks = {},
+            onOpenPhotosLocation = {},
             onOpenAbout = {},
             onRetryClick = {},
             onSignOutRequest = {},
