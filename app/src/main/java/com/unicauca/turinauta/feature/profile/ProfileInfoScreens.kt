@@ -17,8 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.PureWhite
-import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.TurinautaBackTopBar
@@ -93,8 +93,8 @@ private fun InformationCard(title: String, content: @Composable () -> Unit) {
         shape = shape,
         modifier = Modifier.fillMaxWidth().border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape),
     ) {
-        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = SlateDark)
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = DeepTeal)
             content()
         }
     }

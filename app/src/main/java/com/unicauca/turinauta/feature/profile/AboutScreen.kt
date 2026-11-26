@@ -24,7 +24,6 @@ import com.unicauca.turinauta.BuildConfig
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.PureWhite
-import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
 import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
@@ -87,7 +86,7 @@ fun AboutScreen(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
                         "Julián Rojas López",
                         "Anderson Vinasco Giraldo",
                     ).forEach { name ->
-                        Text(name, style = MaterialTheme.typography.bodyMedium, color = SlateDark)
+                        Text(name, style = MaterialTheme.typography.bodyMedium, color = SlateMedium)
                     }
                 }
             }
@@ -113,9 +112,9 @@ private fun AboutCard(title: String, content: @Composable () -> Unit) {
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = SlateDark)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = DeepTeal)
             content()
         }
     }
