@@ -240,35 +240,40 @@ private data class IntroDoodleSpot(val x: Float, val y: Float, val motif: Int, v
 private fun introDoodleSpots(widthDp: Float, heightDp: Float): List<IntroDoodleSpot> {
     if (widthDp <= 0f || heightDp <= 0f) return emptyList()
     val random = Random(20261126)
-    val minimumDistance = 46f
+    val minimumDistance = 45f
     val points = ArrayList<Offset>()
-    val active = ArrayList<Int>()
-    points += Offset(random.nextFloat() * widthDp, random.nextFloat() * heightDp)
-    active += 0
+    val rowCount = (heightDp / 50f).toInt() + 2
+    val columnCount = (widthDp / 55f).toInt() + 2
 
-    // Distribución de disco de Poisson: separada y uniforme, sin filas ni cuadrícula.
-    while (active.isNotEmpty()) {
-        val activePosition = random.nextInt(active.size)
-        val center = points[active[activePosition]]
-        var added = false
-        for (attempt in 0 until 30) {
-            val angle = random.nextDouble() * 2.0 * PI
-            val distance = minimumDistance * (1f + random.nextFloat())
-            val x = center.x + cos(angle).toFloat() * distance
-            val y = center.y + sin(angle).toFloat() * distance
-            if (x !in 0f..widthDp || y !in 0f..heightDp) continue
-            val tooClose = points.any {
-                val dx = it.x - x
-                val dy = it.y - y
-                dx * dx + dy * dy < minimumDistance * minimumDistance
+    // Una posición por zona, con desplazamientos irregulares y distancia mínima entre figuras.
+    for (row in -1..rowCount) {
+        val rowShiftX = (random.nextFloat() - 0.5f) * 12f
+        val rowShiftY = (random.nextFloat() - 0.5f) * 8f
+        for (column in -1..columnCount) {
+            val baseX = column * 55f + (if (row % 2 == 0) 0f else 27.5f) + rowShiftX
+            val baseY = row * 50f + rowShiftY
+            if (baseX !in -20f..(widthDp + 20f) || baseY !in -20f..(heightDp + 20f)) continue
+
+            var bestPoint: Offset? = null
+            var bestDistanceSquared = -1f
+            repeat(24) {
+                val x = baseX + (random.nextFloat() - 0.5f) * 24f
+                val y = baseY + (random.nextFloat() - 0.5f) * 24f
+                if (x !in 0f..widthDp || y !in 0f..heightDp) return@repeat
+                val nearestSquared = points.minOfOrNull {
+                    val dx = it.x - x
+                    val dy = it.y - y
+                    dx * dx + dy * dy
+                } ?: Float.POSITIVE_INFINITY
+                if (nearestSquared > bestDistanceSquared) {
+                    bestPoint = Offset(x, y)
+                    bestDistanceSquared = nearestSquared
+                }
             }
-            if (tooClose) continue
-            points += Offset(x, y)
-            active += points.lastIndex
-            added = true
-            break
+            if (bestDistanceSquared >= minimumDistance * minimumDistance) {
+                bestPoint?.let(points::add)
+            }
         }
-        if (!added) active.removeAt(activePosition)
     }
 
     val decorationRandom = Random(20261127)
