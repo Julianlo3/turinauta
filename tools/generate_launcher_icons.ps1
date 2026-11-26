@@ -75,6 +75,8 @@ try {
         $foregroundSize = [int][Math]::Round(72 * $density.Scale * $artworkScale)
         Save-ScaledImage $sourceBitmap $legacySize $legacyArtworkSize (Join-Path $folder 'ic_launcher.png')
         Save-ScaledImage $sourceBitmap $legacySize $legacyArtworkSize (Join-Path $folder 'ic_launcher_round.png')
+        # Keep the reference artwork intact for the colored adaptive icon.
+        Save-ScaledImage $sourceBitmap $adaptiveSize $adaptiveSize (Join-Path $folder 'ic_launcher_adaptive.png')
         Save-ScaledImage $foregroundBitmap $adaptiveSize $foregroundSize (Join-Path $folder 'ic_launcher_foreground.png')
         Save-ScaledImage $monochrome $adaptiveSize $foregroundSize (Join-Path $folder 'ic_launcher_monochrome.png')
     }
