@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -46,14 +47,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
-import com.unicauca.turinauta.core.designsystem.MedalInnerOchre
 import com.unicauca.turinauta.core.designsystem.MutedOchre
 import com.unicauca.turinauta.core.designsystem.OnDeepTeal
 import com.unicauca.turinauta.core.designsystem.PlaceIllustration
 import com.unicauca.turinauta.core.designsystem.PureWhite
 import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
-import com.unicauca.turinauta.core.designsystem.SoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.model.RewardBadge
@@ -74,10 +73,10 @@ internal fun VisitStampSuccessDialog(
     LaunchedEffect(visitId) {
         progress.snapTo(0f)
         delay(340)
-        progress.animateTo(0.43f, tween(470, easing = FastOutSlowInEasing))
+        progress.animateTo(0.43f, tween(430, easing = FastOutSlowInEasing))
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-        progress.animateTo(0.60f, tween(220, easing = LinearEasing))
-        progress.animateTo(1f, tween(680, easing = FastOutSlowInEasing))
+        progress.animateTo(0.60f, tween(160, easing = LinearEasing))
+        progress.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
     }
 
     Dialog(
@@ -188,17 +187,16 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
             }
         }
         WoodenStamp(
-            modifier = Modifier.size(310.dp).graphicsLayer {
+            modifier = Modifier.size(330.dp).graphicsLayer {
                 val down = phase(progress.value, 0f, 0.43f)
                 val lift = phase(progress.value, 0.60f, 0.97f)
                 val press = kotlin.math.sin(phase(progress.value, 0.43f, 0.60f) * kotlin.math.PI).toFloat()
-                val scale = 1.16f - 0.16f * down - 0.04f * press + 0.25f * lift
+                val scale = 1.10f - 0.10f * down - 0.04f * press + 0.16f * lift
                 scaleX = scale
                 scaleY = scale
-                translationX = (38f * (1f - down) + 27f * lift) * density
-                translationY = (-50f + 26f * down + 4f * press - 26f * lift) * density
-                rotationZ = 8f - 5f * down + 5f * lift
-                alpha = 1f - phase(progress.value, 0.75f, 0.98f)
+                translationX = (220f - 187f * down + 300f * lift) * density
+                translationY = (-160f + 160f * down + 4f * press - 180f * lift) * density
+                rotationZ = -10f + 10f * down - 8f * lift
             },
         )
     }
@@ -209,80 +207,77 @@ private fun WoodenStamp(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val baseCenter = Offset(w * 0.50f, h * 0.55f)
-        val baseRadius = w * 0.41f // Diámetro de 254 dp, cercano a los 246 dp de la imagen.
+        val woodDark = Color(0xFF70462D)
+        val woodMid = Color(0xFFAE6D35)
+        val woodLight = Color(0xFFEBC18A)
+        val woodGold = Color(0xFFD9954D)
+        val baseCenter = Offset(w * 0.40f, h * 0.50f)
+        val baseRadius = w * 0.39f // Diámetro de 257 dp, cercano a los 246 dp de la imagen.
         drawCircle(
-            color = SlateDark.copy(alpha = 0.14f),
+            color = SlateDark.copy(alpha = 0.16f),
             radius = baseRadius,
-            center = baseCenter + Offset(w * 0.015f, h * 0.035f),
+            center = baseCenter + Offset(w * 0.018f, h * 0.028f),
         )
         drawCircle(
-            brush = Brush.horizontalGradient(listOf(MedalInnerOchre, MutedOchre, MedalInnerOchre)),
+            brush = Brush.horizontalGradient(listOf(woodDark, woodGold, woodMid)),
             radius = baseRadius,
-            center = baseCenter + Offset(0f, h * 0.02f),
+            center = baseCenter,
         )
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.35f, h * 0.35f),
-                radius = w * 0.60f,
+                colors = listOf(woodLight, woodGold, woodMid, woodDark),
+                center = Offset(w * 0.30f, h * 0.34f),
+                radius = w * 0.49f,
             ),
-            radius = baseRadius,
-            center = baseCenter,
-        )
-        drawCircle(
-            color = MedalInnerOchre.copy(alpha = 0.65f),
             radius = baseRadius * 0.91f,
-            center = baseCenter,
-            style = Stroke(width = 3.dp.toPx()),
+            center = baseCenter + Offset(w * 0.018f, -h * 0.008f),
         )
         drawCircle(
-            color = SoftOchreContainer.copy(alpha = 0.8f),
-            radius = baseRadius * 0.87f,
-            center = baseCenter,
+            color = woodDark.copy(alpha = 0.42f),
+            radius = baseRadius * 0.83f,
+            center = baseCenter + Offset(w * 0.018f, -h * 0.008f),
             style = Stroke(width = 2.dp.toPx()),
         )
-        drawOval(
-            color = MedalInnerOchre.copy(alpha = 0.50f),
-            topLeft = Offset(w * 0.37f, h * 0.45f),
-            size = Size(w * 0.31f, h * 0.19f),
+        drawCircle(
+            color = woodLight.copy(alpha = 0.40f),
+            radius = baseRadius * 0.74f,
+            center = baseCenter + Offset(w * 0.018f, -h * 0.008f),
+            style = Stroke(width = 1.5.dp.toPx()),
         )
-        val neck = Path().apply {
-            moveTo(w * 0.51f, h * 0.23f)
-            cubicTo(w * 0.56f, h * 0.34f, w * 0.52f, h * 0.39f, w * 0.40f, h * 0.48f)
-            cubicTo(w * 0.34f, h * 0.52f, w * 0.37f, h * 0.58f, w * 0.50f, h * 0.59f)
-            cubicTo(w * 0.64f, h * 0.60f, w * 0.71f, h * 0.54f, w * 0.65f, h * 0.48f)
-            cubicTo(w * 0.57f, h * 0.38f, w * 0.65f, h * 0.33f, w * 0.71f, h * 0.23f)
+        val handle = Path().apply {
+            moveTo(w * 0.48f, h * 0.40f)
+            cubicTo(w * 0.68f, h * 0.36f, w * 0.88f, h * 0.31f, w * 1.20f, h * 0.28f)
+            lineTo(w * 1.20f, h * 0.51f)
+            cubicTo(w * 0.88f, h * 0.52f, w * 0.68f, h * 0.57f, w * 0.48f, h * 0.58f)
             close()
         }
         drawPath(
-            neck,
-            Brush.horizontalGradient(listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre)),
+            handle,
+            Brush.verticalGradient(listOf(woodLight, woodGold, woodMid)),
         )
         drawOval(
-            color = MedalInnerOchre.copy(alpha = 0.70f),
-            topLeft = Offset(w * 0.39f, h * 0.49f),
-            size = Size(w * 0.25f, h * 0.09f),
-            style = Stroke(width = 2.dp.toPx()),
+            color = woodLight.copy(alpha = 0.56f),
+            topLeft = Offset(w * 0.62f, h * 0.37f),
+            size = Size(w * 0.24f, h * 0.035f),
         )
-        drawOval(
-            color = MedalInnerOchre.copy(alpha = 0.65f),
-            topLeft = Offset(w * 0.49f, h * 0.06f),
-            size = Size(w * 0.29f, h * 0.31f),
+        drawCircle(
+            color = woodDark.copy(alpha = 0.52f),
+            radius = w * 0.125f,
+            center = Offset(w * 0.47f, h * 0.49f),
         )
-        drawOval(
+        drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.57f, h * 0.11f),
-                radius = w * 0.27f,
+                colors = listOf(woodLight, woodGold, woodMid),
+                center = Offset(w * 0.43f, h * 0.43f),
+                radius = w * 0.16f,
             ),
-            topLeft = Offset(w * 0.47f, h * 0.04f),
-            size = Size(w * 0.29f, h * 0.31f),
+            radius = w * 0.105f,
+            center = Offset(w * 0.47f, h * 0.47f),
         )
-        drawOval(
-            color = PureWhite.copy(alpha = 0.62f),
-            topLeft = Offset(w * 0.54f, h * 0.08f),
-            size = Size(w * 0.09f, h * 0.03f),
+        drawCircle(
+            color = woodLight.copy(alpha = 0.55f),
+            radius = w * 0.035f,
+            center = Offset(w * 0.44f, h * 0.43f),
         )
     }
 }
