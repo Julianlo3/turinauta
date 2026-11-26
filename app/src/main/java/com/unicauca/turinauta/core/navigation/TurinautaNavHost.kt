@@ -19,9 +19,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unicauca.turinauta.data.AppContainer
 import com.unicauca.turinauta.feature.auth.AuthRoute
 import com.unicauca.turinauta.feature.collection.CollectionRoute
+import com.unicauca.turinauta.feature.collection.CollectionViewModel
 import com.unicauca.turinauta.feature.collection.StampDetailRoute
 import com.unicauca.turinauta.feature.explore.ExploreRoute
 import com.unicauca.turinauta.feature.explore.PlaceDetailRoute
@@ -44,6 +46,12 @@ fun TurinautaApp(
     val showBottomBar = currentRoute == TurinautaRoutes.EXPLORE
     val selectedRoute = if (showBottomBar) TopLevelDestination.entries[pagerState.currentPage].route else null
     val snackbarHostState = remember { SnackbarHostState() }
+    val collectionViewModel: CollectionViewModel = viewModel(
+        factory = CollectionViewModel.factory(
+            collectionRepository = container.collectionRepository,
+            authRepository = container.authRepository,
+        ),
+    )
 
     fun navigateToTopLevel(destination: TopLevelDestination) {
         if (currentRoute != TurinautaRoutes.EXPLORE) {
@@ -61,6 +69,7 @@ fun TurinautaApp(
         TurinautaNavHost(
             navController = navController,
             container = container,
+            collectionViewModel = collectionViewModel,
             pagerState = pagerState,
             onNavigateToTopLevel = ::navigateToTopLevel,
             modifier = Modifier.padding(innerPadding),
@@ -72,6 +81,7 @@ fun TurinautaApp(
 fun TurinautaNavHost(
     navController: NavHostController,
     container: AppContainer,
+    collectionViewModel: CollectionViewModel,
     pagerState: PagerState,
     onNavigateToTopLevel: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
@@ -114,9 +124,7 @@ fun TurinautaNavHost(
                     )
 
                     TopLevelDestination.COLLECTION -> CollectionRoute(
-                        collectionRepository = container.collectionRepository,
-                        authRepository = container.authRepository,
-                        isActive = pagerState.settledPage == page,
+                        viewModel = collectionViewModel,
                         onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
                         onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
                         onStampClick = { stampId -> navController.navigate(TurinautaRoutes.stampDetail(stampId)) },
@@ -148,6 +156,7 @@ fun TurinautaNavHost(
                 authRepository = container.authRepository,
                 reportRepository = container.reportRepository,
                 walkingRouteRepository = container.walkingRouteRepository,
+                onVisitCreated = collectionViewModel::refresh,
                 onBackClick = { navController.popBackStack() },
                 onRequireAuth = { navController.navigate(TurinautaRoutes.AUTH) },
                 onNavigateToCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },

@@ -84,6 +84,7 @@ data class VisitRegistrationUiState(
 
 class VisitRegistrationViewModel(
     private val registerVisitUseCase: RegisterVisitUseCase,
+    private val onVisitCreated: () -> Unit = {},
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VisitRegistrationUiState())
@@ -206,6 +207,7 @@ class VisitRegistrationViewModel(
                 latitude = lat,
                 longitude = lon,
             )
+            if (result is VisitResult.VisitCreated) onVisitCreated()
             _uiState.update {
                 it.copy(
                     isSubmitting = false,
@@ -224,11 +226,14 @@ class VisitRegistrationViewModel(
     }
 
     companion object {
-        fun factory(visitRepository: VisitRepository): ViewModelProvider.Factory =
+        fun factory(
+            visitRepository: VisitRepository,
+            onVisitCreated: () -> Unit = {},
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    VisitRegistrationViewModel(RegisterVisitUseCase(visitRepository)) as T
+                    VisitRegistrationViewModel(RegisterVisitUseCase(visitRepository), onVisitCreated) as T
             }
     }
 }

@@ -37,10 +37,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -64,10 +65,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.MutedOchre
@@ -90,8 +88,6 @@ import com.unicauca.turinauta.core.model.CollectionProgress
 import com.unicauca.turinauta.core.model.IllustrationKey
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
-import com.unicauca.turinauta.data.repository.AuthRepository
-import com.unicauca.turinauta.data.repository.CollectionRepository
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -100,28 +96,14 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CollectionRoute(
-    collectionRepository: CollectionRepository,
-    authRepository: AuthRepository,
-    isActive: Boolean,
+    viewModel: CollectionViewModel,
     onSignInClick: () -> Unit,
     onExploreClick: () -> Unit,
     onStampClick: (String) -> Unit,
     onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: CollectionViewModel = viewModel(
-        factory = CollectionViewModel.factory(
-            collectionRepository = collectionRepository,
-            authRepository = authRepository,
-        ),
-    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        if (isActive) viewModel.onScreenVisible()
-    }
-    LaunchedEffect(isActive) {
-        if (isActive) viewModel.onScreenVisible()
-    }
 
     CollectionScreen(
         uiState = uiState,
@@ -134,6 +116,7 @@ fun CollectionRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionScreen(
     uiState: CollectionUiState,
@@ -144,89 +127,104 @@ fun CollectionScreen(
     onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = onRetryClick,
         modifier = modifier.fillMaxSize().background(WarmIvory),
-        contentPadding = PaddingValues(
-            start = TurinautaDimens.ScreenHorizontalPadding,
-            end = TurinautaDimens.ScreenHorizontalPadding,
-            top = 16.dp,
-            bottom = 24.dp,
-        ),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item(key = "collection_header") {
-            TurinautaSectionTitle("Colección", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
-        }
-
-        // Resumen superior: progreso si hay sesión, o invitación discreta si es anónimo (R1)
-        item(key = "collection_summary") {
-            if (uiState.isAuthenticated) {
-                CollectionSummaryBanner(
-                    earnedStamps = uiState.earnedStamps,
-                    totalStamps = uiState.totalStamps,
-                    progressPercent = uiState.overallProgressPercent,
-                )
-            } else {
-                AnonymousCollectionBanner(onSignInClick = onSignInClick)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = TurinautaDimens.ScreenHorizontalPadding,
+                end = TurinautaDimens.ScreenHorizontalPadding,
+                top = 16.dp,
+                bottom = 24.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            item(key = "collection_header") {
+                TurinautaSectionTitle("Colección", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
             }
-        }
 
-        when {
-            uiState.isLoading -> {
-                item(key = "collection_loading") {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+            // Resumen superior: progreso si hay sesión, o invitación discreta si es anónimo (R1)
+            item(key = "collection_summary") {
+                if (uiState.isAuthenticated) {
+                    CollectionSummaryBanner(
+                        earnedStamps = uiState.earnedStamps,
+                        totalStamps = uiState.totalStamps,
+                        progressPercent = uiState.overallProgressPercent,
+                    )
+                } else {
+                    AnonymousCollectionBanner(onSignInClick = onSignInClick)
+                }
+            }
+
+            when {
+                uiState.isLoading -> {
+                    item(key = "collection_loading") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            CircularProgressIndicator(color = DeepTeal)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                CircularProgressIndicator(color = DeepTeal)
+                                Text(
+                                    text = "Cargando colecciones y sellos...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = SlateMedium,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                uiState.errorMessage != null && uiState.collections.isEmpty() -> {
+                    item(key = "collection_error") {
+                        CollectionMessageCard(
+                            title = if (uiState.isBackendNotConfigured) {
+                                "Falta conectar el backend"
+                            } else {
+                                "No pudimos cargar tu colección"
+                            },
+                            message = uiState.errorMessage,
+                            actionLabel = "Reintentar",
+                            onActionClick = onRetryClick,
+                        )
+                    }
+                }
+
+                uiState.collections.isEmpty() -> {
+                    item(key = "collection_empty") {
+                        CollectionMessageCard(
+                            title = "Aún no hay colecciones publicadas",
+                            message = "Mientras se habilitan nuevas colecciones, descubre los lugares de Popayán en el catálogo.",
+                            actionLabel = "Volver al catálogo",
+                            onActionClick = onExploreClick,
+                        )
+                    }
+                }
+
+                else -> {
+                    if (uiState.errorMessage != null) {
+                        item(key = "collection_refresh_error") {
                             Text(
-                                text = "Cargando colecciones y sellos...",
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = "No pudimos actualizar los sellos. Desliza hacia abajo para reintentar.",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = SlateMedium,
                             )
                         }
                     }
-                }
-            }
-
-            uiState.errorMessage != null -> {
-                item(key = "collection_error") {
-                    CollectionMessageCard(
-                        title = if (uiState.isBackendNotConfigured) {
-                            "Falta conectar el backend"
-                        } else {
-                            "No pudimos cargar tu colección"
-                        },
-                        message = uiState.errorMessage,
-                        actionLabel = "Reintentar",
-                        onActionClick = onRetryClick,
-                    )
-                }
-            }
-
-            uiState.collections.isEmpty() -> {
-                item(key = "collection_empty") {
-                    CollectionMessageCard(
-                        title = "Aún no hay colecciones publicadas",
-                        message = "Mientras se habilitan nuevas colecciones, descubre los lugares de Popayán en el catálogo.",
-                        actionLabel = "Volver al catálogo",
-                        onActionClick = onExploreClick,
-                    )
-                }
-            }
-
-            else -> {
-                items(
-                    items = uiState.collections,
-                    key = { it.id },
-                ) { collection ->
-                    CollectionProgressCard(collection = collection, onStampClick = onStampClick)
+                    items(
+                        items = uiState.collections,
+                        key = { it.id },
+                    ) { collection ->
+                        CollectionProgressCard(collection = collection, onStampClick = onStampClick)
+                    }
                 }
             }
         }

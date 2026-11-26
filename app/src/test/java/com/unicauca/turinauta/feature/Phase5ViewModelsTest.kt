@@ -78,7 +78,7 @@ class Phase5ViewModelsTest {
     }
 
     @Test
-    fun collectionViewModelReloadsProgressWhenScreenBecomesVisibleAgain() = runTest(testDispatcher) {
+    fun collectionViewModelReloadsProgressOnlyOnExplicitRefresh() = runTest(testDispatcher) {
         val authRepo = MutableAuthRepo(
             initialUser = UserProfile("u1", "Julián", "julian@unicauca.edu.co"),
         )
@@ -88,12 +88,9 @@ class Phase5ViewModelsTest {
         assertEquals(1, vm.uiState.value.earnedStamps)
         assertEquals(1, collectionRepo.myProgressRequests)
 
-        vm.onScreenVisible()
-        advanceUntilIdle()
-        assertEquals(1, collectionRepo.myProgressRequests)
-
         collectionRepo.earnedStamps = 2
-        vm.onScreenVisible()
+        assertEquals(1, collectionRepo.myProgressRequests)
+        vm.refresh()
         advanceUntilIdle()
         assertEquals(2, collectionRepo.myProgressRequests)
         assertEquals(2, vm.uiState.value.earnedStamps)

@@ -128,7 +128,8 @@ class Phase4ViewModelsTest {
         val visitRepo = StubVisitRepository(
             nextResult = VisitResult.VisitNetworkError("Sin conexión"),
         )
-        val vm = VisitRegistrationViewModel(RegisterVisitUseCase(visitRepo))
+        var collectionRefreshes = 0
+        val vm = VisitRegistrationViewModel(RegisterVisitUseCase(visitRepo)) { collectionRefreshes++ }
 
         // Rechaza foto inválida antes de subir
         vm.onPhotoSelected("content://bad", ByteArray(100) { 1 }, "gif")
@@ -152,6 +153,7 @@ class Phase4ViewModelsTest {
         vm.submitVisit("p1")
         advanceUntilIdle()
         assertTrue(vm.uiState.value.visitResult is VisitResult.VisitNetworkError)
+        assertEquals(0, collectionRefreshes)
 
         // Reintento exitoso con sello
         visitRepo.nextResult = VisitResult.VisitCreated(
@@ -172,6 +174,7 @@ class Phase4ViewModelsTest {
         advanceUntilIdle()
         assertTrue(vm.uiState.value.visitResult is VisitResult.VisitCreated)
         assertEquals(2, visitRepo.registerCalls)
+        assertEquals(1, collectionRefreshes)
     }
 
     @Test

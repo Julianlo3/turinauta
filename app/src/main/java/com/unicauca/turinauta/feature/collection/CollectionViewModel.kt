@@ -18,6 +18,7 @@ data class CollectionUiState(
     val collections: List<CollectionProgress> = emptyList(),
     val isAuthenticated: Boolean = false,
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val errorMessage: String? = null,
     val isBackendNotConfigured: Boolean = false,
 ) {
@@ -36,7 +37,6 @@ class CollectionViewModel(
     private val authRepository: AuthRepository,
 ) : ViewModel() {
 
-    private var hasBeenVisible = false
     private var requestVersion = 0L
 
     private val _uiState = MutableStateFlow(
@@ -47,7 +47,10 @@ class CollectionViewModel(
     init {
         viewModelScope.launch {
             authRepository.isAuthenticated.collectLatest { authenticated ->
-                _uiState.update { it.copy(isAuthenticated = authenticated) }
+                _uiState.update { current ->
+                    if (current.isAuthenticated == authenticated) current
+                    else current.copy(isAuthenticated = authenticated, collections = emptyList())
+                }
                 loadCollections(authenticated)
             }
         }
@@ -59,15 +62,12 @@ class CollectionViewModel(
         }
     }
 
-    fun onScreenVisible() {
-        if (hasBeenVisible) refresh() else hasBeenVisible = true
-    }
-
     private suspend fun loadCollections(authenticated: Boolean) {
         val version = ++requestVersion
         _uiState.update {
             it.copy(
-                isLoading = true,
+                isLoading = it.collections.isEmpty(),
+                isRefreshing = it.collections.isNotEmpty(),
                 errorMessage = null,
                 isBackendNotConfigured = false,
             )
@@ -86,6 +86,7 @@ class CollectionViewModel(
                     it.copy(
                         collections = list.sortedBy { col -> col.sortOrder },
                         isLoading = false,
+                        isRefreshing = false,
                         errorMessage = null,
                         isBackendNotConfigured = false,
                     )
@@ -96,6 +97,7 @@ class CollectionViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         isBackendNotConfigured = notConfigured,
                         errorMessage = if (notConfigured) {
                             "Agrega SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en local.properties para consultar tus colecciones."

@@ -94,6 +94,7 @@ fun PlaceDetailRoute(
     authRepository: AuthRepository,
     reportRepository: ReportRepository,
     walkingRouteRepository: WalkingRouteRepository,
+    onVisitCreated: () -> Unit,
     onBackClick: () -> Unit,
     onRequireAuth: () -> Unit,
     onNavigateToCollection: () -> Unit,
@@ -117,7 +118,7 @@ fun PlaceDetailRoute(
     )
     val visitViewModel: VisitRegistrationViewModel = viewModel(
         key = "visit_$placeId",
-        factory = VisitRegistrationViewModel.factory(visitRepository),
+        factory = VisitRegistrationViewModel.factory(visitRepository, onVisitCreated),
     )
     val mapViewModel: PlaceMapViewModel = viewModel(
         key = "place_map_$placeId",
