@@ -33,7 +33,7 @@ fun TurinautaSectionTitle(title: String, modifier: Modifier = Modifier) {
     ) {
         Text(text = title, style = SectionTitleStyle, color = DeepTeal, modifier = Modifier.weight(1f))
         Image(
-            painter = painterResource(R.drawable.turinauta_brand_mark),
+            painter = painterResource(R.drawable.turinauta_logo),
             contentDescription = null,
             modifier = Modifier.size(38.dp),
         )

@@ -48,7 +48,7 @@ fun TurinautaLogoMark(
     contentDescription: String? = null,
 ) {
     Image(
-        painter = painterResource(R.drawable.turinauta_brand_mark),
+        painter = painterResource(R.drawable.turinauta_logo),
         contentDescription = contentDescription,
         modifier = modifier.size(size),
     )
