@@ -23,13 +23,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -65,6 +69,7 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     val dotPop = FastOutSlowInEasing.transform(phase(progress, 0.53f, 0.55f))
     val dotSettle = FastOutSlowInEasing.transform(phase(progress, 0.55f, 0.60f))
     val splashProgress = phase(progress, 0.55f, 0.66f)
+    val patternAlpha = 0.18f * FastOutSlowInEasing.transform(phase(progress, 0.54f, 0.66f))
     val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.66f, 0.82f))
     val verticalShift = (1f - titleProgress) * 52f
     val overlayAlpha = 1f - phase(progress, 0.95f, 1f)
@@ -78,6 +83,7 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
             .semantics { contentDescription = "Introducción de Turinauta" },
         contentAlignment = Alignment.Center,
     ) {
+        IntroDoodleBackdrop(alpha = patternAlpha)
         Column(
             modifier = Modifier.offset(y = verticalShift.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -181,6 +187,96 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
                         clipRect(right = size.width * titleProgress) { this@drawWithContent.drawContent() }
                     },
             )
+        }
+    }
+}
+
+@Composable
+private fun IntroDoodleBackdrop(alpha: Float) {
+    Canvas(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }) {
+        val tile = 96.dp.toPx()
+        val columns = (size.width / tile).toInt() + 2
+        val rows = (size.height / tile).toInt() + 2
+        val inkWidth = 1.7.dp.toPx()
+        for (row in -1..rows) {
+            for (column in -1..columns) {
+                val x = column * tile + (if (row % 2 == 0) 0.18f else 0.65f) * tile
+                val y = row * tile + tile * 0.48f
+                val motif = Math.floorMod(row * 3 + column * 5, 6)
+                val color = if (motif == 3 || motif == 4) MutedOchre else DeepTeal
+                translate(left = x, top = y) {
+                    drawIntroDoodle(motif, tile * 0.32f, inkWidth, color)
+                    drawCircle(color, radius = inkWidth, center = Offset(tile * 0.29f, -tile * 0.26f))
+                }
+            }
+        }
+    }
+}
+
+private fun DrawScope.drawIntroDoodle(motif: Int, width: Float, inkWidth: Float, color: Color) {
+    val r = width / 2f
+    val outline = Stroke(width = inkWidth, cap = StrokeCap.Round)
+    when (motif) {
+        0 -> { // Punto de un lugar
+            val pin = Path().apply {
+                moveTo(0f, r)
+                cubicTo(-r * 0.32f, r * 0.50f, -r * 0.73f, 0f, -r * 0.73f, -r * 0.32f)
+                cubicTo(-r * 0.73f, -r * 1.32f, r * 0.73f, -r * 1.32f, r * 0.73f, -r * 0.32f)
+                cubicTo(r * 0.73f, 0f, r * 0.32f, r * 0.50f, 0f, r)
+                close()
+            }
+            drawPath(pin, color, style = outline)
+            drawCircle(color, radius = r * 0.22f, center = Offset(0f, -r * 0.36f), style = outline)
+        }
+        1 -> { // Camino entre dos paradas
+            val route = Path().apply {
+                moveTo(-r, r * 0.55f)
+                cubicTo(-r * 0.15f, r * 0.60f, -r * 0.10f, -r * 0.12f, r * 0.45f, -r * 0.18f)
+                cubicTo(r * 0.82f, -r * 0.22f, r * 0.80f, -r * 0.62f, r, -r * 0.70f)
+            }
+            drawPath(route, color, style = outline)
+            drawCircle(color, radius = r * 0.16f, center = Offset(-r, r * 0.55f), style = outline)
+            drawCircle(color, radius = r * 0.16f, center = Offset(r, -r * 0.70f), style = outline)
+        }
+        2 -> { // Fotografía de una visita
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(-r, -r * 0.55f),
+                size = Size(width, r * 1.25f),
+                cornerRadius = CornerRadius(r * 0.16f),
+                style = outline,
+            )
+            drawCircle(color, radius = r * 0.40f, center = Offset(0f, r * 0.07f), style = outline)
+            drawLine(color, Offset(-r * 0.52f, -r * 0.75f), Offset(-r * 0.10f, -r * 0.75f), inkWidth)
+        }
+        3 -> { // Sello coleccionable
+            drawCircle(color, radius = r * 0.88f, style = outline)
+            drawCircle(color, radius = r * 0.62f, style = outline)
+            drawCircle(color, radius = r * 0.16f)
+            drawLine(color, Offset(-r * 0.42f, r * 1.07f), Offset(0f, r * 1.31f), inkWidth)
+            drawLine(color, Offset(r * 0.42f, r * 1.07f), Offset(0f, r * 1.31f), inkWidth)
+        }
+        4 -> { // Fachada de un lugar local
+            drawRect(color, topLeft = Offset(-r * 0.80f, -r * 0.20f), size = Size(r * 1.60f, r * 1.10f), style = outline)
+            val roof = Path().apply {
+                moveTo(-r, -r * 0.20f)
+                lineTo(-r * 0.76f, -r * 0.77f)
+                lineTo(r * 0.76f, -r * 0.77f)
+                lineTo(r, -r * 0.20f)
+            }
+            drawPath(roof, color, style = outline)
+            drawRect(color, topLeft = Offset(-r * 0.21f, r * 0.27f), size = Size(r * 0.42f, r * 0.63f), style = outline)
+        }
+        else -> { // Brújula de exploración
+            drawCircle(color, radius = r * 0.92f, style = outline)
+            val needle = Path().apply {
+                moveTo(r * 0.42f, -r * 0.57f)
+                lineTo(r * 0.14f, r * 0.18f)
+                lineTo(-r * 0.42f, r * 0.57f)
+                lineTo(-r * 0.14f, -r * 0.18f)
+                close()
+            }
+            drawPath(needle, color, style = outline)
         }
     }
 }
