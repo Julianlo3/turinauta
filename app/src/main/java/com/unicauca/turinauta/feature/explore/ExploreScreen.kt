@@ -84,7 +84,7 @@ import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
-import com.unicauca.turinauta.core.designsystem.TurinautaLogoMark
+import com.unicauca.turinauta.core.designsystem.TurinautaSectionTitle
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.designsystem.WarmOutline
@@ -186,12 +186,12 @@ fun ExploreScreen(
         contentPadding = PaddingValues(
             start = TurinautaDimens.ScreenHorizontalPadding,
             end = TurinautaDimens.ScreenHorizontalPadding,
-            top = 12.dp,
+            top = 16.dp,
             bottom = 24.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // 1. TopBar: logo + «Turinauta» (izq.) y píldora «Popayán» (der.)
+        // 1. Encabezado de sección y ubicación de la ciudad
         item(key = "top_bar") {
             ExploreTopBar()
         }
@@ -342,17 +342,7 @@ private fun ExploreTopBar() {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            TurinautaLogoMark(size = 36.dp)
-            Text(
-                text = "Turinauta",
-                style = MaterialTheme.typography.titleLarge,
-                color = SlateDark,
-            )
-        }
+        TurinautaSectionTitle("Explorar", modifier = Modifier.weight(1f))
 
         Surface(
             color = WarmIvory,

@@ -66,6 +66,7 @@ import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaLogoMark
+import com.unicauca.turinauta.core.designsystem.TurinautaSectionTitle
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.UserProfile
@@ -172,11 +173,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "profile_title") {
-            Text(
-                text = "Perfil",
-                style = MaterialTheme.typography.headlineLarge,
-                color = DeepTeal,
-            )
+            TurinautaSectionTitle("Perfil", modifier = Modifier.padding(vertical = 4.dp))
         }
 
         if (!uiState.isAuthenticated || uiState.user == null) {

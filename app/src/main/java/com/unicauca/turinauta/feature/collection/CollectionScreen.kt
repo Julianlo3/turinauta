@@ -82,6 +82,7 @@ import com.unicauca.turinauta.core.designsystem.SoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
+import com.unicauca.turinauta.core.designsystem.TurinautaSectionTitle
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.CollectionProgress
@@ -144,22 +145,7 @@ fun CollectionScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(key = "collection_header") {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "Colección",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = SlateDark,
-                )
-                Text(
-                    text = if (uiState.isAuthenticated) {
-                        "Sigue tu avance y revisa los sellos desbloqueados en cada visita."
-                    } else {
-                        "Explora las colecciones disponibles e inicia sesión para guardar tus sellos."
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = SlateMedium,
-                )
-            }
+            TurinautaSectionTitle("Colección", modifier = Modifier.padding(vertical = 4.dp))
         }
 
         // Resumen superior: progreso si hay sesión, o invitación discreta si es anónimo (R1)
