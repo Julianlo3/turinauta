@@ -32,10 +32,12 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +58,7 @@ import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
+import kotlinx.coroutines.delay
 
 /** Se muestra únicamente después de que el servidor confirma una visita con sello nuevo. */
 @Composable
@@ -70,10 +73,11 @@ internal fun VisitStampSuccessDialog(
     val haptics = LocalHapticFeedback.current
     LaunchedEffect(visitId) {
         progress.snapTo(0f)
-        progress.animateTo(0.43f, tween(390, easing = FastOutSlowInEasing))
+        delay(340)
+        progress.animateTo(0.43f, tween(470, easing = FastOutSlowInEasing))
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-        progress.animateTo(0.52f, tween(130, easing = LinearEasing))
-        progress.animateTo(1f, tween(650, easing = FastOutSlowInEasing))
+        progress.animateTo(0.60f, tween(220, easing = LinearEasing))
+        progress.animateTo(1f, tween(680, easing = FastOutSlowInEasing))
     }
 
     Dialog(
@@ -109,7 +113,7 @@ internal fun VisitStampSuccessDialog(
                         style = MaterialTheme.typography.titleLarge,
                         color = SlateDark,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.graphicsLayer { alpha = phase(progress.value, 0.55f, 0.85f) },
+                        modifier = Modifier.graphicsLayer { alpha = phase(progress.value, 0.60f, 0.86f) },
                     )
                     Text(
                         text = "Tu visita a $placeName quedó guardada correctamente.",
@@ -138,39 +142,40 @@ internal fun VisitStampSuccessDialog(
 
 @Composable
 private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>) {
+    val density = LocalDensity.current.density
     val imageUrl = remember(reward.imagePath) { SupabaseConfig.resolvePublicMediaUrl(reward.imagePath) }
     Box(
-        modifier = Modifier.fillMaxWidth().size(height = 240.dp, width = 280.dp)
+        modifier = Modifier.fillMaxWidth().size(height = 270.dp, width = 290.dp)
             .clipToBounds().background(PureWhite),
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier.size(164.dp).graphicsLayer {
-                val reveal = phase(progress.value, 0.52f, 0.83f)
+            modifier = Modifier.size(208.dp).graphicsLayer {
+                val reveal = phase(progress.value, 0.60f, 0.86f)
                 alpha = reveal
-                scaleX = 0.88f + 0.12f * reveal
+                scaleX = 0.90f + 0.10f * reveal
                 scaleY = scaleX
             },
             contentAlignment = Alignment.Center,
         ) {
             if (imageUrl == null) {
-                PlaceIllustration(reward.illustrationKey, size = 156.dp, cornerRadius = 78.dp, backgroundColor = PureWhite)
+                PlaceIllustration(reward.illustrationKey, size = 200.dp, cornerRadius = 100.dp, backgroundColor = PureWhite)
             } else {
                 SubcomposeAsyncImage(
                     model = imageUrl,
                     contentDescription = "Sello ${reward.title}",
                     contentScale = ContentScale.Fit,
-                    loading = { PlaceIllustration(reward.illustrationKey, size = 156.dp, cornerRadius = 78.dp, backgroundColor = PureWhite) },
-                    error = { PlaceIllustration(reward.illustrationKey, size = 156.dp, cornerRadius = 78.dp, backgroundColor = PureWhite) },
-                    modifier = Modifier.size(156.dp),
+                    loading = { PlaceIllustration(reward.illustrationKey, size = 200.dp, cornerRadius = 100.dp, backgroundColor = PureWhite) },
+                    error = { PlaceIllustration(reward.illustrationKey, size = 200.dp, cornerRadius = 100.dp, backgroundColor = PureWhite) },
+                    modifier = Modifier.size(200.dp),
                 )
             }
         }
-        Canvas(modifier = Modifier.fillMaxWidth().size(height = 240.dp, width = 280.dp)) {
-            val burst = phase(progress.value, 0.43f, 0.69f)
+        Canvas(modifier = Modifier.fillMaxWidth().size(height = 270.dp, width = 290.dp)) {
+            val burst = phase(progress.value, 0.43f, 0.73f)
             if (burst > 0f && burst < 1f) {
                 val center = Offset(size.width / 2f, size.height / 2f)
-                val radius = 112.dp.toPx() + 12.dp.toPx() * burst
+                val radius = 118.dp.toPx() + 10.dp.toPx() * burst
                 repeat(10) { index ->
                     val angle = index * (2.0 * kotlin.math.PI / 10.0)
                     val direction = Offset(kotlin.math.cos(angle).toFloat(), kotlin.math.sin(angle).toFloat())
@@ -183,13 +188,17 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
             }
         }
         WoodenStamp(
-            modifier = Modifier.size(240.dp).graphicsLayer {
+            modifier = Modifier.size(270.dp).graphicsLayer {
                 val down = phase(progress.value, 0f, 0.43f)
-                val lift = phase(progress.value, 0.52f, 0.95f)
-                val scale = 1.22f - 0.22f * down + 0.27f * lift
-                scaleX = scale
-                scaleY = scale
-                alpha = 1f - phase(progress.value, 0.72f, 0.98f)
+                val lift = phase(progress.value, 0.60f, 0.97f)
+                val press = kotlin.math.sin(phase(progress.value, 0.43f, 0.60f) * kotlin.math.PI).toFloat()
+                val scale = 1.20f - 0.20f * down + 0.28f * lift
+                scaleX = scale * (1f + 0.05f * press)
+                scaleY = scale * (1f - 0.10f * press)
+                translationX = (-28f * (1f - down) - 24f * lift) * density
+                translationY = (-20f * (1f - down) - 18f * lift) * density
+                rotationZ = -7f + 4f * down - 4f * lift
+                alpha = 1f - phase(progress.value, 0.75f, 0.98f)
             },
         )
     }
@@ -200,38 +209,60 @@ private fun WoodenStamp(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val center = Offset(w * 0.50f, h * 0.50f)
-        drawCircle(color = SlateDark.copy(alpha = 0.14f), radius = w * 0.46f, center = center + Offset(0f, h * 0.035f))
-        drawCircle(color = MedalInnerOchre, radius = w * 0.46f, center = center)
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.38f, h * 0.32f),
-                radius = w * 0.58f,
-            ),
-            radius = w * 0.42f,
-            center = center,
-        )
-        drawCircle(color = MedalInnerOchre.copy(alpha = 0.65f), radius = w * 0.29f, center = center + Offset(0f, h * 0.02f))
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.41f, h * 0.36f),
-                radius = w * 0.34f,
-            ),
-            radius = w * 0.24f,
-            center = center - Offset(0f, h * 0.06f),
+        drawOval(
+            color = SlateDark.copy(alpha = 0.16f),
+            topLeft = Offset(w * 0.04f, h * 0.20f),
+            size = Size(w * 0.94f, h * 0.76f),
         )
         drawOval(
-            color = PureWhite.copy(alpha = 0.55f),
-            topLeft = Offset(w * 0.39f, h * 0.32f),
-            size = Size(w * 0.09f, h * 0.035f),
+            color = MedalInnerOchre,
+            topLeft = Offset(w * 0.03f, h * 0.17f),
+            size = Size(w * 0.94f, h * 0.76f),
         )
-        drawCircle(
+        drawOval(
+            brush = Brush.radialGradient(
+                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
+                center = Offset(w * 0.34f, h * 0.30f),
+                radius = w * 0.63f,
+            ),
+            topLeft = Offset(w * 0.03f, h * 0.13f),
+            size = Size(w * 0.94f, h * 0.76f),
+        )
+        drawOval(
             color = SoftOchreContainer.copy(alpha = 0.85f),
-            radius = w * 0.39f,
-            center = center,
+            topLeft = Offset(w * 0.07f, h * 0.17f),
+            size = Size(w * 0.86f, h * 0.68f),
             style = Stroke(width = 2.dp.toPx()),
+        )
+        val neck = Path().apply {
+            moveTo(w * 0.28f, h * 0.30f)
+            cubicTo(w * 0.26f, h * 0.40f, w * 0.38f, h * 0.48f, w * 0.41f, h * 0.57f)
+            lineTo(w * 0.58f, h * 0.57f)
+            cubicTo(w * 0.49f, h * 0.43f, w * 0.53f, h * 0.32f, w * 0.45f, h * 0.26f)
+            close()
+        }
+        drawPath(
+            neck,
+            Brush.horizontalGradient(listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre)),
+        )
+        drawOval(
+            color = MedalInnerOchre.copy(alpha = 0.55f),
+            topLeft = Offset(w * 0.28f, h * 0.08f),
+            size = Size(w * 0.36f, h * 0.37f),
+        )
+        drawOval(
+            brush = Brush.radialGradient(
+                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
+                center = Offset(w * 0.36f, h * 0.15f),
+                radius = w * 0.35f,
+            ),
+            topLeft = Offset(w * 0.24f, h * 0.06f),
+            size = Size(w * 0.36f, h * 0.37f),
+        )
+        drawOval(
+            color = PureWhite.copy(alpha = 0.62f),
+            topLeft = Offset(w * 0.33f, h * 0.11f),
+            size = Size(w * 0.11f, h * 0.04f),
         )
     }
 }
