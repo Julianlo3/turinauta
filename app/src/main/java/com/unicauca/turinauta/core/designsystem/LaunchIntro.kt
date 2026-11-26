@@ -213,7 +213,6 @@ private fun IntroDoodleBackdrop(wave: Float) {
             ) + doodleWidth
             val waveRadius = maxRadius * wave
             if (waveRadius > 0f) {
-                drawCircle(DeepTeal.copy(alpha = 0.07f), radius = waveRadius, center = origin)
                 val revealArea = Path().apply {
                     addOval(Rect(origin, waveRadius))
                 }
@@ -231,14 +230,6 @@ private fun IntroDoodleBackdrop(wave: Float) {
                         }
                     }
                 }
-                if (wave < 1f) {
-                    drawCircle(
-                        color = DeepTeal.copy(alpha = 0.35f * (1f - 0.35f * wave)),
-                        radius = waveRadius,
-                        center = origin,
-                        style = Stroke(width = 3.5.dp.toPx()),
-                    )
-                }
             }
         }
     }
@@ -249,13 +240,17 @@ private data class IntroDoodleSpot(val x: Float, val y: Float, val motif: Int, v
 private fun introDoodleSpots(widthDp: Float, heightDp: Float): List<IntroDoodleSpot> {
     if (widthDp <= 0f || heightDp <= 0f) return emptyList()
     val random = Random(20261126)
-    val targetCount = (widthDp * heightDp / 3300f).toInt().coerceIn(40, 120)
+    val targetCount = (widthDp * heightDp / 2300f).toInt().coerceIn(55, 180)
     val spots = ArrayList<IntroDoodleSpot>(targetCount)
     repeat(targetCount * 80) {
         if (spots.size == targetCount) return spots
         val x = random.nextFloat() * widthDp
         val y = random.nextFloat() * heightDp
-        if (spots.any { hypot(it.x * widthDp - x, it.y * heightDp - y) < 55f }) {
+        if (spots.any {
+                val dx = it.x * widthDp - x
+                val dy = it.y * heightDp - y
+                dx * dx + dy * dy < 46f * 46f
+            }) {
             return@repeat
         }
         spots += IntroDoodleSpot(x / widthDp, y / heightDp, random.nextInt(6), random.nextInt(-25, 26).toFloat())
