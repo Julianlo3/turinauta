@@ -150,7 +150,7 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier.size(208.dp).graphicsLayer {
+            modifier = Modifier.size(254.dp).graphicsLayer {
                 val reveal = phase(progress.value, 0.60f, 0.86f)
                 alpha = reveal
                 scaleX = 0.90f + 0.10f * reveal
@@ -159,15 +159,15 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
             contentAlignment = Alignment.Center,
         ) {
             if (imageUrl == null) {
-                PlaceIllustration(reward.illustrationKey, size = 200.dp, cornerRadius = 100.dp, backgroundColor = PureWhite)
+                PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = PureWhite)
             } else {
                 SubcomposeAsyncImage(
                     model = imageUrl,
                     contentDescription = "Sello ${reward.title}",
                     contentScale = ContentScale.Fit,
-                    loading = { PlaceIllustration(reward.illustrationKey, size = 200.dp, cornerRadius = 100.dp, backgroundColor = PureWhite) },
-                    error = { PlaceIllustration(reward.illustrationKey, size = 200.dp, cornerRadius = 100.dp, backgroundColor = PureWhite) },
-                    modifier = Modifier.size(200.dp),
+                    loading = { PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = PureWhite) },
+                    error = { PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = PureWhite) },
+                    modifier = Modifier.size(246.dp),
                 )
             }
         }
@@ -188,16 +188,16 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
             }
         }
         WoodenStamp(
-            modifier = Modifier.size(270.dp).graphicsLayer {
+            modifier = Modifier.size(310.dp).graphicsLayer {
                 val down = phase(progress.value, 0f, 0.43f)
                 val lift = phase(progress.value, 0.60f, 0.97f)
                 val press = kotlin.math.sin(phase(progress.value, 0.43f, 0.60f) * kotlin.math.PI).toFloat()
-                val scale = 1.20f - 0.20f * down + 0.28f * lift
+                val scale = 1.16f - 0.16f * down + 0.25f * lift
                 scaleX = scale * (1f + 0.05f * press)
                 scaleY = scale * (1f - 0.10f * press)
-                translationX = (-28f * (1f - down) - 24f * lift) * density
-                translationY = (-20f * (1f - down) - 18f * lift) * density
-                rotationZ = -7f + 4f * down - 4f * lift
+                translationX = (38f * (1f - down) + 27f * lift) * density
+                translationY = (-50f + 26f * down - 26f * lift) * density
+                rotationZ = 8f - 5f * down + 5f * lift
                 alpha = 1f - phase(progress.value, 0.75f, 0.98f)
             },
         )
@@ -209,36 +209,49 @@ private fun WoodenStamp(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
+        // La base tiene canto visible y anillos de madera; el mango sale en perspectiva.
         drawOval(
-            color = SlateDark.copy(alpha = 0.16f),
-            topLeft = Offset(w * 0.04f, h * 0.20f),
-            size = Size(w * 0.94f, h * 0.76f),
+            color = SlateDark.copy(alpha = 0.18f),
+            topLeft = Offset(w * 0.09f, h * 0.37f),
+            size = Size(w * 0.86f, h * 0.59f),
         )
         drawOval(
             color = MedalInnerOchre,
-            topLeft = Offset(w * 0.03f, h * 0.17f),
-            size = Size(w * 0.94f, h * 0.76f),
+            topLeft = Offset(w * 0.07f, h * 0.32f),
+            size = Size(w * 0.86f, h * 0.59f),
+        )
+        val rim = Path().apply {
+            moveTo(w * 0.07f, h * 0.57f)
+            cubicTo(w * 0.07f, h * 0.84f, w * 0.93f, h * 0.84f, w * 0.93f, h * 0.57f)
+            lineTo(w * 0.93f, h * 0.65f)
+            cubicTo(w * 0.93f, h * 0.93f, w * 0.07f, h * 0.93f, w * 0.07f, h * 0.65f)
+            close()
+        }
+        drawPath(
+            rim,
+            Brush.horizontalGradient(listOf(MedalInnerOchre, MutedOchre, MedalInnerOchre)),
         )
         drawOval(
             brush = Brush.radialGradient(
                 colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.34f, h * 0.30f),
-                radius = w * 0.63f,
+                center = Offset(w * 0.35f, h * 0.43f),
+                radius = w * 0.59f,
             ),
-            topLeft = Offset(w * 0.03f, h * 0.13f),
-            size = Size(w * 0.94f, h * 0.76f),
+            topLeft = Offset(w * 0.07f, h * 0.25f),
+            size = Size(w * 0.86f, h * 0.59f),
         )
         drawOval(
-            color = SoftOchreContainer.copy(alpha = 0.85f),
-            topLeft = Offset(w * 0.07f, h * 0.17f),
-            size = Size(w * 0.86f, h * 0.68f),
-            style = Stroke(width = 2.dp.toPx()),
+            color = SoftOchreContainer.copy(alpha = 0.72f),
+            topLeft = Offset(w * 0.11f, h * 0.29f),
+            size = Size(w * 0.78f, h * 0.51f),
+            style = Stroke(width = 2.5.dp.toPx()),
         )
         val neck = Path().apply {
-            moveTo(w * 0.28f, h * 0.30f)
-            cubicTo(w * 0.26f, h * 0.40f, w * 0.38f, h * 0.48f, w * 0.41f, h * 0.57f)
-            lineTo(w * 0.58f, h * 0.57f)
-            cubicTo(w * 0.49f, h * 0.43f, w * 0.53f, h * 0.32f, w * 0.45f, h * 0.26f)
+            moveTo(w * 0.52f, h * 0.25f)
+            cubicTo(w * 0.54f, h * 0.36f, w * 0.49f, h * 0.44f, w * 0.39f, h * 0.52f)
+            cubicTo(w * 0.36f, h * 0.55f, w * 0.40f, h * 0.59f, w * 0.48f, h * 0.60f)
+            cubicTo(w * 0.62f, h * 0.61f, w * 0.68f, h * 0.56f, w * 0.64f, h * 0.52f)
+            cubicTo(w * 0.58f, h * 0.43f, w * 0.67f, h * 0.35f, w * 0.70f, h * 0.25f)
             close()
         }
         drawPath(
@@ -246,23 +259,23 @@ private fun WoodenStamp(modifier: Modifier = Modifier) {
             Brush.horizontalGradient(listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre)),
         )
         drawOval(
-            color = MedalInnerOchre.copy(alpha = 0.55f),
-            topLeft = Offset(w * 0.28f, h * 0.08f),
-            size = Size(w * 0.36f, h * 0.37f),
+            color = MedalInnerOchre.copy(alpha = 0.65f),
+            topLeft = Offset(w * 0.49f, h * 0.06f),
+            size = Size(w * 0.29f, h * 0.31f),
         )
         drawOval(
             brush = Brush.radialGradient(
                 colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.36f, h * 0.15f),
-                radius = w * 0.35f,
+                center = Offset(w * 0.57f, h * 0.11f),
+                radius = w * 0.27f,
             ),
-            topLeft = Offset(w * 0.24f, h * 0.06f),
-            size = Size(w * 0.36f, h * 0.37f),
+            topLeft = Offset(w * 0.47f, h * 0.04f),
+            size = Size(w * 0.29f, h * 0.31f),
         )
         drawOval(
             color = PureWhite.copy(alpha = 0.62f),
-            topLeft = Offset(w * 0.33f, h * 0.11f),
-            size = Size(w * 0.11f, h * 0.04f),
+            topLeft = Offset(w * 0.54f, h * 0.08f),
+            size = Size(w * 0.09f, h * 0.03f),
         )
     }
 }
