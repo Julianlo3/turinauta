@@ -7,6 +7,7 @@ import android.content.ContextWrapper
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Color as AndroidColor
+import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -303,10 +304,12 @@ private fun OpenStreetMapView(
             overlay is Polyline || (overlay is Marker && overlay.title == "Tu ubicación")
         }
         if (route != null) {
-            mapView.overlays.add(0, Polyline(mapView).apply {
+            mapView.overlays.add(0, Polyline(mapView, true).apply {
                 setPoints(route.points.map { GeoPoint(it.latitude, it.longitude) })
                 outlinePaint.color = DeepTeal.toArgb()
                 outlinePaint.strokeWidth = 10f * context.resources.displayMetrics.density
+                outlinePaint.strokeJoin = Paint.Join.ROUND
+                outlinePaint.strokeCap = Paint.Cap.ROUND
             })
         }
         if (userLocation != null) {
@@ -321,6 +324,7 @@ private fun OpenStreetMapView(
                 position = GeoPoint(userLocation.latitude, userLocation.longitude)
                 title = "Tu ubicación"
                 setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                setFlat(true)
                 icon = circle
             })
             val points = (route?.points ?: listOf(MapPoint(latitude, longitude), userLocation))
