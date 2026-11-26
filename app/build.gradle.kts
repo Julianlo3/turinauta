@@ -26,8 +26,8 @@ android {
         applicationId = "com.unicauca.turinauta"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 51
+        versionName = "0.1.51-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
