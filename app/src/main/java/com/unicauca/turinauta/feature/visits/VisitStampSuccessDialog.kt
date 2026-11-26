@@ -6,12 +6,10 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,16 +28,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,11 +52,8 @@ import com.unicauca.turinauta.core.designsystem.PureWhite
 import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
 import com.unicauca.turinauta.core.designsystem.SoftOchreContainer
-import com.unicauca.turinauta.core.designsystem.SubtleOutline
-import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
-import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
 
@@ -145,50 +138,58 @@ internal fun VisitStampSuccessDialog(
 
 @Composable
 private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>) {
-    val density = LocalDensity.current.density
     val imageUrl = remember(reward.imagePath) { SupabaseConfig.resolvePublicMediaUrl(reward.imagePath) }
     Box(
-        modifier = Modifier.fillMaxWidth().height(222.dp)
-            .clip(RoundedCornerShape(18.dp)).background(SurfaceLowSand),
+        modifier = Modifier.fillMaxWidth().size(height = 240.dp, width = 280.dp)
+            .clipToBounds().background(PureWhite),
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 12.dp)
-                .height(158.dp).clip(RoundedCornerShape(12.dp))
-                .background(WarmIvory)
-                .border(1.dp, SubtleOutline, RoundedCornerShape(12.dp)),
+            modifier = Modifier.size(164.dp).graphicsLayer {
+                val reveal = phase(progress.value, 0.52f, 0.83f)
+                alpha = reveal
+                scaleX = 0.88f + 0.12f * reveal
+                scaleY = scaleX
+            },
             contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier.size(124.dp).graphicsLayer {
-                    val reveal = phase(progress.value, 0.53f, 0.84f)
-                    alpha = reveal
-                    scaleX = 0.84f + 0.16f * reveal
-                    scaleY = scaleX
-                },
-                contentAlignment = Alignment.Center,
-            ) {
-                if (imageUrl == null) {
-                    PlaceIllustration(reward.illustrationKey, size = 116.dp, cornerRadius = 58.dp)
-                } else {
-                    SubcomposeAsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Sello ${reward.title}",
-                        contentScale = ContentScale.Fit,
-                        loading = { PlaceIllustration(reward.illustrationKey, size = 116.dp, cornerRadius = 58.dp) },
-                        error = { PlaceIllustration(reward.illustrationKey, size = 116.dp, cornerRadius = 58.dp) },
-                        modifier = Modifier.size(116.dp),
-                    )
+            if (imageUrl == null) {
+                PlaceIllustration(reward.illustrationKey, size = 156.dp, cornerRadius = 78.dp, backgroundColor = PureWhite)
+            } else {
+                SubcomposeAsyncImage(
+                    model = imageUrl,
+                    contentDescription = "Sello ${reward.title}",
+                    contentScale = ContentScale.Fit,
+                    loading = { PlaceIllustration(reward.illustrationKey, size = 156.dp, cornerRadius = 78.dp, backgroundColor = PureWhite) },
+                    error = { PlaceIllustration(reward.illustrationKey, size = 156.dp, cornerRadius = 78.dp, backgroundColor = PureWhite) },
+                    modifier = Modifier.size(156.dp),
+                )
+            }
+        }
+        Canvas(modifier = Modifier.fillMaxWidth().size(height = 240.dp, width = 280.dp)) {
+            val burst = phase(progress.value, 0.43f, 0.69f)
+            if (burst > 0f && burst < 1f) {
+                val center = Offset(size.width / 2f, size.height / 2f)
+                val radius = 112.dp.toPx() + 12.dp.toPx() * burst
+                repeat(10) { index ->
+                    val angle = index * (2.0 * kotlin.math.PI / 10.0)
+                    val direction = Offset(kotlin.math.cos(angle).toFloat(), kotlin.math.sin(angle).toFloat())
+                    val start = center + direction * radius
+                    val end = center + direction * (radius + 12.dp.toPx())
+                    val sparkColor = if (index % 2 == 0) MutedOchre else DeepTeal
+                    drawLine(sparkColor.copy(alpha = 1f - burst), start, end, strokeWidth = 3.dp.toPx())
+                    drawCircle(sparkColor.copy(alpha = 1f - burst), radius = 2.dp.toPx(), center = end)
                 }
             }
         }
         WoodenStamp(
-            modifier = Modifier.align(Alignment.TopCenter).size(160.dp).graphicsLayer {
+            modifier = Modifier.size(240.dp).graphicsLayer {
                 val down = phase(progress.value, 0f, 0.43f)
-                val up = phase(progress.value, 0.52f, 1f)
-                translationY = (-142f + 142f * down - 150f * up) * density
-                val compression = 1f - 0.05f * (1f - kotlin.math.abs(progress.value - 0.48f) / 0.08f).coerceIn(0f, 1f)
-                scaleY = compression
+                val lift = phase(progress.value, 0.52f, 0.95f)
+                val scale = 1.22f - 0.22f * down + 0.27f * lift
+                scaleX = scale
+                scaleY = scale
+                alpha = 1f - phase(progress.value, 0.72f, 0.98f)
             },
         )
     }
@@ -199,28 +200,37 @@ private fun WoodenStamp(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val stem = Path().apply {
-            moveTo(w * 0.35f, h * 0.28f)
-            cubicTo(w * 0.28f, h * 0.40f, w * 0.44f, h * 0.46f, w * 0.43f, h * 0.68f)
-            lineTo(w * 0.57f, h * 0.68f)
-            cubicTo(w * 0.56f, h * 0.46f, w * 0.72f, h * 0.40f, w * 0.65f, h * 0.28f)
-            close()
-        }
-        drawPath(stem, MutedOchre)
-        drawOval(MedalInnerOchre, Offset(w * 0.31f, h * 0.08f), Size(w * 0.38f, h * 0.33f))
-        drawOval(MutedOchre, Offset(w * 0.29f, h * 0.05f), Size(w * 0.38f, h * 0.33f))
-        drawOval(SoftOchreContainer.copy(alpha = 0.7f), Offset(w * 0.38f, h * 0.09f), Size(w * 0.10f, h * 0.10f))
-        drawRoundRect(
-            color = MedalInnerOchre,
-            topLeft = Offset(w * 0.11f, h * 0.75f),
-            size = Size(w * 0.78f, h * 0.15f),
-            cornerRadius = CornerRadius(w * 0.08f),
+        val center = Offset(w * 0.50f, h * 0.50f)
+        drawCircle(color = SlateDark.copy(alpha = 0.14f), radius = w * 0.46f, center = center + Offset(0f, h * 0.035f))
+        drawCircle(color = MedalInnerOchre, radius = w * 0.46f, center = center)
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
+                center = Offset(w * 0.38f, h * 0.32f),
+                radius = w * 0.58f,
+            ),
+            radius = w * 0.42f,
+            center = center,
         )
-        drawOval(MutedOchre, Offset(w * 0.11f, h * 0.65f), Size(w * 0.78f, h * 0.19f))
+        drawCircle(color = MedalInnerOchre.copy(alpha = 0.65f), radius = w * 0.29f, center = center + Offset(0f, h * 0.02f))
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
+                center = Offset(w * 0.41f, h * 0.36f),
+                radius = w * 0.34f,
+            ),
+            radius = w * 0.24f,
+            center = center - Offset(0f, h * 0.06f),
+        )
         drawOval(
+            color = PureWhite.copy(alpha = 0.55f),
+            topLeft = Offset(w * 0.39f, h * 0.32f),
+            size = Size(w * 0.09f, h * 0.035f),
+        )
+        drawCircle(
             color = SoftOchreContainer.copy(alpha = 0.85f),
-            topLeft = Offset(w * 0.19f, h * 0.68f),
-            size = Size(w * 0.62f, h * 0.11f),
+            radius = w * 0.39f,
+            center = center,
             style = Stroke(width = 2.dp.toPx()),
         )
     }
