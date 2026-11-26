@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -50,6 +52,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
+import kotlin.random.Random
 
 /** Intro de apertura inspirada en la secuencia del logo y el nombre del video de referencia. */
 @Composable
@@ -70,7 +73,6 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     val dotPop = FastOutSlowInEasing.transform(phase(progress, 0.53f, 0.55f))
     val dotSettle = FastOutSlowInEasing.transform(phase(progress, 0.55f, 0.60f))
     val splashProgress = phase(progress, 0.55f, 0.66f)
-    val patternAlpha = 0.18f * FastOutSlowInEasing.transform(phase(progress, 0.54f, 0.59f))
     val patternWave = phase(progress, 0.54f, 0.82f)
     val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.66f, 0.82f))
     val verticalShift = (1f - titleProgress) * 52f
@@ -85,7 +87,7 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
             .semantics { contentDescription = "Introducción de Turinauta" },
         contentAlignment = Alignment.Center,
     ) {
-        IntroDoodleBackdrop(alpha = patternAlpha, wave = patternWave)
+        IntroDoodleBackdrop(wave = patternWave)
         Column(
             modifier = Modifier.offset(y = verticalShift.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -194,43 +196,63 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
 }
 
 @Composable
-private fun IntroDoodleBackdrop(alpha: Float, wave: Float) {
-    Canvas(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }) {
-        val tile = 72.dp.toPx()
-        val columns = (size.width / tile).toInt() + 2
-        val rows = (size.height / tile).toInt() + 2
+private fun IntroDoodleBackdrop(wave: Float) {
+    val spots = remember { introDoodleSpots() }
+    Canvas(Modifier.fillMaxSize()) {
+        val doodleWidth = 29.dp.toPx()
         val inkWidth = 1.5.dp.toPx()
         // El punto del logo está a la derecha y algo arriba del centro al aparecer.
         val origin = Offset(size.width / 2f + 48.dp.toPx(), size.height / 2f - 30.dp.toPx())
         val maxRadius = hypot(
             maxOf(origin.x, size.width - origin.x),
             maxOf(origin.y, size.height - origin.y),
-        ) + tile
+        ) + doodleWidth
         val waveRadius = maxRadius * wave
-        if (wave > 0f && wave < 1f) {
-            drawCircle(
-                color = DeepTeal.copy(alpha = 0.28f * (1f - wave)),
-                radius = waveRadius,
-                center = origin,
-                style = Stroke(width = 2.dp.toPx()),
-            )
-        }
-        for (row in -1..rows) {
-            for (column in -1..columns) {
-                val x = column * tile + (if (row % 2 == 0) 0.18f else 0.65f) * tile
-                val y = row * tile + tile * 0.48f
-                val distance = hypot(x - origin.x, y - origin.y)
-                val reveal = ((waveRadius - distance + tile * 0.15f) / (tile * 0.45f)).coerceIn(0f, 1f)
-                if (reveal == 0f) continue
-                val motif = Math.floorMod(row * 3 + column * 5, 6)
-                val color = (if (motif == 3 || motif == 4) MutedOchre else DeepTeal).copy(alpha = reveal)
-                translate(left = x, top = y) {
-                    drawIntroDoodle(motif, tile * 0.38f, inkWidth, color)
-                    drawCircle(color, radius = inkWidth, center = Offset(tile * 0.29f, -tile * 0.26f))
+        if (waveRadius > 0f) {
+            drawCircle(DeepTeal.copy(alpha = 0.025f), radius = waveRadius, center = origin)
+            val revealArea = Path().apply {
+                addOval(Rect(origin, waveRadius))
+            }
+            clipPath(revealArea) {
+                spots.forEach { spot ->
+                    val x = spot.x * size.width
+                    val y = spot.y * size.height
+                    if (hypot(x - origin.x, y - origin.y) > waveRadius + doodleWidth) return@forEach
+                    val color = (if (spot.motif == 3 || spot.motif == 4) MutedOchre else DeepTeal)
+                        .copy(alpha = 0.17f)
+                    translate(left = x, top = y) {
+                        rotate(spot.rotation) {
+                            drawIntroDoodle(spot.motif, doodleWidth, inkWidth, color)
+                            drawCircle(color, radius = inkWidth, center = Offset(doodleWidth * 0.76f, -doodleWidth * 0.67f))
+                        }
+                    }
                 }
+            }
+            if (wave < 1f) {
+                drawCircle(
+                    color = DeepTeal.copy(alpha = 0.19f * (1f - 0.45f * wave)),
+                    radius = waveRadius,
+                    center = origin,
+                    style = Stroke(width = 2.5.dp.toPx()),
+                )
             }
         }
     }
+}
+
+private data class IntroDoodleSpot(val x: Float, val y: Float, val motif: Int, val rotation: Float)
+
+private fun introDoodleSpots(): List<IntroDoodleSpot> {
+    val random = Random(20261126)
+    val spots = ArrayList<IntroDoodleSpot>(105)
+    repeat(3500) {
+        if (spots.size == 105) return spots
+        val x = random.nextFloat() * 1.10f - 0.05f
+        val y = random.nextFloat() * 1.10f - 0.05f
+        if (spots.any { hypot((it.x - x) * 400f, (it.y - y) * 850f) < 43f }) return@repeat
+        spots += IntroDoodleSpot(x, y, random.nextInt(6), random.nextInt(-25, 26).toFloat())
+    }
+    return spots
 }
 
 private fun DrawScope.drawIntroDoodle(motif: Int, width: Float, inkWidth: Float, color: Color) {
