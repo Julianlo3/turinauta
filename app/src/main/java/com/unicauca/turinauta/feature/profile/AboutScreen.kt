@@ -64,7 +64,7 @@ fun AboutScreen(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
                 )
                 Surface(color = SoftTealContainer, shape = RoundedCornerShape(50)) {
                     Text(
-                        text = "Prototipo académico",
+                        text = "Prototipo",
                         style = MaterialTheme.typography.labelLarge,
                         color = OnSoftTealContainer,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -74,7 +74,7 @@ fun AboutScreen(onBackClick: () -> Unit, modifier: Modifier = Modifier) {
 
             AboutCard(title = "Sobre el proyecto") {
                 Text(
-                    text = "Turinauta es un prototipo móvil para descubrir lugares de Popayán, recorrer rutas temáticas y coleccionar sellos al registrar visitas.",
+                    text = "Turinauta es un prototipo móvil para descubrir lugares, recorrer rutas temáticas y coleccionar sellos al registrar visitas.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = SlateMedium,
                 )
