@@ -23,12 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -96,31 +94,35 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
                     drawCircle(color = DeepTeal, radius = diameter / 2f, center = center)
 
                     val road = Path().apply {
-                        moveTo(diameter * 0.12f, diameter * 0.83f)
-                        cubicTo(diameter * 0.35f, diameter * 0.75f, diameter * 0.67f, diameter * 0.63f, diameter * 0.63f, diameter * 0.53f)
-                        cubicTo(diameter * 0.60f, diameter * 0.45f, diameter * 0.43f, diameter * 0.45f, diameter * 0.43f, diameter * 0.36f)
-                        cubicTo(diameter * 0.43f, diameter * 0.29f, diameter * 0.61f, diameter * 0.26f, diameter * 0.74f, diameter * 0.25f)
+                        moveTo(diameter * 0.19f, diameter * 0.75f)
+                        cubicTo(diameter * 0.37f, diameter * 0.68f, diameter * 0.65f, diameter * 0.58f, diameter * 0.61f, diameter * 0.51f)
+                        cubicTo(diameter * 0.57f, diameter * 0.44f, diameter * 0.39f, diameter * 0.42f, diameter * 0.40f, diameter * 0.35f)
+                        cubicTo(diameter * 0.40f, diameter * 0.30f, diameter * 0.53f, diameter * 0.28f, diameter * 0.65f, diameter * 0.285f)
                     }
                     val measure = PathMeasure().apply { setPath(road, false) }
                     val visibleLength = measure.length * roadProgress
-                    val disc = Path().apply { addOval(Rect(0f, 0f, size.width, size.height)) }
-                    clipPath(disc) {
-                        for (segment in 0 until 24) {
-                            val start = measure.length * segment / 24f
-                            if (start >= visibleLength) break
-                            val end = minOf(measure.length * (segment + 1) / 24f, visibleLength)
-                            val portion = Path()
-                            measure.getSegment(start, end, portion, true)
-                            drawPath(
-                                path = portion,
-                                color = Color.White,
-                                style = Stroke(
-                                    width = diameter * (0.125f - 0.103f * segment / 23f),
-                                    cap = StrokeCap.Round,
-                                    join = StrokeJoin.Round,
-                                ),
-                            )
-                        }
+                    val roadShape = Path().apply {
+                        moveTo(diameter * 0.16f, diameter * 0.70f)
+                        cubicTo(diameter * 0.33f, diameter * 0.66f, diameter * 0.50f, diameter * 0.58f, diameter * 0.56f, diameter * 0.54f)
+                        cubicTo(diameter * 0.59f, diameter * 0.51f, diameter * 0.58f, diameter * 0.49f, diameter * 0.51f, diameter * 0.45f)
+                        cubicTo(diameter * 0.44f, diameter * 0.42f, diameter * 0.36f, diameter * 0.40f, diameter * 0.37f, diameter * 0.35f)
+                        cubicTo(diameter * 0.38f, diameter * 0.29f, diameter * 0.52f, diameter * 0.27f, diameter * 0.65f, diameter * 0.27f)
+                        lineTo(diameter * 0.65f, diameter * 0.30f)
+                        cubicTo(diameter * 0.53f, diameter * 0.31f, diameter * 0.44f, diameter * 0.33f, diameter * 0.43f, diameter * 0.35f)
+                        cubicTo(diameter * 0.42f, diameter * 0.37f, diameter * 0.50f, diameter * 0.40f, diameter * 0.56f, diameter * 0.43f)
+                        cubicTo(diameter * 0.65f, diameter * 0.47f, diameter * 0.69f, diameter * 0.52f, diameter * 0.66f, diameter * 0.57f)
+                        cubicTo(diameter * 0.63f, diameter * 0.63f, diameter * 0.42f, diameter * 0.71f, diameter * 0.22f, diameter * 0.81f)
+                        cubicTo(diameter * 0.20f, diameter * 0.78f, diameter * 0.18f, diameter * 0.75f, diameter * 0.16f, diameter * 0.70f)
+                        close()
+                    }
+                    val revealedRoad = Path()
+                    measure.getSegment(0f, visibleLength, revealedRoad, true)
+                    clipPath(roadShape) {
+                        drawPath(
+                            path = revealedRoad,
+                            color = Color.White,
+                            style = Stroke(width = diameter * 0.28f, cap = StrokeCap.Round),
+                        )
                     }
                     if (dotProgress > 0f) {
                         drawCircle(
