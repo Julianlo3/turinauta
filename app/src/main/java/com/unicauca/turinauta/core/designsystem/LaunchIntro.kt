@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
@@ -42,6 +43,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import kotlinx.coroutines.delay
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** Intro de apertura inspirada en la secuencia del logo y el nombre del video de referencia. */
 @Composable
@@ -59,7 +63,10 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     val circleGrowth = FastOutSlowInEasing.transform(phase(progress, 0f, 0.38f))
     val logoScale = 0.06f + 0.94f * circleGrowth
     val roadProgress = phase(progress, 0.38f, 0.63f)
-    val dotProgress = FastOutSlowInEasing.transform(phase(progress, 0.60f, 0.72f))
+    val dropProgress = phase(progress, 0.59f, 0.70f)
+    val dropAppearance = FastOutSlowInEasing.transform(phase(progress, 0.59f, 0.62f))
+    val impactProgress = phase(progress, 0.70f, 0.80f)
+    val splashProgress = phase(progress, 0.70f, 0.81f)
     val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.72f, 0.88f))
     val verticalShift = (1f - titleProgress) * 52f
     val overlayAlpha = 1f - phase(progress, 0.95f, 1f)
@@ -121,11 +128,44 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
                             style = Stroke(width = diameter * 0.28f, cap = StrokeCap.Round),
                         )
                     }
-                    if (dotProgress > 0f) {
-                        drawCircle(
-                            color = MutedOchre,
-                            radius = diameter * 0.083f * dotProgress,
-                            center = Offset(diameter * 0.73f, diameter * 0.27f),
+                    if (dropAppearance > 0f) {
+                        val dotCenter = Offset(diameter * 0.73f, diameter * 0.27f)
+                        if (splashProgress > 0f && splashProgress < 1f) {
+                            val spread = FastOutSlowInEasing.transform(splashProgress)
+                            val splashAlpha = sin(PI * splashProgress).toFloat() * 0.85f
+                            val rayStart = diameter * (0.105f + 0.055f * spread)
+                            for (degrees in listOf(-155.0, -110.0, -65.0, -20.0, 30.0, 75.0, 145.0)) {
+                                val angle = Math.toRadians(degrees)
+                                val direction = Offset(cos(angle).toFloat(), sin(angle).toFloat())
+                                drawLine(
+                                    color = MutedOchre.copy(alpha = splashAlpha),
+                                    start = dotCenter + direction * rayStart,
+                                    end = dotCenter + direction * (rayStart + diameter * 0.028f),
+                                    strokeWidth = diameter * 0.011f,
+                                    cap = StrokeCap.Round,
+                                )
+                            }
+                            for (degrees in listOf(-130.0, -42.0, 55.0)) {
+                                val angle = Math.toRadians(degrees)
+                                val direction = Offset(cos(angle).toFloat(), sin(angle).toFloat())
+                                drawCircle(
+                                    color = MutedOchre.copy(alpha = splashAlpha),
+                                    radius = diameter * 0.007f,
+                                    center = dotCenter + direction * diameter * (0.14f + 0.07f * spread),
+                                )
+                            }
+                        }
+                        val fall = dropProgress * dropProgress
+                        val bounce = sin(PI * impactProgress).toFloat().coerceAtLeast(0f)
+                        val centerY = diameter * (0.055f + 0.215f * fall - 0.018f * bounce)
+                        val squash = sin(PI * phase(progress, 0.70f, 0.76f)).toFloat().coerceAtLeast(0f)
+                        val radius = diameter * 0.083f * (0.55f + 0.45f * dropAppearance)
+                        val radiusX = radius * (1f - 0.14f * (1f - dropProgress) + 0.15f * squash)
+                        val radiusY = radius * (1f + 0.26f * (1f - dropProgress) - 0.15f * squash)
+                        drawOval(
+                            color = MutedOchre.copy(alpha = dropAppearance),
+                            topLeft = Offset(dotCenter.x - radiusX, centerY - radiusY),
+                            size = Size(radiusX * 2f, radiusY * 2f),
                         )
                     }
                 }
