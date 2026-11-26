@@ -41,10 +41,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             TurinautaTheme {
                 var showIntro by remember { mutableStateOf(showIntroOnCreate) }
+                var showApp by remember { mutableStateOf(!showIntroOnCreate) }
                 Box(Modifier.fillMaxSize()) {
-                    TurinautaApp(container = appContainer)
+                    if (showApp) {
+                        TurinautaApp(container = appContainer)
+                    }
                     if (showIntro) {
-                        LaunchIntro(onFinished = { showIntro = false })
+                        LaunchIntro(
+                            onReadyForApp = { showApp = true },
+                            onFinished = {
+                                showApp = true
+                                showIntro = false
+                            },
+                        )
                     }
                 }
             }

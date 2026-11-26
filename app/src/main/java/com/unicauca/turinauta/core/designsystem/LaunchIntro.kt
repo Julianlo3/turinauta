@@ -1,6 +1,7 @@
 package com.unicauca.turinauta.core.designsystem
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -44,22 +45,23 @@ import kotlinx.coroutines.delay
 
 /** Intro de apertura inspirada en la secuencia del logo y el nombre del video de referencia. */
 @Composable
-fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
+fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Modifier = Modifier) {
     val timeline = remember { Animatable(0f) }
     val interactionSource = remember { MutableInteractionSource() }
     LaunchedEffect(Unit) {
         timeline.animateTo(0.95f, animationSpec = tween(durationMillis = 2850, easing = LinearEasing))
+        onReadyForApp()
         delay(900)
         timeline.animateTo(1f, animationSpec = tween(durationMillis = 220, easing = LinearEasing))
         onFinished()
     }
 
     val progress = timeline.value
-    val circleGrowth = easeOut(phase(progress, 0f, 0.32f))
+    val circleGrowth = FastOutSlowInEasing.transform(phase(progress, 0f, 0.38f))
     val logoScale = if (progress < 0.38f) {
         0.06f + 1.12f * circleGrowth
     } else {
-        1.18f - 0.18f * easeOut(phase(progress, 0.38f, 0.78f))
+        1.18f - 0.18f * FastOutSlowInEasing.transform(phase(progress, 0.38f, 0.78f))
     }
     val roadProgress = phase(progress, 0.33f, 0.62f)
     val dotProgress = phase(progress, 0.57f, 0.70f)
