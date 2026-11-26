@@ -100,6 +100,7 @@ fun ExploreRoute(
     catalogRepository: CatalogRepository,
     onPlaceClick: (String) -> Unit,
     onRoutesBannerClick: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ExploreViewModel = viewModel(
@@ -157,6 +158,7 @@ fun ExploreRoute(
             }
         },
         onRoutesBannerClick = onRoutesBannerClick,
+        onOpenAbout = onOpenAbout,
         onPlaceClick = onPlaceClick,
         onRetryClick = viewModel::loadCatalog,
         onClearFiltersClick = viewModel::clearFilters,
@@ -176,6 +178,7 @@ fun ExploreScreen(
     onRetryClick: () -> Unit,
     onClearFiltersClick: () -> Unit,
     onDismissLocationNotice: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -192,7 +195,7 @@ fun ExploreScreen(
     ) {
         // 1. Encabezado de sección
         item(key = "top_bar") {
-            TurinautaSectionTitle("Explorar", modifier = Modifier.padding(vertical = 4.dp))
+            TurinautaSectionTitle("Explorar", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         // 2. Buscador pill (#F1EEE7)
@@ -806,6 +809,7 @@ private fun ExploreScreenPreview() {
             onRetryClick = {},
             onClearFiltersClick = {},
             onDismissLocationNotice = {},
+            onOpenAbout = {},
         )
     }
 }

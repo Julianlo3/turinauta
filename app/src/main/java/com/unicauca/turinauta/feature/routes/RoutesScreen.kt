@@ -85,6 +85,7 @@ fun RoutesRoute(
     authRepository: AuthRepository,
     onRouteClick: (String) -> Unit,
     onExploreClick: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: RoutesViewModel = viewModel(
@@ -102,6 +103,7 @@ fun RoutesRoute(
         onRouteClick = onRouteClick,
         onRetryClick = viewModel::loadRoutes,
         onExploreClick = onExploreClick,
+        onOpenAbout = onOpenAbout,
         modifier = modifier,
     )
 }
@@ -112,6 +114,7 @@ fun RoutesScreen(
     onRouteClick: (String) -> Unit,
     onRetryClick: () -> Unit,
     onExploreClick: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -127,7 +130,7 @@ fun RoutesScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "routes_header") {
-            TurinautaSectionTitle("Rutas temáticas", modifier = Modifier.padding(vertical = 4.dp))
+            TurinautaSectionTitle("Rutas temáticas", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         when {
@@ -746,6 +749,7 @@ private fun RoutesScreenPreview() {
             onRouteClick = {},
             onRetryClick = {},
             onExploreClick = {},
+            onOpenAbout = {},
         )
     }
 }

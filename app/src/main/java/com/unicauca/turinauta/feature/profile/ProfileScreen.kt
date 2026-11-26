@@ -178,7 +178,7 @@ fun ProfileScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "profile_title") {
-            TurinautaSectionTitle("Perfil", modifier = Modifier.padding(vertical = 4.dp))
+            TurinautaSectionTitle("Perfil", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         if (!uiState.isAuthenticated || uiState.user == null) {

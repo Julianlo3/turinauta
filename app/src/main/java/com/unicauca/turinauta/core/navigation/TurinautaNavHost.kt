@@ -77,6 +77,7 @@ fun TurinautaNavHost(
             ExploreRoute(
                 catalogRepository = container.catalogRepository,
                 onRoutesBannerClick = { onNavigateToTopLevel(TopLevelDestination.ROUTES) },
+                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
                 onPlaceClick = { placeId ->
                     navController.navigate(TurinautaRoutes.placeDetail(placeId))
                 },
@@ -111,6 +112,7 @@ fun TurinautaNavHost(
                     navController.navigate(TurinautaRoutes.routeDetail(routeId))
                 },
                 onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
+                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
             )
         }
 
@@ -139,6 +141,7 @@ fun TurinautaNavHost(
                 onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
                 onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
                 onStampClick = { stampId -> navController.navigate(TurinautaRoutes.stampDetail(stampId)) },
+                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
             )
         }
 

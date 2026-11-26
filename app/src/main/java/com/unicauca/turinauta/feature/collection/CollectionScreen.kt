@@ -104,6 +104,7 @@ fun CollectionRoute(
     onSignInClick: () -> Unit,
     onExploreClick: () -> Unit,
     onStampClick: (String) -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: CollectionViewModel = viewModel(
@@ -121,6 +122,7 @@ fun CollectionRoute(
         onExploreClick = onExploreClick,
         onRetryClick = viewModel::refresh,
         onStampClick = onStampClick,
+        onOpenAbout = onOpenAbout,
         modifier = modifier,
     )
 }
@@ -132,6 +134,7 @@ fun CollectionScreen(
     onExploreClick: () -> Unit,
     onRetryClick: () -> Unit,
     onStampClick: (String) -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -145,7 +148,7 @@ fun CollectionScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(key = "collection_header") {
-            TurinautaSectionTitle("Colección", modifier = Modifier.padding(vertical = 4.dp))
+            TurinautaSectionTitle("Colección", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         // Resumen superior: progreso si hay sesión, o invitación discreta si es anónimo (R1)
@@ -668,6 +671,7 @@ private fun CollectionScreenPreview() {
             onExploreClick = {},
             onRetryClick = {},
             onStampClick = {},
+            onOpenAbout = {},
         )
     }
 }
