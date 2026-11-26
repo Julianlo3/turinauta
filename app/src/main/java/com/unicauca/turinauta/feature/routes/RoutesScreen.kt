@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,6 +64,7 @@ import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.SurfaceThumbBeige
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
+import com.unicauca.turinauta.core.designsystem.TurinautaSectionTitle
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.IllustrationKey
@@ -85,6 +85,7 @@ fun RoutesRoute(
     authRepository: AuthRepository,
     onRouteClick: (String) -> Unit,
     onExploreClick: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: RoutesViewModel = viewModel(
@@ -102,6 +103,7 @@ fun RoutesRoute(
         onRouteClick = onRouteClick,
         onRetryClick = viewModel::loadRoutes,
         onExploreClick = onExploreClick,
+        onOpenAbout = onOpenAbout,
         modifier = modifier,
     )
 }
@@ -112,6 +114,7 @@ fun RoutesScreen(
     onRouteClick: (String) -> Unit,
     onRetryClick: () -> Unit,
     onExploreClick: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -127,11 +130,7 @@ fun RoutesScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "routes_header") {
-            RoutesEditorialHeader(
-                routesCount = uiState.routeItems.size,
-                placesCount = uiState.totalPlacesAcrossRoutes,
-                showCounts = !uiState.isLoading && uiState.routeItems.isNotEmpty(),
-            )
+            TurinautaSectionTitle("Rutas temáticas", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         when {
@@ -196,101 +195,6 @@ fun RoutesScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun RoutesEditorialHeader(
-    routesCount: Int,
-    placesCount: Int,
-    showCounts: Boolean,
-) {
-    Surface(
-        color = SurfaceLowSand,
-        shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(SoftTealContainer),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.AltRoute,
-                        contentDescription = null,
-                        tint = DeepTeal,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-                Column {
-                    Text(
-                        text = "Rutas temáticas",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = SlateDark,
-                    )
-                    Text(
-                        text = "Recorridos curados para explorar Popayán",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SlateMedium,
-                    )
-                }
-            }
-
-            if (showCounts) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HeaderMetricPill(
-                        icon = Icons.AutoMirrored.Rounded.AltRoute,
-                        text = if (routesCount == 1) "1 recorrido" else "$routesCount recorridos",
-                    )
-                    if (placesCount > 0) {
-                        HeaderMetricPill(
-                            icon = Icons.Outlined.Place,
-                            text = if (placesCount == 1) "1 lugar" else "$placesCount lugares",
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun HeaderMetricPill(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    text: String,
-) {
-    Surface(
-        color = PureWhite,
-        shape = RoundedCornerShape(TurinautaDimens.ChipCornerRadius),
-        modifier = Modifier.border(1.dp, SubtleOutline, RoundedCornerShape(TurinautaDimens.ChipCornerRadius)),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = DeepTeal,
-                modifier = Modifier.size(15.dp),
-            )
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = SlateDark,
-            )
         }
     }
 }
@@ -845,6 +749,7 @@ private fun RoutesScreenPreview() {
             onRouteClick = {},
             onRetryClick = {},
             onExploreClick = {},
+            onOpenAbout = {},
         )
     }
 }

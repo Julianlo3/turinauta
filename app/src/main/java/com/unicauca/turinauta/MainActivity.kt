@@ -7,6 +7,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import com.unicauca.turinauta.core.designsystem.LaunchIntro
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.navigation.TurinautaApp
 import io.github.jan.supabase.auth.handleDeeplinks
@@ -29,9 +37,25 @@ class MainActivity : ComponentActivity() {
         )
         handleOAuthCallback(intent)
 
+        val showIntroOnCreate = savedInstanceState == null && intent?.action != Intent.ACTION_VIEW
         setContent {
             TurinautaTheme {
-                TurinautaApp(container = appContainer)
+                var showIntro by remember { mutableStateOf(showIntroOnCreate) }
+                var showApp by remember { mutableStateOf(!showIntroOnCreate) }
+                Box(Modifier.fillMaxSize()) {
+                    if (showApp) {
+                        TurinautaApp(container = appContainer)
+                    }
+                    if (showIntro) {
+                        LaunchIntro(
+                            onReadyForApp = { showApp = true },
+                            onFinished = {
+                                showApp = true
+                                showIntro = false
+                            },
+                        )
+                    }
+                }
             }
         }
     }

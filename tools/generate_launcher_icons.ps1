@@ -40,6 +40,54 @@ function Save-ScaledImage {
     }
 }
 
+function Save-AdaptiveImage {
+    param(
+        [System.Drawing.Image]$Image,
+        [int]$CanvasSize,
+        [double]$Scale,
+        [string]$Path
+    )
+    $bitmap = [System.Drawing.Bitmap]::new($CanvasSize, $CanvasSize)
+    $scaled = [System.Drawing.Bitmap]::new($CanvasSize, $CanvasSize)
+    $graphics = [System.Drawing.Graphics]::FromImage($scaled)
+    try {
+        $teal = [System.Drawing.Color]::FromArgb(19, 80, 84)
+        $bitmapGraphics = [System.Drawing.Graphics]::FromImage($bitmap)
+        try { $bitmapGraphics.Clear($teal) } finally { $bitmapGraphics.Dispose() }
+        $graphics.Clear([System.Drawing.Color]::Transparent)
+        $graphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
+        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+        $imageSize = [int][Math]::Round(82 * $Scale)
+        $offset = [int](($CanvasSize - $imageSize) / 2)
+        $graphics.DrawImage($Image, [System.Drawing.Rectangle]::new($offset, $offset, $imageSize, $imageSize))
+
+        # Blend the circle edge into the extended teal area without touching the road or dot.
+        $center = $CanvasSize / 2.0
+        $fadeStart = 38 * $Scale
+        $fadeEnd = 41 * $Scale
+        for ($y = 0; $y -lt $CanvasSize; $y++) {
+            for ($x = 0; $x -lt $CanvasSize; $x++) {
+                $distance = [Math]::Sqrt(($x + 0.5 - $center) * ($x + 0.5 - $center) + ($y + 0.5 - $center) * ($y + 0.5 - $center))
+                if ($distance -ge $fadeEnd) { continue }
+                $pixel = $scaled.GetPixel($x, $y)
+                if ($pixel.A -eq 0) { continue }
+                $fade = [Math]::Min(1.0, ($fadeEnd - $distance) / ($fadeEnd - $fadeStart))
+                $alpha = ($pixel.A / 255.0) * $fade
+                $red = [int][Math]::Round($pixel.R * $alpha + $teal.R * (1 - $alpha))
+                $green = [int][Math]::Round($pixel.G * $alpha + $teal.G * (1 - $alpha))
+                $blue = [int][Math]::Round($pixel.B * $alpha + $teal.B * (1 - $alpha))
+                $bitmap.SetPixel($x, $y, [System.Drawing.Color]::FromArgb($red, $green, $blue))
+            }
+        }
+        $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally {
+        $graphics.Dispose()
+        $scaled.Dispose()
+        $bitmap.Dispose()
+    }
+}
+
 # The themed icon preserves the route and dot alpha while Android supplies the tint.
 $monochrome = [System.Drawing.Bitmap]::new($sourceBitmap.Width, $sourceBitmap.Height)
 for ($y = 0; $y -lt $sourceBitmap.Height; $y++) {
@@ -75,6 +123,7 @@ try {
         $foregroundSize = [int][Math]::Round(72 * $density.Scale * $artworkScale)
         Save-ScaledImage $sourceBitmap $legacySize $legacyArtworkSize (Join-Path $folder 'ic_launcher.png')
         Save-ScaledImage $sourceBitmap $legacySize $legacyArtworkSize (Join-Path $folder 'ic_launcher_round.png')
+        Save-AdaptiveImage $sourceBitmap $adaptiveSize $density.Scale (Join-Path $folder 'ic_launcher_adaptive.png')
         Save-ScaledImage $foregroundBitmap $adaptiveSize $foregroundSize (Join-Path $folder 'ic_launcher_foreground.png')
         Save-ScaledImage $monochrome $adaptiveSize $foregroundSize (Join-Path $folder 'ic_launcher_monochrome.png')
     }

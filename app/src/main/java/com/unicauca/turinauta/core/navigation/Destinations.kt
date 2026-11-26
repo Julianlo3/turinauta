@@ -61,6 +61,7 @@ object TurinautaRoutes {
 
     const val AUTH = "auth"
     const val VISIT_HISTORY = "visit_history"
+    const val ABOUT = "about"
     const val ARG_STAMP_ID = "stampId"
     const val STAMP_DETAIL_PATTERN = "stamp_detail/{$ARG_STAMP_ID}"
 

@@ -35,7 +35,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
@@ -84,7 +83,7 @@ import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceLowSand
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
-import com.unicauca.turinauta.core.designsystem.TurinautaLogoMark
+import com.unicauca.turinauta.core.designsystem.TurinautaSectionTitle
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.designsystem.WarmOutline
@@ -101,6 +100,7 @@ fun ExploreRoute(
     catalogRepository: CatalogRepository,
     onPlaceClick: (String) -> Unit,
     onRoutesBannerClick: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ExploreViewModel = viewModel(
@@ -158,6 +158,7 @@ fun ExploreRoute(
             }
         },
         onRoutesBannerClick = onRoutesBannerClick,
+        onOpenAbout = onOpenAbout,
         onPlaceClick = onPlaceClick,
         onRetryClick = viewModel::loadCatalog,
         onClearFiltersClick = viewModel::clearFilters,
@@ -177,6 +178,7 @@ fun ExploreScreen(
     onRetryClick: () -> Unit,
     onClearFiltersClick: () -> Unit,
     onDismissLocationNotice: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -186,14 +188,14 @@ fun ExploreScreen(
         contentPadding = PaddingValues(
             start = TurinautaDimens.ScreenHorizontalPadding,
             end = TurinautaDimens.ScreenHorizontalPadding,
-            top = 12.dp,
+            top = 16.dp,
             bottom = 24.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // 1. TopBar: logo + «Turinauta» (izq.) y píldora «Popayán» (der.)
+        // 1. Encabezado de sección
         item(key = "top_bar") {
-            ExploreTopBar()
+            TurinautaSectionTitle("Explorar", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         // 2. Buscador pill (#F1EEE7)
@@ -328,53 +330,6 @@ fun ExploreScreen(
                         onClick = { onPlaceClick(place.id) },
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExploreTopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            TurinautaLogoMark(size = 36.dp)
-            Text(
-                text = "Turinauta",
-                style = MaterialTheme.typography.titleLarge,
-                color = SlateDark,
-            )
-        }
-
-        Surface(
-            color = WarmIvory,
-            shape = RoundedCornerShape(TurinautaDimens.PillCornerRadius),
-            border = BorderStroke(1.dp, WarmOutline),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = null,
-                    tint = DeepTeal,
-                    modifier = Modifier.size(16.dp),
-                )
-                Text(
-                    text = "Popayán",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = SlateDark,
-                )
             }
         }
     }
@@ -854,6 +809,7 @@ private fun ExploreScreenPreview() {
             onRetryClick = {},
             onClearFiltersClick = {},
             onDismissLocationNotice = {},
+            onOpenAbout = {},
         )
     }
 }

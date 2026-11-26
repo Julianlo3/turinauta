@@ -1,6 +1,5 @@
 package com.unicauca.turinauta.feature.profile
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,6 +24,8 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -32,7 +33,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,16 +63,19 @@ import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.PureWhite
 import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
+import com.unicauca.turinauta.core.designsystem.SoftOchreContainer
 import com.unicauca.turinauta.core.designsystem.SoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaLogoMark
+import com.unicauca.turinauta.core.designsystem.TurinautaSectionTitle
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.designsystem.WarmIvory
 import com.unicauca.turinauta.core.model.UserProfile
 import com.unicauca.turinauta.data.repository.AuthRepository
 import com.unicauca.turinauta.data.repository.CollectionRepository
 import com.unicauca.turinauta.data.repository.VisitRepository
+import java.util.Locale
 
 @Composable
 fun ProfileRoute(
@@ -82,6 +85,7 @@ fun ProfileRoute(
     onSignInClick: () -> Unit,
     onOpenVisitHistory: () -> Unit,
     onOpenCollection: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ProfileViewModel = viewModel(
@@ -99,6 +103,7 @@ fun ProfileRoute(
         onSignInClick = onSignInClick,
         onOpenVisitHistory = onOpenVisitHistory,
         onOpenCollection = onOpenCollection,
+        onOpenAbout = onOpenAbout,
         onRetryClick = viewModel::refresh,
         onSignOutRequest = { showSignOutDialog = true },
         modifier = modifier,
@@ -155,6 +160,7 @@ fun ProfileScreen(
     onSignInClick: () -> Unit,
     onOpenVisitHistory: () -> Unit,
     onOpenCollection: () -> Unit,
+    onOpenAbout: () -> Unit,
     onRetryClick: () -> Unit,
     onSignOutRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -169,14 +175,10 @@ fun ProfileScreen(
             top = 16.dp,
             bottom = 24.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "profile_title") {
-            Text(
-                text = "Perfil",
-                style = MaterialTheme.typography.headlineSmall,
-                color = SlateDark,
-            )
+            TurinautaSectionTitle("Perfil", onOpenAbout = onOpenAbout, modifier = Modifier.padding(vertical = 4.dp))
         }
 
         if (!uiState.isAuthenticated || uiState.user == null) {
@@ -222,6 +224,9 @@ fun ProfileScreen(
                     }
                 }
             }
+            item(key = "profile_about") {
+                ProfileAboutEntry(onOpenAbout = onOpenAbout)
+            }
             return@LazyColumn
         }
 
@@ -246,8 +251,8 @@ fun ProfileScreen(
                     .border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape),
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ProfileAvatar(
@@ -255,22 +260,22 @@ fun ProfileScreen(
                         initials = initials,
                         displayName = user.displayName,
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(
-                            text = user.displayName,
+                            text = user.displayName.uppercase(Locale.forLanguageTag("es-CO")),
                             style = MaterialTheme.typography.titleMedium,
                             color = SlateDark,
                         )
                         if (!user.email.isNullOrBlank()) {
                             Text(
                                 text = user.email,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = SlateMedium,
                             )
                         }
                         Text(
                             text = "Cuenta vinculada con Google",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelLarge,
                             color = DeepTeal,
                         )
                     }
@@ -285,17 +290,19 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ProfileStatCard(
-                    label = "Visitas registradas",
+                    label = "Visitas",
                     value = if (uiState.isLoadingStats) "—" else "${uiState.visitedPlacesCount}",
                     icon = Icons.Outlined.History,
                     iconTint = DeepTeal,
+                    iconBackground = SoftTealContainer,
                     modifier = Modifier.weight(1f),
                 )
                 ProfileStatCard(
-                    label = "Sellos obtenidos",
+                    label = "Sellos",
                     value = if (uiState.isLoadingStats) "—" else "${uiState.earnedStampsCount}",
                     icon = Icons.Rounded.WorkspacePremium,
                     iconTint = MutedOchre,
+                    iconBackground = SoftOchreContainer,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -332,17 +339,17 @@ fun ProfileScreen(
 
         // Accesos privados
         item(key = "profile_actions") {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 ProfileActionCard(
                     icon = Icons.Outlined.History,
                     title = "Historial de visitas",
-                    subtitle = "Consulta tus lugares visitados, fotos y sellos conservados",
+                    subtitle = "Consulta tus visitas y fotos",
                     onClick = onOpenVisitHistory,
                 )
                 ProfileActionCard(
                     icon = Icons.Outlined.CollectionsBookmark,
                     title = "Colecciones y sellos",
-                    subtitle = "Revisa tu avance en cada colección temática",
+                    subtitle = "Mira tu avance y tus sellos",
                     onClick = onOpenCollection,
                 )
             }
@@ -350,36 +357,79 @@ fun ProfileScreen(
 
         // Cerrar sesión (HU-25)
         item(key = "sign_out_button") {
-            Spacer(modifier = Modifier.height(6.dp))
-            OutlinedButton(
-                onClick = onSignOutRequest,
-                enabled = !uiState.isSigningOut,
-                border = BorderStroke(1.dp, ErrorRed),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = TurinautaDimens.MinTouchTarget),
-            ) {
-                if (uiState.isSigningOut) {
-                    CircularProgressIndicator(
-                        color = ErrorRed,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(18.dp),
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.Logout,
-                        contentDescription = null,
-                        tint = ErrorRed,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Cerrar sesión",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = ErrorRed,
-                    )
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Cuenta", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+                ProfileLocationCard()
+                val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
+                Surface(
+                    color = PureWhite,
+                    shape = shape,
+                    modifier = Modifier.fillMaxWidth()
+                        .border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape)
+                        .clip(shape)
+                        .clickable(enabled = !uiState.isSigningOut, role = Role.Button, onClick = onSignOutRequest),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(18.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        if (uiState.isSigningOut) {
+                            CircularProgressIndicator(color = SlateMedium, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+                        } else {
+                            Icon(Icons.AutoMirrored.Rounded.Logout, contentDescription = null,
+                                tint = SlateMedium, modifier = Modifier.size(22.dp))
+                        }
+                        Text("Cerrar sesión", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+                    }
                 }
+            }
+        }
+        item(key = "profile_about") {
+            ProfileAboutEntry(onOpenAbout = onOpenAbout)
+        }
+    }
+}
+
+@Composable
+private fun ProfileAboutEntry(onOpenAbout: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Aplicación", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+        ProfileActionCard(
+            icon = Icons.Outlined.Info,
+            title = "Acerca de Turinauta",
+            subtitle = "Conoce el proyecto y su equipo",
+            onClick = onOpenAbout,
+        )
+    }
+}
+
+@Composable
+private fun ProfileLocationCard() {
+    val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
+    Surface(
+        color = PureWhite,
+        shape = shape,
+        modifier = Modifier.fillMaxWidth()
+            .border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape)
+            .semantics(mergeDescendants = true) {},
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier.size(42.dp).clip(CircleShape).background(SoftTealContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Outlined.LocationOn, contentDescription = null,
+                    tint = DeepTeal, modifier = Modifier.size(22.dp))
+            }
+            Column {
+                Text("Ubicación actual", style = MaterialTheme.typography.bodySmall, color = SlateMedium)
+                Text("Popayán, Cauca", style = MaterialTheme.typography.titleMedium, color = SlateDark)
             }
         }
     }
@@ -401,7 +451,7 @@ private fun ProfileAvatar(
             loading = { InitialsAvatar(initials = initials) },
             error = { InitialsAvatar(initials = initials) },
             modifier = Modifier
-                .size(56.dp)
+                .size(64.dp)
                 .clip(CircleShape)
                 .background(SoftTealContainer),
         )
@@ -412,7 +462,7 @@ private fun ProfileAvatar(
 private fun InitialsAvatar(initials: String) {
     Box(
         modifier = Modifier
-            .size(56.dp)
+            .size(64.dp)
             .clip(CircleShape)
             .background(SoftTealContainer),
         contentAlignment = Alignment.Center,
@@ -431,6 +481,7 @@ private fun ProfileStatCard(
     value: String,
     icon: ImageVector,
     iconTint: androidx.compose.ui.graphics.Color,
+    iconBackground: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
@@ -441,26 +492,22 @@ private fun ProfileStatCard(
             .border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape)
             .semantics(mergeDescendants = true) {},
     ) {
-        Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+        Row(
+            modifier = Modifier.padding(10.dp).heightIn(min = 58.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(22.dp),
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.headlineSmall,
-                color = SlateDark,
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = SlateMedium,
-            )
+            Box(
+                modifier = Modifier.size(38.dp).clip(CircleShape).background(iconBackground),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
+            }
+            Box(modifier = Modifier.width(1.dp).height(38.dp).background(SubtleOutline))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(value, style = MaterialTheme.typography.headlineMedium, color = DeepTeal)
+                Text(label, style = MaterialTheme.typography.bodySmall, color = SlateMedium)
+            }
         }
     }
 }
@@ -492,7 +539,7 @@ private fun ProfileActionCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(42.dp)
+                    .size(50.dp)
                     .clip(CircleShape)
                     .background(SoftTealContainer),
                 contentAlignment = Alignment.Center,
@@ -501,7 +548,7 @@ private fun ProfileActionCard(
                     imageVector = icon,
                     contentDescription = null,
                     tint = DeepTeal,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
@@ -512,7 +559,7 @@ private fun ProfileActionCard(
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = SlateMedium,
                 )
             }
@@ -543,6 +590,7 @@ private fun ProfileScreenSignedInPreview() {
             onSignInClick = {},
             onOpenVisitHistory = {},
             onOpenCollection = {},
+            onOpenAbout = {},
             onRetryClick = {},
             onSignOutRequest = {},
         )
