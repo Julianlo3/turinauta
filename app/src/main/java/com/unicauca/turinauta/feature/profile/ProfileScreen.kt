@@ -285,7 +285,7 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ProfileStatCard(
-                    label = "Visitas registradas",
+                    label = "Visitas",
                     value = if (uiState.isLoadingStats) "—" else "${uiState.visitedPlacesCount}",
                     icon = Icons.Outlined.History,
                     iconTint = DeepTeal,
@@ -293,7 +293,7 @@ fun ProfileScreen(
                     modifier = Modifier.weight(1f),
                 )
                 ProfileStatCard(
-                    label = "Sellos obtenidos",
+                    label = "Sellos",
                     value = if (uiState.isLoadingStats) "—" else "${uiState.earnedStampsCount}",
                     icon = Icons.Rounded.WorkspacePremium,
                     iconTint = MutedOchre,
