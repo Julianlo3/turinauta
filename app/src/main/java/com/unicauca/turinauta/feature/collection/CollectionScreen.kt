@@ -40,6 +40,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -101,6 +102,7 @@ import kotlinx.coroutines.launch
 fun CollectionRoute(
     collectionRepository: CollectionRepository,
     authRepository: AuthRepository,
+    isActive: Boolean,
     onSignInClick: () -> Unit,
     onExploreClick: () -> Unit,
     onStampClick: (String) -> Unit,
@@ -114,7 +116,12 @@ fun CollectionRoute(
         ),
     )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenVisible() }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (isActive) viewModel.onScreenVisible()
+    }
+    LaunchedEffect(isActive) {
+        if (isActive) viewModel.onScreenVisible()
+    }
 
     CollectionScreen(
         uiState = uiState,

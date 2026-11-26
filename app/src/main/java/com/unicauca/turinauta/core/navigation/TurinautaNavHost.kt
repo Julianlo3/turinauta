@@ -1,12 +1,17 @@
 package com.unicauca.turinauta.core.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,6 +30,7 @@ import com.unicauca.turinauta.feature.profile.AboutScreen
 import com.unicauca.turinauta.feature.profile.VisitHistoryRoute
 import com.unicauca.turinauta.feature.routes.RouteDetailRoute
 import com.unicauca.turinauta.feature.routes.RoutesRoute
+import kotlinx.coroutines.launch
 
 @Composable
 fun TurinautaApp(
@@ -33,22 +39,21 @@ fun TurinautaApp(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val currentTopLevel = TopLevelDestination.entries.firstOrNull { it.route == currentRoute }
-    val showBottomBar = currentRoute in TurinautaRoutes.topLevelRoutes
+    val pagerState = rememberPagerState(pageCount = { TopLevelDestination.entries.size })
+    val scope = rememberCoroutineScope()
+    val showBottomBar = currentRoute == TurinautaRoutes.EXPLORE
+    val selectedRoute = if (showBottomBar) TopLevelDestination.entries[pagerState.currentPage].route else null
     val snackbarHostState = remember { SnackbarHostState() }
 
     fun navigateToTopLevel(destination: TopLevelDestination) {
-        navController.navigate(destination.route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
+        if (currentRoute != TurinautaRoutes.EXPLORE) {
+            navController.popBackStack(TurinautaRoutes.EXPLORE, inclusive = false)
         }
+        scope.launch { pagerState.animateScrollToPage(destination.ordinal) }
     }
 
     MainScaffold(
-        currentRoute = currentRoute,
+        currentRoute = selectedRoute,
         showBottomBar = showBottomBar,
         snackbarHostState = snackbarHostState,
         onDestinationSelected = ::navigateToTopLevel,
@@ -56,10 +61,9 @@ fun TurinautaApp(
         TurinautaNavHost(
             navController = navController,
             container = container,
+            pagerState = pagerState,
             onNavigateToTopLevel = ::navigateToTopLevel,
-            modifier = Modifier
-                .padding(innerPadding)
-                .topLevelSwipe(currentTopLevel, ::navigateToTopLevel),
+            modifier = Modifier.padding(innerPadding),
         )
     }
 }
@@ -68,6 +72,7 @@ fun TurinautaApp(
 fun TurinautaNavHost(
     navController: NavHostController,
     container: AppContainer,
+    pagerState: PagerState,
     onNavigateToTopLevel: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -77,14 +82,58 @@ fun TurinautaNavHost(
         modifier = modifier,
     ) {
         composable(TurinautaRoutes.EXPLORE) {
-            ExploreRoute(
-                catalogRepository = container.catalogRepository,
-                onRoutesBannerClick = { onNavigateToTopLevel(TopLevelDestination.ROUTES) },
-                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
-                onPlaceClick = { placeId ->
-                    navController.navigate(TurinautaRoutes.placeDetail(placeId))
-                },
-            )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 1,
+                flingBehavior = PagerDefaults.flingBehavior(
+                    state = pagerState,
+                    snapPositionalThreshold = 0.4f,
+                ),
+            ) { page ->
+                when (TopLevelDestination.entries[page]) {
+                    TopLevelDestination.EXPLORE -> ExploreRoute(
+                        catalogRepository = container.catalogRepository,
+                        onRoutesBannerClick = { onNavigateToTopLevel(TopLevelDestination.ROUTES) },
+                        onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
+                        onPlaceClick = { placeId ->
+                            navController.navigate(TurinautaRoutes.placeDetail(placeId))
+                        },
+                    )
+
+                    TopLevelDestination.ROUTES -> RoutesRoute(
+                        routeRepository = container.routeRepository,
+                        catalogRepository = container.catalogRepository,
+                        visitRepository = container.visitRepository,
+                        authRepository = container.authRepository,
+                        onRouteClick = { routeId ->
+                            navController.navigate(TurinautaRoutes.routeDetail(routeId))
+                        },
+                        onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
+                        onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
+                    )
+
+                    TopLevelDestination.COLLECTION -> CollectionRoute(
+                        collectionRepository = container.collectionRepository,
+                        authRepository = container.authRepository,
+                        isActive = pagerState.settledPage == page,
+                        onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
+                        onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
+                        onStampClick = { stampId -> navController.navigate(TurinautaRoutes.stampDetail(stampId)) },
+                        onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
+                    )
+
+                    TopLevelDestination.PROFILE -> ProfileRoute(
+                        authRepository = container.authRepository,
+                        visitRepository = container.visitRepository,
+                        collectionRepository = container.collectionRepository,
+                        onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
+                        onOpenVisitHistory = { navController.navigate(TurinautaRoutes.VISIT_HISTORY) },
+                        onOpenCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
+                        onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
+                    )
+                }
+            }
         }
 
         composable(
@@ -102,20 +151,6 @@ fun TurinautaNavHost(
                 onBackClick = { navController.popBackStack() },
                 onRequireAuth = { navController.navigate(TurinautaRoutes.AUTH) },
                 onNavigateToCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
-            )
-        }
-
-        composable(TurinautaRoutes.ROUTES) {
-            RoutesRoute(
-                routeRepository = container.routeRepository,
-                catalogRepository = container.catalogRepository,
-                visitRepository = container.visitRepository,
-                authRepository = container.authRepository,
-                onRouteClick = { routeId ->
-                    navController.navigate(TurinautaRoutes.routeDetail(routeId))
-                },
-                onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
-                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
             )
         }
 
@@ -137,17 +172,6 @@ fun TurinautaNavHost(
             )
         }
 
-        composable(TurinautaRoutes.COLLECTION) {
-            CollectionRoute(
-                collectionRepository = container.collectionRepository,
-                authRepository = container.authRepository,
-                onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
-                onExploreClick = { onNavigateToTopLevel(TopLevelDestination.EXPLORE) },
-                onStampClick = { stampId -> navController.navigate(TurinautaRoutes.stampDetail(stampId)) },
-                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
-            )
-        }
-
         composable(
             route = TurinautaRoutes.STAMP_DETAIL_PATTERN,
             arguments = listOf(navArgument(TurinautaRoutes.ARG_STAMP_ID) { type = NavType.StringType }),
@@ -160,18 +184,6 @@ fun TurinautaNavHost(
                 authRepository = container.authRepository,
                 onBackClick = { navController.popBackStack() },
                 onPlaceClick = { placeId -> navController.navigate(TurinautaRoutes.placeDetail(placeId)) },
-            )
-        }
-
-        composable(TurinautaRoutes.PROFILE) {
-            ProfileRoute(
-                authRepository = container.authRepository,
-                visitRepository = container.visitRepository,
-                collectionRepository = container.collectionRepository,
-                onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
-                onOpenVisitHistory = { navController.navigate(TurinautaRoutes.VISIT_HISTORY) },
-                onOpenCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
-                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
             )
         }
 
