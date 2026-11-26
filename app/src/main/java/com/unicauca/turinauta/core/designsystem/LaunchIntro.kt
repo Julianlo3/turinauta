@@ -240,22 +240,46 @@ private data class IntroDoodleSpot(val x: Float, val y: Float, val motif: Int, v
 private fun introDoodleSpots(widthDp: Float, heightDp: Float): List<IntroDoodleSpot> {
     if (widthDp <= 0f || heightDp <= 0f) return emptyList()
     val random = Random(20261126)
-    val targetCount = (widthDp * heightDp / 2300f).toInt().coerceIn(55, 180)
-    val spots = ArrayList<IntroDoodleSpot>(targetCount)
-    repeat(targetCount * 80) {
-        if (spots.size == targetCount) return spots
-        val x = random.nextFloat() * widthDp
-        val y = random.nextFloat() * heightDp
-        if (spots.any {
-                val dx = it.x * widthDp - x
-                val dy = it.y * heightDp - y
-                dx * dx + dy * dy < 46f * 46f
-            }) {
-            return@repeat
+    val minimumDistance = 46f
+    val points = ArrayList<Offset>()
+    val active = ArrayList<Int>()
+    points += Offset(random.nextFloat() * widthDp, random.nextFloat() * heightDp)
+    active += 0
+
+    // Distribución de disco de Poisson: separada y uniforme, sin filas ni cuadrícula.
+    while (active.isNotEmpty()) {
+        val activePosition = random.nextInt(active.size)
+        val center = points[active[activePosition]]
+        var added = false
+        for (attempt in 0 until 30) {
+            val angle = random.nextDouble() * 2.0 * PI
+            val distance = minimumDistance * (1f + random.nextFloat())
+            val x = center.x + cos(angle).toFloat() * distance
+            val y = center.y + sin(angle).toFloat() * distance
+            if (x !in 0f..widthDp || y !in 0f..heightDp) continue
+            val tooClose = points.any {
+                val dx = it.x - x
+                val dy = it.y - y
+                dx * dx + dy * dy < minimumDistance * minimumDistance
+            }
+            if (tooClose) continue
+            points += Offset(x, y)
+            active += points.lastIndex
+            added = true
+            break
         }
-        spots += IntroDoodleSpot(x / widthDp, y / heightDp, random.nextInt(6), random.nextInt(-25, 26).toFloat())
+        if (!added) active.removeAt(activePosition)
     }
-    return spots
+
+    val decorationRandom = Random(20261127)
+    return points.map {
+        IntroDoodleSpot(
+            it.x / widthDp,
+            it.y / heightDp,
+            decorationRandom.nextInt(6),
+            decorationRandom.nextInt(-25, 26).toFloat(),
+        )
+    }
 }
 
 private fun DrawScope.drawIntroDoodle(motif: Int, width: Float, inkWidth: Float, color: Color) {
