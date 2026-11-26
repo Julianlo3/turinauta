@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -197,44 +198,47 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
 
 @Composable
 private fun IntroDoodleBackdrop(wave: Float) {
-    val spots = remember { introDoodleSpots() }
-    Canvas(Modifier.fillMaxSize()) {
-        val doodleWidth = 29.dp.toPx()
-        val inkWidth = 1.5.dp.toPx()
-        // El punto del logo está a la derecha y algo arriba del centro al aparecer.
-        val origin = Offset(size.width / 2f + 48.dp.toPx(), size.height / 2f - 30.dp.toPx())
-        val maxRadius = hypot(
-            maxOf(origin.x, size.width - origin.x),
-            maxOf(origin.y, size.height - origin.y),
-        ) + doodleWidth
-        val waveRadius = maxRadius * wave
-        if (waveRadius > 0f) {
-            drawCircle(DeepTeal.copy(alpha = 0.025f), radius = waveRadius, center = origin)
-            val revealArea = Path().apply {
-                addOval(Rect(origin, waveRadius))
-            }
-            clipPath(revealArea) {
-                spots.forEach { spot ->
-                    val x = spot.x * size.width
-                    val y = spot.y * size.height
-                    if (hypot(x - origin.x, y - origin.y) > waveRadius + doodleWidth) return@forEach
-                    val color = (if (spot.motif == 3 || spot.motif == 4) MutedOchre else DeepTeal)
-                        .copy(alpha = 0.17f)
-                    translate(left = x, top = y) {
-                        rotate(spot.rotation) {
-                            drawIntroDoodle(spot.motif, doodleWidth, inkWidth, color)
-                            drawCircle(color, radius = inkWidth, center = Offset(doodleWidth * 0.76f, -doodleWidth * 0.67f))
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val spots = remember(maxWidth, maxHeight) {
+            introDoodleSpots(maxWidth.value, maxHeight.value)
+        }
+        Canvas(Modifier.fillMaxSize()) {
+            val doodleWidth = 29.dp.toPx()
+            val inkWidth = 2.dp.toPx()
+            // El punto del logo está a la derecha y algo arriba del centro al aparecer.
+            val origin = Offset(size.width / 2f + 48.dp.toPx(), size.height / 2f - 30.dp.toPx())
+            val maxRadius = hypot(
+                maxOf(origin.x, size.width - origin.x),
+                maxOf(origin.y, size.height - origin.y),
+            ) + doodleWidth
+            val waveRadius = maxRadius * wave
+            if (waveRadius > 0f) {
+                drawCircle(DeepTeal.copy(alpha = 0.07f), radius = waveRadius, center = origin)
+                val revealArea = Path().apply {
+                    addOval(Rect(origin, waveRadius))
+                }
+                clipPath(revealArea) {
+                    spots.forEach { spot ->
+                        val x = spot.x * size.width
+                        val y = spot.y * size.height
+                        if (hypot(x - origin.x, y - origin.y) > waveRadius + doodleWidth) return@forEach
+                        val color = (if (spot.motif == 3 || spot.motif == 4) MutedOchre else DeepTeal)
+                            .copy(alpha = 0.21f)
+                        translate(left = x, top = y) {
+                            rotate(spot.rotation) {
+                                drawIntroDoodle(spot.motif, doodleWidth, inkWidth, color)
+                            }
                         }
                     }
                 }
-            }
-            if (wave < 1f) {
-                drawCircle(
-                    color = DeepTeal.copy(alpha = 0.19f * (1f - 0.45f * wave)),
-                    radius = waveRadius,
-                    center = origin,
-                    style = Stroke(width = 2.5.dp.toPx()),
-                )
+                if (wave < 1f) {
+                    drawCircle(
+                        color = DeepTeal.copy(alpha = 0.35f * (1f - 0.35f * wave)),
+                        radius = waveRadius,
+                        center = origin,
+                        style = Stroke(width = 3.5.dp.toPx()),
+                    )
+                }
             }
         }
     }
@@ -242,15 +246,19 @@ private fun IntroDoodleBackdrop(wave: Float) {
 
 private data class IntroDoodleSpot(val x: Float, val y: Float, val motif: Int, val rotation: Float)
 
-private fun introDoodleSpots(): List<IntroDoodleSpot> {
+private fun introDoodleSpots(widthDp: Float, heightDp: Float): List<IntroDoodleSpot> {
+    if (widthDp <= 0f || heightDp <= 0f) return emptyList()
     val random = Random(20261126)
-    val spots = ArrayList<IntroDoodleSpot>(105)
-    repeat(3500) {
-        if (spots.size == 105) return spots
-        val x = random.nextFloat() * 1.10f - 0.05f
-        val y = random.nextFloat() * 1.10f - 0.05f
-        if (spots.any { hypot((it.x - x) * 400f, (it.y - y) * 850f) < 43f }) return@repeat
-        spots += IntroDoodleSpot(x, y, random.nextInt(6), random.nextInt(-25, 26).toFloat())
+    val targetCount = (widthDp * heightDp / 3300f).toInt().coerceIn(40, 120)
+    val spots = ArrayList<IntroDoodleSpot>(targetCount)
+    repeat(targetCount * 80) {
+        if (spots.size == targetCount) return spots
+        val x = random.nextFloat() * widthDp
+        val y = random.nextFloat() * heightDp
+        if (spots.any { hypot(it.x * widthDp - x, it.y * heightDp - y) < 55f }) {
+            return@repeat
+        }
+        spots += IntroDoodleSpot(x / widthDp, y / heightDp, random.nextInt(6), random.nextInt(-25, 26).toFloat())
     }
     return spots
 }
