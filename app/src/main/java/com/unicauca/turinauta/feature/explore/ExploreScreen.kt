@@ -35,7 +35,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
@@ -191,9 +190,9 @@ fun ExploreScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        // 1. Encabezado de sección y ubicación de la ciudad
+        // 1. Encabezado de sección
         item(key = "top_bar") {
-            ExploreTopBar()
+            TurinautaSectionTitle("Explorar", modifier = Modifier.padding(vertical = 4.dp))
         }
 
         // 2. Buscador pill (#F1EEE7)
@@ -328,43 +327,6 @@ fun ExploreScreen(
                         onClick = { onPlaceClick(place.id) },
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExploreTopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TurinautaSectionTitle("Explorar", modifier = Modifier.weight(1f))
-
-        Surface(
-            color = WarmIvory,
-            shape = RoundedCornerShape(TurinautaDimens.PillCornerRadius),
-            border = BorderStroke(1.dp, WarmOutline),
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LocationOn,
-                    contentDescription = null,
-                    tint = DeepTeal,
-                    modifier = Modifier.size(16.dp),
-                )
-                Text(
-                    text = "Popayán",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = SlateDark,
-                )
             }
         }
     }

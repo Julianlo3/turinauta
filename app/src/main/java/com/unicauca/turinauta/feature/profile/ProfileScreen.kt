@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -352,6 +353,7 @@ fun ProfileScreen(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text("Cuenta", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+                ProfileLocationCard()
                 val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
                 Surface(
                     color = PureWhite,
@@ -375,6 +377,36 @@ fun ProfileScreen(
                         Text("Cerrar sesión", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileLocationCard() {
+    val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
+    Surface(
+        color = PureWhite,
+        shape = shape,
+        modifier = Modifier.fillMaxWidth()
+            .border(TurinautaDimens.CardBorderWidth, SubtleOutline, shape)
+            .semantics(mergeDescendants = true) {},
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Box(
+                modifier = Modifier.size(42.dp).clip(CircleShape).background(SoftTealContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Outlined.LocationOn, contentDescription = null,
+                    tint = DeepTeal, modifier = Modifier.size(22.dp))
+            }
+            Column {
+                Text("Ubicación actual", style = MaterialTheme.typography.bodySmall, color = SlateMedium)
+                Text("Popayán, Cauca", style = MaterialTheme.typography.titleMedium, color = SlateDark)
             }
         }
     }
