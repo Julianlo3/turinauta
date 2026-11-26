@@ -59,13 +59,13 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     }
 
     val progress = timeline.value
-    val circleGrowth = FastOutSlowInEasing.transform(phase(progress, 0f, 0.35f))
+    val circleGrowth = FastOutSlowInEasing.transform(phase(progress, 0f, 0.32f))
     val logoScale = 0.06f + 0.94f * circleGrowth
-    val roadProgress = phase(progress, 0.35f, 0.60f)
-    val dotPop = FastOutSlowInEasing.transform(phase(progress, 0.59f, 0.61f))
-    val dotSettle = FastOutSlowInEasing.transform(phase(progress, 0.61f, 0.66f))
-    val splashProgress = phase(progress, 0.61f, 0.72f)
-    val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.72f, 0.88f))
+    val roadProgress = phase(progress, 0.32f, 0.54f)
+    val dotPop = FastOutSlowInEasing.transform(phase(progress, 0.53f, 0.55f))
+    val dotSettle = FastOutSlowInEasing.transform(phase(progress, 0.55f, 0.60f))
+    val splashProgress = phase(progress, 0.55f, 0.66f)
+    val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.66f, 0.82f))
     val verticalShift = (1f - titleProgress) * 52f
     val overlayAlpha = 1f - phase(progress, 0.95f, 1f)
 
@@ -153,7 +153,7 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
                                 )
                             }
                         }
-                        val dotScale = if (progress < 0.61f) 1.12f * dotPop else 1.12f - 0.12f * dotSettle
+                        val dotScale = if (progress < 0.55f) 1.12f * dotPop else 1.12f - 0.12f * dotSettle
                         drawCircle(
                             color = MutedOchre,
                             radius = diameter * 0.083f * dotScale,
