@@ -21,6 +21,7 @@ import com.unicauca.turinauta.feature.collection.StampDetailRoute
 import com.unicauca.turinauta.feature.explore.ExploreRoute
 import com.unicauca.turinauta.feature.explore.PlaceDetailRoute
 import com.unicauca.turinauta.feature.profile.ProfileRoute
+import com.unicauca.turinauta.feature.profile.AboutScreen
 import com.unicauca.turinauta.feature.profile.VisitHistoryRoute
 import com.unicauca.turinauta.feature.routes.RouteDetailRoute
 import com.unicauca.turinauta.feature.routes.RoutesRoute
@@ -164,7 +165,12 @@ fun TurinautaNavHost(
                 onSignInClick = { navController.navigate(TurinautaRoutes.AUTH) },
                 onOpenVisitHistory = { navController.navigate(TurinautaRoutes.VISIT_HISTORY) },
                 onOpenCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
+                onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
             )
+        }
+
+        composable(TurinautaRoutes.ABOUT) {
+            AboutScreen(onBackClick = { navController.popBackStack() })
         }
 
         composable(TurinautaRoutes.VISIT_HISTORY) {

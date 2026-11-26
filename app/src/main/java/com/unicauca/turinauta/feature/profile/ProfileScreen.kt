@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.AlertDialog
@@ -84,6 +85,7 @@ fun ProfileRoute(
     onSignInClick: () -> Unit,
     onOpenVisitHistory: () -> Unit,
     onOpenCollection: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: ProfileViewModel = viewModel(
@@ -101,6 +103,7 @@ fun ProfileRoute(
         onSignInClick = onSignInClick,
         onOpenVisitHistory = onOpenVisitHistory,
         onOpenCollection = onOpenCollection,
+        onOpenAbout = onOpenAbout,
         onRetryClick = viewModel::refresh,
         onSignOutRequest = { showSignOutDialog = true },
         modifier = modifier,
@@ -157,6 +160,7 @@ fun ProfileScreen(
     onSignInClick: () -> Unit,
     onOpenVisitHistory: () -> Unit,
     onOpenCollection: () -> Unit,
+    onOpenAbout: () -> Unit,
     onRetryClick: () -> Unit,
     onSignOutRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -219,6 +223,9 @@ fun ProfileScreen(
                         }
                     }
                 }
+            }
+            item(key = "profile_about") {
+                ProfileAboutEntry(onOpenAbout = onOpenAbout)
             }
             return@LazyColumn
         }
@@ -379,6 +386,22 @@ fun ProfileScreen(
                 }
             }
         }
+        item(key = "profile_about") {
+            ProfileAboutEntry(onOpenAbout = onOpenAbout)
+        }
+    }
+}
+
+@Composable
+private fun ProfileAboutEntry(onOpenAbout: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Aplicación", style = MaterialTheme.typography.titleMedium, color = SlateMedium)
+        ProfileActionCard(
+            icon = Icons.Outlined.Info,
+            title = "Acerca de Turinauta",
+            subtitle = "Conoce el proyecto y su equipo",
+            onClick = onOpenAbout,
+        )
     }
 }
 
@@ -567,6 +590,7 @@ private fun ProfileScreenSignedInPreview() {
             onSignInClick = {},
             onOpenVisitHistory = {},
             onOpenCollection = {},
+            onOpenAbout = {},
             onRetryClick = {},
             onSignOutRequest = {},
         )
