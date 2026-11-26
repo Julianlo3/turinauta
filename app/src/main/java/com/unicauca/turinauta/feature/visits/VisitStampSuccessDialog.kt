@@ -192,11 +192,11 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
                 val down = phase(progress.value, 0f, 0.43f)
                 val lift = phase(progress.value, 0.60f, 0.97f)
                 val press = kotlin.math.sin(phase(progress.value, 0.43f, 0.60f) * kotlin.math.PI).toFloat()
-                val scale = 1.16f - 0.16f * down + 0.25f * lift
-                scaleX = scale * (1f + 0.05f * press)
-                scaleY = scale * (1f - 0.10f * press)
+                val scale = 1.16f - 0.16f * down - 0.04f * press + 0.25f * lift
+                scaleX = scale
+                scaleY = scale
                 translationX = (38f * (1f - down) + 27f * lift) * density
-                translationY = (-50f + 26f * down - 26f * lift) * density
+                translationY = (-50f + 26f * down + 4f * press - 26f * lift) * density
                 rotationZ = 8f - 5f * down + 5f * lift
                 alpha = 1f - phase(progress.value, 0.75f, 0.98f)
             },
@@ -209,54 +209,61 @@ private fun WoodenStamp(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        // La base tiene canto visible y anillos de madera; el mango sale en perspectiva.
-        drawOval(
-            color = SlateDark.copy(alpha = 0.18f),
-            topLeft = Offset(w * 0.09f, h * 0.37f),
-            size = Size(w * 0.86f, h * 0.59f),
+        val baseCenter = Offset(w * 0.50f, h * 0.55f)
+        val baseRadius = w * 0.41f // Diámetro de 254 dp, cercano a los 246 dp de la imagen.
+        drawCircle(
+            color = SlateDark.copy(alpha = 0.14f),
+            radius = baseRadius,
+            center = baseCenter + Offset(w * 0.015f, h * 0.035f),
         )
-        drawOval(
-            color = MedalInnerOchre,
-            topLeft = Offset(w * 0.07f, h * 0.32f),
-            size = Size(w * 0.86f, h * 0.59f),
+        drawCircle(
+            brush = Brush.horizontalGradient(listOf(MedalInnerOchre, MutedOchre, MedalInnerOchre)),
+            radius = baseRadius,
+            center = baseCenter + Offset(0f, h * 0.02f),
         )
-        val rim = Path().apply {
-            moveTo(w * 0.07f, h * 0.57f)
-            cubicTo(w * 0.07f, h * 0.84f, w * 0.93f, h * 0.84f, w * 0.93f, h * 0.57f)
-            lineTo(w * 0.93f, h * 0.65f)
-            cubicTo(w * 0.93f, h * 0.93f, w * 0.07f, h * 0.93f, w * 0.07f, h * 0.65f)
-            close()
-        }
-        drawPath(
-            rim,
-            Brush.horizontalGradient(listOf(MedalInnerOchre, MutedOchre, MedalInnerOchre)),
-        )
-        drawOval(
+        drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre),
-                center = Offset(w * 0.35f, h * 0.43f),
-                radius = w * 0.59f,
+                center = Offset(w * 0.35f, h * 0.35f),
+                radius = w * 0.60f,
             ),
-            topLeft = Offset(w * 0.07f, h * 0.25f),
-            size = Size(w * 0.86f, h * 0.59f),
+            radius = baseRadius,
+            center = baseCenter,
+        )
+        drawCircle(
+            color = MedalInnerOchre.copy(alpha = 0.65f),
+            radius = baseRadius * 0.91f,
+            center = baseCenter,
+            style = Stroke(width = 3.dp.toPx()),
+        )
+        drawCircle(
+            color = SoftOchreContainer.copy(alpha = 0.8f),
+            radius = baseRadius * 0.87f,
+            center = baseCenter,
+            style = Stroke(width = 2.dp.toPx()),
         )
         drawOval(
-            color = SoftOchreContainer.copy(alpha = 0.72f),
-            topLeft = Offset(w * 0.11f, h * 0.29f),
-            size = Size(w * 0.78f, h * 0.51f),
-            style = Stroke(width = 2.5.dp.toPx()),
+            color = MedalInnerOchre.copy(alpha = 0.50f),
+            topLeft = Offset(w * 0.37f, h * 0.45f),
+            size = Size(w * 0.31f, h * 0.19f),
         )
         val neck = Path().apply {
-            moveTo(w * 0.52f, h * 0.25f)
-            cubicTo(w * 0.54f, h * 0.36f, w * 0.49f, h * 0.44f, w * 0.39f, h * 0.52f)
-            cubicTo(w * 0.36f, h * 0.55f, w * 0.40f, h * 0.59f, w * 0.48f, h * 0.60f)
-            cubicTo(w * 0.62f, h * 0.61f, w * 0.68f, h * 0.56f, w * 0.64f, h * 0.52f)
-            cubicTo(w * 0.58f, h * 0.43f, w * 0.67f, h * 0.35f, w * 0.70f, h * 0.25f)
+            moveTo(w * 0.51f, h * 0.23f)
+            cubicTo(w * 0.56f, h * 0.34f, w * 0.52f, h * 0.39f, w * 0.40f, h * 0.48f)
+            cubicTo(w * 0.34f, h * 0.52f, w * 0.37f, h * 0.58f, w * 0.50f, h * 0.59f)
+            cubicTo(w * 0.64f, h * 0.60f, w * 0.71f, h * 0.54f, w * 0.65f, h * 0.48f)
+            cubicTo(w * 0.57f, h * 0.38f, w * 0.65f, h * 0.33f, w * 0.71f, h * 0.23f)
             close()
         }
         drawPath(
             neck,
             Brush.horizontalGradient(listOf(SoftOchreContainer, MutedOchre, MedalInnerOchre)),
+        )
+        drawOval(
+            color = MedalInnerOchre.copy(alpha = 0.70f),
+            topLeft = Offset(w * 0.39f, h * 0.49f),
+            size = Size(w * 0.25f, h * 0.09f),
+            style = Stroke(width = 2.dp.toPx()),
         )
         drawOval(
             color = MedalInnerOchre.copy(alpha = 0.65f),
