@@ -48,6 +48,7 @@ import androidx.compose.material3.Text
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.sin
 
 /** Intro de apertura inspirada en la secuencia del logo y el nombre del video de referencia. */
@@ -69,7 +70,8 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     val dotPop = FastOutSlowInEasing.transform(phase(progress, 0.53f, 0.55f))
     val dotSettle = FastOutSlowInEasing.transform(phase(progress, 0.55f, 0.60f))
     val splashProgress = phase(progress, 0.55f, 0.66f)
-    val patternAlpha = 0.18f * FastOutSlowInEasing.transform(phase(progress, 0.54f, 0.66f))
+    val patternAlpha = 0.18f * FastOutSlowInEasing.transform(phase(progress, 0.54f, 0.59f))
+    val patternWave = phase(progress, 0.54f, 0.82f)
     val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.66f, 0.82f))
     val verticalShift = (1f - titleProgress) * 52f
     val overlayAlpha = 1f - phase(progress, 0.95f, 1f)
@@ -83,7 +85,7 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
             .semantics { contentDescription = "Introducción de Turinauta" },
         contentAlignment = Alignment.Center,
     ) {
-        IntroDoodleBackdrop(alpha = patternAlpha)
+        IntroDoodleBackdrop(alpha = patternAlpha, wave = patternWave)
         Column(
             modifier = Modifier.offset(y = verticalShift.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -192,20 +194,38 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
 }
 
 @Composable
-private fun IntroDoodleBackdrop(alpha: Float) {
+private fun IntroDoodleBackdrop(alpha: Float, wave: Float) {
     Canvas(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }) {
-        val tile = 96.dp.toPx()
+        val tile = 72.dp.toPx()
         val columns = (size.width / tile).toInt() + 2
         val rows = (size.height / tile).toInt() + 2
-        val inkWidth = 1.7.dp.toPx()
+        val inkWidth = 1.5.dp.toPx()
+        // El punto del logo está a la derecha y algo arriba del centro al aparecer.
+        val origin = Offset(size.width / 2f + 48.dp.toPx(), size.height / 2f - 30.dp.toPx())
+        val maxRadius = hypot(
+            maxOf(origin.x, size.width - origin.x),
+            maxOf(origin.y, size.height - origin.y),
+        ) + tile
+        val waveRadius = maxRadius * wave
+        if (wave > 0f && wave < 1f) {
+            drawCircle(
+                color = DeepTeal.copy(alpha = 0.28f * (1f - wave)),
+                radius = waveRadius,
+                center = origin,
+                style = Stroke(width = 2.dp.toPx()),
+            )
+        }
         for (row in -1..rows) {
             for (column in -1..columns) {
                 val x = column * tile + (if (row % 2 == 0) 0.18f else 0.65f) * tile
                 val y = row * tile + tile * 0.48f
+                val distance = hypot(x - origin.x, y - origin.y)
+                val reveal = ((waveRadius - distance + tile * 0.15f) / (tile * 0.45f)).coerceIn(0f, 1f)
+                if (reveal == 0f) continue
                 val motif = Math.floorMod(row * 3 + column * 5, 6)
-                val color = if (motif == 3 || motif == 4) MutedOchre else DeepTeal
+                val color = (if (motif == 3 || motif == 4) MutedOchre else DeepTeal).copy(alpha = reveal)
                 translate(left = x, top = y) {
-                    drawIntroDoodle(motif, tile * 0.32f, inkWidth, color)
+                    drawIntroDoodle(motif, tile * 0.38f, inkWidth, color)
                     drawCircle(color, radius = inkWidth, center = Offset(tile * 0.29f, -tile * 0.26f))
                 }
             }
