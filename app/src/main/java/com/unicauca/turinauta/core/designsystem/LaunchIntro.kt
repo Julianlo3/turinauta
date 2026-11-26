@@ -4,7 +4,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -34,7 +33,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -44,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
-import com.unicauca.turinauta.R
+import kotlinx.coroutines.delay
 
 /** Intro de apertura inspirada en la secuencia del logo y el nombre del video de referencia. */
 @Composable
@@ -52,7 +50,9 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
     val timeline = remember { Animatable(0f) }
     val interactionSource = remember { MutableInteractionSource() }
     LaunchedEffect(Unit) {
-        timeline.animateTo(1f, animationSpec = tween(durationMillis = 3000, easing = LinearEasing))
+        timeline.animateTo(0.95f, animationSpec = tween(durationMillis = 2850, easing = LinearEasing))
+        delay(900)
+        timeline.animateTo(1f, animationSpec = tween(durationMillis = 220, easing = LinearEasing))
         onFinished()
     }
 
@@ -65,7 +65,6 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
     }
     val roadProgress = phase(progress, 0.33f, 0.62f)
     val dotProgress = phase(progress, 0.57f, 0.70f)
-    val finalLogoAlpha = phase(progress, 0.67f, 0.76f)
     val titleProgress = phase(progress, 0.65f, 0.86f)
     val verticalShift = (1f - easeOut(phase(progress, 0.53f, 0.82f))) * 52f
     val overlayAlpha = 1f - phase(progress, 0.95f, 1f)
@@ -131,11 +130,6 @@ fun LaunchIntro(onFinished: () -> Unit, modifier: Modifier = Modifier) {
                         )
                     }
                 }
-                Image(
-                    painter = painterResource(R.drawable.turinauta_logo),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize().graphicsLayer { alpha = finalLogoAlpha },
-                )
             }
 
             Spacer(Modifier.height(14.dp))
