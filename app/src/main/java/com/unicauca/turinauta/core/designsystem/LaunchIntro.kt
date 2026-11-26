@@ -53,7 +53,7 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     LaunchedEffect(Unit) {
         timeline.animateTo(0.95f, animationSpec = tween(durationMillis = 2850, easing = LinearEasing))
         onReadyForApp()
-        delay(600)
+        delay(500)
         timeline.animateTo(1f, animationSpec = tween(durationMillis = 220, easing = LinearEasing))
         onFinished()
     }
