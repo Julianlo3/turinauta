@@ -33,6 +33,7 @@ fun TurinautaApp(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val currentTopLevel = TopLevelDestination.entries.firstOrNull { it.route == currentRoute }
     val showBottomBar = currentRoute in TurinautaRoutes.topLevelRoutes
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -56,7 +57,9 @@ fun TurinautaApp(
             navController = navController,
             container = container,
             onNavigateToTopLevel = ::navigateToTopLevel,
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier
+                .padding(innerPadding)
+                .topLevelSwipe(currentTopLevel, ::navigateToTopLevel),
         )
     }
 }
