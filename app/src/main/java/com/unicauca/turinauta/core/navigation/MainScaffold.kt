@@ -3,26 +3,30 @@ package com.unicauca.turinauta.core.navigation
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import com.unicauca.turinauta.core.designsystem.DeepTeal
 import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.SlateMedium
 import com.unicauca.turinauta.core.designsystem.SoftTealContainer
+import com.unicauca.turinauta.core.designsystem.SubtleOutline
 import com.unicauca.turinauta.core.designsystem.SurfaceNavSand
 
 /**
- * Contenedor principal con `NavigationBar` de 4 destinos (Explorar, Rutas, Colección, Perfil)
+ * Contenedor principal con barra compacta de 4 destinos (Explorar, Rutas, Colección, Perfil)
  * y manejo seguro de `WindowInsets` edge-to-edge.
  */
 @Composable
@@ -41,13 +45,20 @@ fun MainScaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(
+                ShortNavigationBar(
+                    modifier = Modifier.drawBehind {
+                        drawLine(
+                            color = SubtleOutline,
+                            start = Offset.Zero,
+                            end = Offset(size.width, 0f),
+                            strokeWidth = 1.dp.toPx(),
+                        )
+                    },
                     containerColor = SurfaceNavSand,
-                    tonalElevation = 0.dp,
                 ) {
                     TopLevelDestination.entries.forEach { destination ->
                         val selected = currentRoute == destination.route
-                        NavigationBarItem(
+                        ShortNavigationBarItem(
                             selected = selected,
                             onClick = { onDestinationSelected(destination) },
                             icon = {
@@ -57,19 +68,20 @@ fun MainScaffold(
                                     } else {
                                         destination.unselectedIcon
                                     },
-                                    contentDescription = destination.label,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
                                 )
                             },
                             label = {
                                 Text(
                                     text = destination.label,
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelSmall,
                                 )
                             },
-                            colors = NavigationBarItemDefaults.colors(
+                            colors = ShortNavigationBarItemDefaults.colors(
                                 selectedIconColor = OnSoftTealContainer,
                                 selectedTextColor = DeepTeal,
-                                indicatorColor = SoftTealContainer,
+                                selectedIndicatorColor = SoftTealContainer,
                                 unselectedIconColor = SlateMedium,
                                 unselectedTextColor = SlateMedium,
                             ),
