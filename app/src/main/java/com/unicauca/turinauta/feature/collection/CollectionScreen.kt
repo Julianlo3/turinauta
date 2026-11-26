@@ -333,55 +333,23 @@ private fun CollectionProgressCard(
 ) {
     val shape = RoundedCornerShape(TurinautaDimens.CardCornerRadius)
     val completed = collection.isCompleted
-    Surface(
-        color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
-        shape = shape,
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                TurinautaDimens.CardBorderWidth,
-                if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
-                shape,
-            ),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+    val medalWidth = 76.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Surface(
+            color = if (completed) SoftOchreContainer.copy(alpha = 0.55f) else PureWhite,
+            shape = shape,
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    TurinautaDimens.CardBorderWidth,
+                    if (completed) MutedOchre.copy(alpha = 0.55f) else SubtleOutline,
+                    shape,
+                ),
         ) {
-            if (completed) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Text(
-                            text = collection.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = SlateDark,
-                        )
-                        Text(
-                            text = "${collection.earnedStamps}/${collection.totalStamps} sellos",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = SlateMedium,
-                        )
-                        LinearProgressIndicator(
-                            progress = { 1f },
-                            color = MutedOchre,
-                            trackColor = PureWhite,
-                            modifier = Modifier.fillMaxWidth().height(7.dp).clip(RoundedCornerShape(4.dp)),
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.width(1.dp).height(64.dp)
-                            .background(MutedOchre.copy(alpha = 0.35f)),
-                    )
-                    CompletedCollectionMedal()
-                }
-            } else {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
                 Text(
                     text = collection.name,
                     style = MaterialTheme.typography.titleMedium,
@@ -393,29 +361,45 @@ private fun CollectionProgressCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = SlateMedium,
                     )
-                    Text(
-                        text = "${collection.progressPercent}%",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DeepTeal,
-                    )
+                    if (!completed) {
+                        Text(
+                            text = "${collection.progressPercent}%",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DeepTeal,
+                        )
+                    }
                 }
                 LinearProgressIndicator(
                     progress = { (collection.progressPercent.coerceIn(0, 100)) / 100f },
-                    color = DeepTeal,
-                    trackColor = SurfaceLowSand,
+                    color = if (completed) MutedOchre else DeepTeal,
+                    trackColor = if (completed) PureWhite else SurfaceLowSand,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(end = if (completed) medalWidth + 25.dp else 0.dp)
                         .height(7.dp)
                         .clip(RoundedCornerShape(4.dp)),
                 )
-            }
 
-            if (collection.stamps.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    collection.stamps.forEach { badge ->
-                        RewardBadgeRow(badge = badge, onStampClick = onStampClick)
+                if (collection.stamps.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        collection.stamps.forEach { badge ->
+                            RewardBadgeRow(badge = badge, onStampClick = onStampClick)
+                        }
                     }
                 }
+            }
+        }
+        if (completed) {
+            Box(modifier = Modifier.matchParentSize()) {
+                Box(
+                    modifier = Modifier.align(Alignment.TopEnd)
+                        .offset(x = -(16.dp + medalWidth + 12.dp), y = 18.dp)
+                        .width(1.dp).height(64.dp)
+                        .background(MutedOchre.copy(alpha = 0.35f)),
+                )
+                CompletedCollectionMedal(
+                    modifier = Modifier.align(Alignment.TopEnd).offset(x = (-16).dp, y = 8.dp),
+                )
             }
         }
     }
