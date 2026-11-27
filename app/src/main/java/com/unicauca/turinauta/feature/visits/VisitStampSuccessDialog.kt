@@ -150,7 +150,7 @@ internal fun VisitStampSuccessDialog(
                             colors = ButtonDefaults.buttonColors(containerColor = DeepTeal, contentColor = OnDeepTeal),
                             modifier = Modifier.fillMaxWidth().heightIn(min = TurinautaDimens.MinTouchTarget),
                         ) {
-                            Text("Ver sello")
+                            Text("Ver detalles")
                         }
                         OutlinedButton(
                             onClick = onDismiss,
