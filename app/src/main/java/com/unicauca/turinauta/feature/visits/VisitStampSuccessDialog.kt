@@ -182,7 +182,7 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
     LaunchedEffect(visitId) {
         snapshotFlow { progress.value }.first { it >= 0.43f }
         while (true) {
-            fall.animateTo(fall.value + 1f, tween(4500, easing = LinearEasing))
+            fall.animateTo(fall.value + 1f, tween(6000, easing = LinearEasing))
         }
     }
     val pieces = remember(visitId) {
