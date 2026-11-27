@@ -281,8 +281,8 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
                 val scale = 1.10f - 0.10f * down - 0.04f * press + 0.16f * lift
                 scaleX = scale
                 scaleY = scale
-                translationX = (220f - 187f * down + 300f * lift) * density
-                translationY = (-160f + 160f * down + 4f * press - 180f * lift) * density
+                translationX = (460f - 427f * down + 300f * lift) * density
+                translationY = (-220f + 220f * down + 4f * press - 180f * lift) * density
                 rotationZ = -10f + 10f * down - 8f * lift
             },
         )
