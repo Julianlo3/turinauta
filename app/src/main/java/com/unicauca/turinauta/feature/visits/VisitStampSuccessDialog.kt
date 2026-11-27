@@ -187,10 +187,10 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
     }
     val pieces = remember(visitId) {
         val random = Random(visitId.hashCode())
-        List(60) {
+        List(60) { index ->
             ConfettiPiece(
                 x = random.nextFloat(),
-                phaseOffset = random.nextFloat() * 0.55f,
+                phaseOffset = (index + random.nextFloat() * 0.35f) / 60f,
                 angle = random.nextFloat() * (2f * kotlin.math.PI.toFloat()),
                 lengthDp = 5f + random.nextFloat() * 5f,
                 colorIndex = random.nextInt(4),
@@ -211,7 +211,6 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
                 piece.x * size.width,
                 -14.dp.toPx() + travel * (size.height + 28.dp.toPx()),
             )
-            if (center.y < 55.dp.toPx() && piece.x in 0.22f..0.78f) return@forEach
             val fade = ((fadeEndY - center.y) / (fadeEndY - fadeStartY)).coerceIn(0f, 1f)
             if (fade == 0f) return@forEach
             val halfLength = piece.lengthDp.dp.toPx() / 2f
