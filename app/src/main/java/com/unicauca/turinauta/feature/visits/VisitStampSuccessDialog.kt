@@ -3,10 +3,6 @@ package com.unicauca.turinauta.feature.visits
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
@@ -34,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -70,6 +67,7 @@ import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.random.Random
@@ -180,22 +178,19 @@ private data class ConfettiPiece(
 
 @Composable
 private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "Confeti de visita")
-    val fall = transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4500, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "Caída del confeti",
-    )
+    val fall = remember(visitId) { Animatable(0f) }
+    LaunchedEffect(visitId) {
+        snapshotFlow { progress.value }.first { it >= 0.43f }
+        while (true) {
+            fall.animateTo(fall.value + 1f, tween(4500, easing = LinearEasing))
+        }
+    }
     val pieces = remember(visitId) {
         val random = Random(visitId.hashCode())
         List(60) {
             ConfettiPiece(
                 x = random.nextFloat(),
-                phaseOffset = random.nextFloat(),
+                phaseOffset = random.nextFloat() * 0.55f,
                 angle = random.nextFloat() * (2f * kotlin.math.PI.toFloat()),
                 lengthDp = 5f + random.nextFloat() * 5f,
                 colorIndex = random.nextInt(4),
@@ -209,7 +204,9 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
         val fadeStartY = 270.dp.toPx()
         val fadeEndY = 390.dp.toPx()
         pieces.forEach { piece ->
-            val travel = (fall.value + piece.phaseOffset) % 1f
+            val elapsed = fall.value - piece.phaseOffset
+            if (elapsed < 0f) return@forEach
+            val travel = elapsed % 1f
             val center = Offset(
                 piece.x * size.width,
                 -14.dp.toPx() + travel * (size.height + 28.dp.toPx()),
