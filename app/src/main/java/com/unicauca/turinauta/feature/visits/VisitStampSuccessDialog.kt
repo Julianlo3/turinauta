@@ -9,7 +9,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -186,7 +185,7 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            animation = tween(durationMillis = 4500, easing = LinearEasing),
             repeatMode = RepeatMode.Restart,
         ),
         label = "Caída del confeti",
@@ -207,6 +206,8 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
     Canvas(modifier.clipToBounds()) {
         val opacity = phase(progress.value, 0.43f, 0.58f)
         if (opacity == 0f) return@Canvas
+        val fadeStartY = 270.dp.toPx()
+        val fadeEndY = 390.dp.toPx()
         pieces.forEach { piece ->
             val travel = (fall.value + piece.phaseOffset) % 1f
             val center = Offset(
@@ -214,10 +215,12 @@ private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, mod
                 -14.dp.toPx() + travel * (size.height + 28.dp.toPx()),
             )
             if (center.y < 55.dp.toPx() && piece.x in 0.22f..0.78f) return@forEach
+            val fade = ((fadeEndY - center.y) / (fadeEndY - fadeStartY)).coerceIn(0f, 1f)
+            if (fade == 0f) return@forEach
             val halfLength = piece.lengthDp.dp.toPx() / 2f
             val direction = Offset(cos(piece.angle) * halfLength, sin(piece.angle) * halfLength)
             drawLine(
-                color = colors[piece.colorIndex].copy(alpha = 0.74f * opacity),
+                color = colors[piece.colorIndex].copy(alpha = 0.74f * opacity * fade),
                 start = center - direction,
                 end = center + direction,
                 strokeWidth = 3.dp.toPx(),
@@ -233,7 +236,7 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
     val imageUrl = remember(reward.imagePath) { SupabaseConfig.resolvePublicMediaUrl(reward.imagePath) }
     Box(
         modifier = Modifier.fillMaxWidth().size(height = 270.dp, width = 290.dp)
-            .clipToBounds().background(PureWhite),
+            .clipToBounds(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
@@ -246,14 +249,14 @@ private fun StampRevealScene(reward: RewardBadge, progress: Animatable<Float, *>
             contentAlignment = Alignment.Center,
         ) {
             if (imageUrl == null) {
-                PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = PureWhite)
+                PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = Color.Transparent)
             } else {
                 SubcomposeAsyncImage(
                     model = imageUrl,
                     contentDescription = "Sello ${reward.title}",
                     contentScale = ContentScale.Fit,
-                    loading = { PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = PureWhite) },
-                    error = { PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = PureWhite) },
+                    loading = { PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = Color.Transparent) },
+                    error = { PlaceIllustration(reward.illustrationKey, size = 246.dp, cornerRadius = 123.dp, backgroundColor = Color.Transparent) },
                     modifier = Modifier.size(246.dp),
                 )
             }
