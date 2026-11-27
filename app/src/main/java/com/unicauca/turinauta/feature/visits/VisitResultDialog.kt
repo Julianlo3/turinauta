@@ -41,6 +41,7 @@ fun VisitResultDialog(
     onDismiss: () -> Unit,
     onRetry: () -> Unit,
     onViewCollection: () -> Unit,
+    onViewStamp: (String) -> Unit,
     onGoToAuth: () -> Unit,
 ) {
     when (result) {
@@ -51,7 +52,7 @@ fun VisitResultDialog(
                     placeName = placeName,
                     reward = result.reward,
                     onDismiss = onDismiss,
-                    onViewCollection = onViewCollection,
+                    onViewStamp = { onViewStamp(result.reward.id) },
                 )
             } else AlertDialog(
                 onDismissRequest = onDismiss,
@@ -347,6 +348,7 @@ private fun VisitResultDialogPreview() {
             onDismiss = {},
             onRetry = {},
             onViewCollection = {},
+            onViewStamp = {},
             onGoToAuth = {},
         )
     }

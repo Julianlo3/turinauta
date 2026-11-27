@@ -79,7 +79,7 @@ internal fun VisitStampSuccessDialog(
     placeName: String,
     reward: RewardBadge,
     onDismiss: () -> Unit,
-    onViewCollection: () -> Unit,
+    onViewStamp: () -> Unit,
 ) {
     val progress = remember(visitId) { Animatable(0f) }
     val haptics = LocalHapticFeedback.current
@@ -145,12 +145,12 @@ internal fun VisitStampSuccessDialog(
                             textAlign = TextAlign.Center,
                         )
                         Button(
-                            onClick = onViewCollection,
+                            onClick = onViewStamp,
                             shape = RoundedCornerShape(50),
                             colors = ButtonDefaults.buttonColors(containerColor = DeepTeal, contentColor = OnDeepTeal),
                             modifier = Modifier.fillMaxWidth().heightIn(min = TurinautaDimens.MinTouchTarget),
                         ) {
-                            Text("Ver colección")
+                            Text("Ver sello")
                         }
                         OutlinedButton(
                             onClick = onDismiss,
@@ -381,7 +381,7 @@ private fun VisitStampSuccessPreview() {
             placeName = "La Esquina del Maíz",
             reward = RewardBadge("s1", "Sello de La Esquina del Maíz", "", isEarned = true),
             onDismiss = {},
-            onViewCollection = {},
+            onViewStamp = {},
         )
     }
 }

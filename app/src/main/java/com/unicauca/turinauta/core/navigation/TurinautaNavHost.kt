@@ -88,6 +88,7 @@ fun TurinautaNavHost(
     onNavigateToTopLevel: (TopLevelDestination) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val navigationScope = rememberCoroutineScope()
     NavHost(
         navController = navController,
         startDestination = TurinautaRoutes.EXPLORE,
@@ -164,6 +165,13 @@ fun TurinautaNavHost(
                 onBackClick = { navController.popBackStack() },
                 onRequireAuth = { navController.navigate(TurinautaRoutes.AUTH) },
                 onNavigateToCollection = { onNavigateToTopLevel(TopLevelDestination.COLLECTION) },
+                onNavigateToStamp = { stampId ->
+                    navigationScope.launch {
+                        pagerState.scrollToPage(TopLevelDestination.COLLECTION.ordinal)
+                        navController.popBackStack(TurinautaRoutes.EXPLORE, inclusive = false)
+                        navController.navigate(TurinautaRoutes.stampDetail(stampId))
+                    }
+                },
             )
         }
 

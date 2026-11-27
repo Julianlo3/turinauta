@@ -98,6 +98,7 @@ fun PlaceDetailRoute(
     onBackClick: () -> Unit,
     onRequireAuth: () -> Unit,
     onNavigateToCollection: () -> Unit,
+    onNavigateToStamp: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel: PlaceDetailViewModel = viewModel(
@@ -233,6 +234,11 @@ fun PlaceDetailRoute(
                 visitViewModel.reset()
                 showVisitSheet = false
                 onNavigateToCollection()
+            },
+            onViewStamp = { stampId ->
+                visitViewModel.reset()
+                showVisitSheet = false
+                onNavigateToStamp(stampId)
             },
             onGoToAuth = {
                 visitViewModel.reset()
