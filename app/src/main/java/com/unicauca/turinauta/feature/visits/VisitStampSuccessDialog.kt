@@ -6,9 +6,11 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -17,12 +19,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LockOpen
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -34,12 +39,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,11 +60,16 @@ import com.unicauca.turinauta.core.designsystem.PlaceIllustration
 import com.unicauca.turinauta.core.designsystem.PureWhite
 import com.unicauca.turinauta.core.designsystem.SlateDark
 import com.unicauca.turinauta.core.designsystem.SlateMedium
+import com.unicauca.turinauta.core.designsystem.SoftTealContainer
+import com.unicauca.turinauta.core.designsystem.OnSoftTealContainer
 import com.unicauca.turinauta.core.designsystem.TurinautaDimens
 import com.unicauca.turinauta.core.designsystem.TurinautaTheme
 import com.unicauca.turinauta.core.model.RewardBadge
 import com.unicauca.turinauta.core.network.SupabaseConfig
 import kotlinx.coroutines.delay
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.random.Random
 
 /** Se muestra únicamente después de que el servidor confirma una visita con sello nuevo. */
 @Composable
@@ -90,51 +102,113 @@ internal fun VisitStampSuccessDialog(
                 shape = RoundedCornerShape(24.dp),
                 shadowElevation = 12.dp,
             ) {
-                Column(
-                    modifier = Modifier.heightIn(max = 620.dp).verticalScroll(rememberScrollState()).padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    Text(
-                        text = "¡Visita registrada!",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = SlateDark,
-                        textAlign = TextAlign.Center,
-                    )
-                    StampRevealScene(reward = reward, progress = progress)
-                    Text(
-                        text = "Sello desbloqueado",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = DeepTeal,
-                    )
-                    Text(
-                        text = reward.title,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = SlateDark,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.graphicsLayer { alpha = phase(progress.value, 0.60f, 0.86f) },
-                    )
-                    Text(
-                        text = "Tu visita a $placeName quedó guardada correctamente.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = SlateMedium,
-                        textAlign = TextAlign.Center,
-                    )
-                    Button(
-                        onClick = onViewCollection,
-                        colors = ButtonDefaults.buttonColors(containerColor = DeepTeal, contentColor = OnDeepTeal),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = TurinautaDimens.MinTouchTarget),
+                Box {
+                    SuccessConfetti(visitId = visitId, progress = progress, modifier = Modifier.matchParentSize())
+                    Column(
+                        modifier = Modifier.heightIn(max = 620.dp).verticalScroll(rememberScrollState()).padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text("Ver colección")
-                    }
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = TurinautaDimens.MinTouchTarget),
-                    ) {
-                        Text("Entendido", color = DeepTeal)
+                        Text(
+                            text = "¡Visita registrada!",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = SlateDark,
+                            textAlign = TextAlign.Center,
+                        )
+                        StampRevealScene(reward = reward, progress = progress)
+                        Surface(
+                            color = SoftTealContainer,
+                            shape = RoundedCornerShape(50),
+                            modifier = Modifier.graphicsLayer { alpha = phase(progress.value, 0.60f, 0.86f) },
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            ) {
+                                Icon(Icons.Outlined.LockOpen, contentDescription = null, tint = OnSoftTealContainer, modifier = Modifier.size(15.dp))
+                                Text("Sello desbloqueado", style = MaterialTheme.typography.labelMedium, color = OnSoftTealContainer)
+                            }
+                        }
+                        Text(
+                            text = reward.title,
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = SlateDark,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.graphicsLayer { alpha = phase(progress.value, 0.60f, 0.86f) },
+                        )
+                        Text(
+                            text = "Tu visita a $placeName quedó registrada con éxito. ¡Sigue explorando para conseguir más sellos!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = SlateMedium,
+                            textAlign = TextAlign.Center,
+                        )
+                        Button(
+                            onClick = onViewCollection,
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = DeepTeal, contentColor = OnDeepTeal),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = TurinautaDimens.MinTouchTarget),
+                        ) {
+                            Text("Ver colección")
+                        }
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            shape = RoundedCornerShape(50),
+                            border = BorderStroke(1.dp, DeepTeal),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = DeepTeal),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = TurinautaDimens.MinTouchTarget),
+                        ) {
+                            Text("Entendido")
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+private data class ConfettiPiece(
+    val x: Float,
+    val yDp: Float,
+    val angle: Float,
+    val lengthDp: Float,
+    val colorIndex: Int,
+)
+
+@Composable
+private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, modifier: Modifier = Modifier) {
+    val pieces = remember(visitId) {
+        val random = Random(visitId.hashCode())
+        List(60) {
+            ConfettiPiece(
+                x = random.nextFloat(),
+                yDp = random.nextFloat() * 210f,
+                angle = random.nextFloat() * (2f * kotlin.math.PI.toFloat()),
+                lengthDp = 5f + random.nextFloat() * 5f,
+                colorIndex = random.nextInt(4),
+            )
+        }
+    }
+    Canvas(modifier.clipToBounds()) {
+        val fall = FastOutSlowInEasing.transform(phase(progress.value, 0.43f, 0.91f))
+        val opacity = phase(progress.value, 0.43f, 0.58f)
+        if (opacity == 0f) return@Canvas
+        val colors = listOf(MutedOchre, DeepTeal, Color(0xFF88A884), Color(0xFFC98562))
+        pieces.forEach { piece ->
+            if (piece.yDp < 55f && piece.x in 0.22f..0.78f) return@forEach
+            val center = Offset(
+                piece.x * size.width,
+                piece.yDp.dp.toPx() - (1f - fall) * 85.dp.toPx(),
+            )
+            val halfLength = piece.lengthDp.dp.toPx() / 2f
+            val direction = Offset(cos(piece.angle) * halfLength, sin(piece.angle) * halfLength)
+            drawLine(
+                color = colors[piece.colorIndex].copy(alpha = 0.74f * opacity),
+                start = center - direction,
+                end = center + direction,
+                strokeWidth = 3.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
         }
     }
 }
