@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,19 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -51,9 +44,7 @@ import androidx.compose.material3.Text
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.hypot
 import kotlin.math.sin
-import kotlin.random.Random
 
 /** Intro de apertura inspirada en la secuencia del logo y el nombre del video de referencia. */
 @Composable
@@ -74,7 +65,6 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
     val dotPop = FastOutSlowInEasing.transform(phase(progress, 0.53f, 0.55f))
     val dotSettle = FastOutSlowInEasing.transform(phase(progress, 0.55f, 0.60f))
     val splashProgress = phase(progress, 0.55f, 0.66f)
-    val patternWave = phase(progress, 0.54f, 0.82f)
     val titleProgress = FastOutSlowInEasing.transform(phase(progress, 0.66f, 0.82f))
     val verticalShift = (1f - titleProgress) * 52f
     val overlayAlpha = 1f - phase(progress, 0.95f, 1f)
@@ -88,7 +78,6 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
             .semantics { contentDescription = "Introducción de Turinauta" },
         contentAlignment = Alignment.Center,
     ) {
-        IntroDoodleBackdrop(wave = patternWave)
         Column(
             modifier = Modifier.offset(y = verticalShift.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -192,165 +181,6 @@ fun LaunchIntro(onReadyForApp: () -> Unit, onFinished: () -> Unit, modifier: Mod
                         clipRect(right = size.width * titleProgress) { this@drawWithContent.drawContent() }
                     },
             )
-        }
-    }
-}
-
-@Composable
-private fun IntroDoodleBackdrop(wave: Float) {
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val spots = remember(maxWidth, maxHeight) {
-            introDoodleSpots(maxWidth.value, maxHeight.value)
-        }
-        Canvas(Modifier.fillMaxSize()) {
-            val doodleWidth = 29.dp.toPx()
-            val inkWidth = 2.dp.toPx()
-            // El punto del logo está a la derecha y algo arriba del centro al aparecer.
-            val origin = Offset(size.width / 2f + 48.dp.toPx(), size.height / 2f - 30.dp.toPx())
-            val maxRadius = hypot(
-                maxOf(origin.x, size.width - origin.x),
-                maxOf(origin.y, size.height - origin.y),
-            ) + doodleWidth
-            val waveRadius = maxRadius * wave
-            if (waveRadius > 0f) {
-                val revealArea = Path().apply {
-                    addOval(Rect(origin, waveRadius))
-                }
-                clipPath(revealArea) {
-                    spots.forEach { spot ->
-                        val x = spot.x * size.width
-                        val y = spot.y * size.height
-                        if (hypot(x - origin.x, y - origin.y) > waveRadius + doodleWidth) return@forEach
-                        val color = (if (spot.motif == 3 || spot.motif == 4) MutedOchre else DeepTeal)
-                            .copy(alpha = 0.21f)
-                        translate(left = x, top = y) {
-                            rotate(spot.rotation) {
-                                drawIntroDoodle(spot.motif, doodleWidth, inkWidth, color)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-private data class IntroDoodleSpot(val x: Float, val y: Float, val motif: Int, val rotation: Float)
-
-private fun introDoodleSpots(widthDp: Float, heightDp: Float): List<IntroDoodleSpot> {
-    if (widthDp <= 0f || heightDp <= 0f) return emptyList()
-    val random = Random(20261126)
-    val minimumDistance = 45f
-    val points = ArrayList<Offset>()
-    val rowCount = (heightDp / 50f).toInt() + 2
-    val columnCount = (widthDp / 55f).toInt() + 2
-
-    // Una posición por zona, con desplazamientos irregulares y distancia mínima entre figuras.
-    for (row in -1..rowCount) {
-        val rowShiftX = (random.nextFloat() - 0.5f) * 12f
-        val rowShiftY = (random.nextFloat() - 0.5f) * 8f
-        for (column in -1..columnCount) {
-            val baseX = column * 55f + (if (row % 2 == 0) 0f else 27.5f) + rowShiftX
-            val baseY = row * 50f + rowShiftY
-            if (baseX !in -20f..(widthDp + 20f) || baseY !in -20f..(heightDp + 20f)) continue
-
-            var bestPoint: Offset? = null
-            var bestDistanceSquared = -1f
-            repeat(24) {
-                val x = baseX + (random.nextFloat() - 0.5f) * 24f
-                val y = baseY + (random.nextFloat() - 0.5f) * 24f
-                if (x !in 0f..widthDp || y !in 0f..heightDp) return@repeat
-                val nearestSquared = points.minOfOrNull {
-                    val dx = it.x - x
-                    val dy = it.y - y
-                    dx * dx + dy * dy
-                } ?: Float.POSITIVE_INFINITY
-                if (nearestSquared > bestDistanceSquared) {
-                    bestPoint = Offset(x, y)
-                    bestDistanceSquared = nearestSquared
-                }
-            }
-            if (bestDistanceSquared >= minimumDistance * minimumDistance) {
-                bestPoint?.let(points::add)
-            }
-        }
-    }
-
-    val decorationRandom = Random(20261127)
-    return points.map {
-        IntroDoodleSpot(
-            it.x / widthDp,
-            it.y / heightDp,
-            decorationRandom.nextInt(6),
-            decorationRandom.nextInt(-25, 26).toFloat(),
-        )
-    }
-}
-
-private fun DrawScope.drawIntroDoodle(motif: Int, width: Float, inkWidth: Float, color: Color) {
-    val r = width / 2f
-    val outline = Stroke(width = inkWidth, cap = StrokeCap.Round)
-    when (motif) {
-        0 -> { // Punto de un lugar
-            val pin = Path().apply {
-                moveTo(0f, r)
-                cubicTo(-r * 0.32f, r * 0.50f, -r * 0.73f, 0f, -r * 0.73f, -r * 0.32f)
-                cubicTo(-r * 0.73f, -r * 1.32f, r * 0.73f, -r * 1.32f, r * 0.73f, -r * 0.32f)
-                cubicTo(r * 0.73f, 0f, r * 0.32f, r * 0.50f, 0f, r)
-                close()
-            }
-            drawPath(pin, color, style = outline)
-            drawCircle(color, radius = r * 0.22f, center = Offset(0f, -r * 0.36f), style = outline)
-        }
-        1 -> { // Camino entre dos paradas
-            val route = Path().apply {
-                moveTo(-r, r * 0.55f)
-                cubicTo(-r * 0.15f, r * 0.60f, -r * 0.10f, -r * 0.12f, r * 0.45f, -r * 0.18f)
-                cubicTo(r * 0.82f, -r * 0.22f, r * 0.80f, -r * 0.62f, r, -r * 0.70f)
-            }
-            drawPath(route, color, style = outline)
-            drawCircle(color, radius = r * 0.16f, center = Offset(-r, r * 0.55f), style = outline)
-            drawCircle(color, radius = r * 0.16f, center = Offset(r, -r * 0.70f), style = outline)
-        }
-        2 -> { // Fotografía de una visita
-            drawRoundRect(
-                color = color,
-                topLeft = Offset(-r, -r * 0.55f),
-                size = Size(width, r * 1.25f),
-                cornerRadius = CornerRadius(r * 0.16f),
-                style = outline,
-            )
-            drawCircle(color, radius = r * 0.40f, center = Offset(0f, r * 0.07f), style = outline)
-            drawLine(color, Offset(-r * 0.52f, -r * 0.75f), Offset(-r * 0.10f, -r * 0.75f), inkWidth)
-        }
-        3 -> { // Sello coleccionable
-            drawCircle(color, radius = r * 0.88f, style = outline)
-            drawCircle(color, radius = r * 0.62f, style = outline)
-            drawCircle(color, radius = r * 0.16f)
-            drawLine(color, Offset(-r * 0.42f, r * 1.07f), Offset(0f, r * 1.31f), inkWidth)
-            drawLine(color, Offset(r * 0.42f, r * 1.07f), Offset(0f, r * 1.31f), inkWidth)
-        }
-        4 -> { // Fachada de un lugar local
-            drawRect(color, topLeft = Offset(-r * 0.80f, -r * 0.20f), size = Size(r * 1.60f, r * 1.10f), style = outline)
-            val roof = Path().apply {
-                moveTo(-r, -r * 0.20f)
-                lineTo(-r * 0.76f, -r * 0.77f)
-                lineTo(r * 0.76f, -r * 0.77f)
-                lineTo(r, -r * 0.20f)
-            }
-            drawPath(roof, color, style = outline)
-            drawRect(color, topLeft = Offset(-r * 0.21f, r * 0.27f), size = Size(r * 0.42f, r * 0.63f), style = outline)
-        }
-        else -> { // Brújula de exploración
-            drawCircle(color, radius = r * 0.92f, style = outline)
-            val needle = Path().apply {
-                moveTo(r * 0.42f, -r * 0.57f)
-                lineTo(r * 0.14f, r * 0.18f)
-                lineTo(-r * 0.42f, r * 0.57f)
-                lineTo(-r * 0.14f, -r * 0.18f)
-                close()
-            }
-            drawPath(needle, color, style = outline)
         }
     }
 }
