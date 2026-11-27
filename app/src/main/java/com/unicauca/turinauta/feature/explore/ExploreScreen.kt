@@ -70,7 +70,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import com.unicauca.turinauta.core.designsystem.CategoryOverlineTextStyle
 import com.unicauca.turinauta.core.designsystem.DeepTeal
@@ -92,20 +91,16 @@ import com.unicauca.turinauta.core.model.IllustrationKey
 import com.unicauca.turinauta.core.model.Place
 import com.unicauca.turinauta.core.model.PlaceSortOrder
 import com.unicauca.turinauta.core.network.SupabaseConfig
-import com.unicauca.turinauta.data.repository.CatalogRepository
 import java.util.Locale
 
 @Composable
 fun ExploreRoute(
-    catalogRepository: CatalogRepository,
+    viewModel: ExploreViewModel,
     onPlaceClick: (String) -> Unit,
     onRoutesBannerClick: () -> Unit,
     onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: ExploreViewModel = viewModel(
-        factory = ExploreViewModel.factory(catalogRepository),
-    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 

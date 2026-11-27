@@ -19,13 +19,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.unicauca.turinauta.data.AppContainer
 import com.unicauca.turinauta.feature.auth.AuthRoute
 import com.unicauca.turinauta.feature.collection.CollectionRoute
 import com.unicauca.turinauta.feature.collection.CollectionViewModel
 import com.unicauca.turinauta.feature.collection.StampDetailRoute
 import com.unicauca.turinauta.feature.explore.ExploreRoute
+import com.unicauca.turinauta.feature.explore.ExploreViewModel
 import com.unicauca.turinauta.feature.explore.PlaceDetailRoute
 import com.unicauca.turinauta.feature.profile.ProfileRoute
 import com.unicauca.turinauta.feature.profile.AboutScreen
@@ -39,6 +39,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun TurinautaApp(
     container: AppContainer,
+    exploreViewModel: ExploreViewModel,
+    collectionViewModel: CollectionViewModel,
     navController: NavHostController = rememberNavController(),
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -48,12 +50,6 @@ fun TurinautaApp(
     val showBottomBar = currentRoute == TurinautaRoutes.EXPLORE
     val selectedRoute = if (showBottomBar) TopLevelDestination.entries[pagerState.currentPage].route else null
     val snackbarHostState = remember { SnackbarHostState() }
-    val collectionViewModel: CollectionViewModel = viewModel(
-        factory = CollectionViewModel.factory(
-            collectionRepository = container.collectionRepository,
-            authRepository = container.authRepository,
-        ),
-    )
 
     fun navigateToTopLevel(destination: TopLevelDestination) {
         if (currentRoute != TurinautaRoutes.EXPLORE) {
@@ -71,6 +67,7 @@ fun TurinautaApp(
         TurinautaNavHost(
             navController = navController,
             container = container,
+            exploreViewModel = exploreViewModel,
             collectionViewModel = collectionViewModel,
             pagerState = pagerState,
             onNavigateToTopLevel = ::navigateToTopLevel,
@@ -83,6 +80,7 @@ fun TurinautaApp(
 fun TurinautaNavHost(
     navController: NavHostController,
     container: AppContainer,
+    exploreViewModel: ExploreViewModel,
     collectionViewModel: CollectionViewModel,
     pagerState: PagerState,
     onNavigateToTopLevel: (TopLevelDestination) -> Unit,
@@ -106,7 +104,7 @@ fun TurinautaNavHost(
             ) { page ->
                 when (TopLevelDestination.entries[page]) {
                     TopLevelDestination.EXPLORE -> ExploreRoute(
-                        catalogRepository = container.catalogRepository,
+                        viewModel = exploreViewModel,
                         onRoutesBannerClick = { onNavigateToTopLevel(TopLevelDestination.ROUTES) },
                         onOpenAbout = { navController.navigate(TurinautaRoutes.ABOUT) },
                         onPlaceClick = { placeId ->
