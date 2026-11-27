@@ -3,6 +3,10 @@ package com.unicauca.turinauta.feature.visits
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -169,7 +173,7 @@ internal fun VisitStampSuccessDialog(
 
 private data class ConfettiPiece(
     val x: Float,
-    val yDp: Float,
+    val phaseOffset: Float,
     val angle: Float,
     val lengthDp: Float,
     val colorIndex: Int,
@@ -177,29 +181,39 @@ private data class ConfettiPiece(
 
 @Composable
 private fun SuccessConfetti(visitId: String, progress: Animatable<Float, *>, modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "Confeti de visita")
+    val fall = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "Caída del confeti",
+    )
     val pieces = remember(visitId) {
         val random = Random(visitId.hashCode())
         List(60) {
             ConfettiPiece(
                 x = random.nextFloat(),
-                yDp = random.nextFloat() * 210f,
+                phaseOffset = random.nextFloat(),
                 angle = random.nextFloat() * (2f * kotlin.math.PI.toFloat()),
                 lengthDp = 5f + random.nextFloat() * 5f,
                 colorIndex = random.nextInt(4),
             )
         }
     }
+    val colors = remember { listOf(MutedOchre, DeepTeal, Color(0xFF88A884), Color(0xFFC98562)) }
     Canvas(modifier.clipToBounds()) {
-        val fall = FastOutSlowInEasing.transform(phase(progress.value, 0.43f, 0.91f))
         val opacity = phase(progress.value, 0.43f, 0.58f)
         if (opacity == 0f) return@Canvas
-        val colors = listOf(MutedOchre, DeepTeal, Color(0xFF88A884), Color(0xFFC98562))
         pieces.forEach { piece ->
-            if (piece.yDp < 55f && piece.x in 0.22f..0.78f) return@forEach
+            val travel = (fall.value + piece.phaseOffset) % 1f
             val center = Offset(
                 piece.x * size.width,
-                piece.yDp.dp.toPx() - (1f - fall) * 85.dp.toPx(),
+                -14.dp.toPx() + travel * (size.height + 28.dp.toPx()),
             )
+            if (center.y < 55.dp.toPx() && piece.x in 0.22f..0.78f) return@forEach
             val halfLength = piece.lengthDp.dp.toPx() / 2f
             val direction = Offset(cos(piece.angle) * halfLength, sin(piece.angle) * halfLength)
             drawLine(
